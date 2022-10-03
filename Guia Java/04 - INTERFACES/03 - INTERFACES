@@ -1,0 +1,98 @@
+INTERFACES
+
+Como veníamos explicando en HERENCIA MULTIPLE, JAVA no soporta la misma debido al problema de ambiguedad -problema de rombo o diamante-, por lo cual para suplir esta faltante, JAVA implementa un mecanismo denominado INTERFAZ que nos permite emular esta herencia múltiple.
+
+Veamos un ejemplo: Supongamos que tenemos el siguiente modelo con dos superclases y subclases totalmente diferentes y bien definidas:
+
+ ┌──────────────────────┐         ┌───────────────────┐
+ │    Ave               │         │   Dispositivo     │
+ ├──────────────────────┤         ├───────────────────┤
+ │+ ponerHuevos(): void │         │+ encender(): void │
+ └──────────────────────┘         └───────────────────┘
+            ^                               ^
+            │                               │
+            │                               │
+ ┌──────────┴───────────┐         ┌─────────┴─────────┐
+ │    PalomaMensajera   │         │   TelefonoMovil   │
+ ├──────────────────────┤         ├───────────────────┤
+ │+ volarRapido(): void │         │+ encender(): void │
+ └──────────────────────┘         └───────────────────┘
+
+Ahora supongamos que tenemos un requerimiento y una empresa nos pide hacer una campaña de publicidad utilizando ambos tipos de mensajería, Palomas Mensajeras y Teléfonos Moviles, por lo cual vamos a necesitar una clase intermediara para que puedan convivir las palomas y los teléfonos, supongamos "EnviadorDeMensaje". Lo ideal sería que esta clase tenga un método enviarMensaje() y que sea superclase de PalomaMensajera y TelefonoMovil y heredarles el método (sobreescrito o no)de manera de utilizar el polimorfismo, pero como ya vimos, ambas clases ya son subclases y heredan atributos y métodos de sus respectivas superclases -Ave y Dispositivo- y, la herencia múltiple, no está soportada en JAVA. Para esto aplicamos el mecanismo llamado INTERFAZ, señalando a esta nueva clase "EnviadorDeMensaje" como una. Una interfaz es muy similar a una clase abstracta ya que en ella solo puede haber métodos abstractos y/o constantes, estáticas y publicas. En UML hay que denotar a EnviadorDeMensaje como abstracto con la fuente itálica así también como su método enviarMensaje(), y además agregar el modificador <<interface>>. Ahora al definir una herencia de una interface EnviadorDeMensaje, con un método enviarMensaje() abstracto, obliga a las subclases de esa interface a sobreescribir ese método, por lo cual tendremos el siguiente modelo:
+
+                              ┌───────────────────────┐
+                              │ Compañia              │
+                              ├───────────────────────┤
+                              │ + hacerCampaña():void │
+   ┌──────────────────────┐   └───────────┬───────────┘   ┌───────────────────┐
+   │     Ave              │               │ -mensajeros   │   Dispositivo     │
+   ├──────────────────────┤               │               ├───────────────────┤
+   │+ ponerHuevos(): void │               ▼ *             │+ encender(): void │
+   └──────────────────────┘   ┌─────────────────────────┐ └───────────────────┘
+               ^              │ EnviadorDeMensaje       │           ^
+               │              ├─────────────────────────┤           │
+               │              │ + enviarMensaje(): void │           │
+               │              └─────────────────────────┘           │
+               │                ^                    ^              │
+   ┌───────────┴───────────┐   /                      \   ┌─────────┴──────────────┐
+   │     PalomaMensajera   │  /                        \  │   TelefonoMovil        │
+   ├───────────────────────┤ /                          \ ├────────────────────────┤
+   │+ volarRapido(): void  │/                            \│+ llamar(): void        │
+   │+ enviarMensaje():void │                              │+ enviarMensaje(): void │
+   └───────────────────────┘                              └────────────────────────┘
+
+ Ahora la "herencia múltiple" en realidad se da entre una clase y una interface, donde la relación con la interfaz se denota con una linea punteada, pero sigue cumpliendo conceptualmente con la regla "es un/a", y la relación es idéntica a la herencia, por lo tanto, una paloma mensajera ES un ave, un teléfono ES un dispositvo y ambos SON enviadores de mensajes también.
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Las interfaces permiten implementar una o más interfaces, siendo más flexible que la herencia en JAVA (solo una)│
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+ En código podemos mediante el IDE crear directamente una INTERFAZ o simplemente crear una clase y cambiarla a interfaz:
+
+ public interface EnviadorDeMensaje{
+ 		void enviarMensaje(String mensaje);				// o "public abstract void enviarMensaje(String mensaje);"
+ }
+
+ En JAVA se asume que adentro de una interfaz solamente puede haber métodos abstractos y, por ende, públicos para poder sobreescribirse, por lo que no hay que aclarar nada más que, el tipo de respuesta del método (void en este caso), el nombre del método que se va a sobreescribir, y el/los nombres y tipos de parámetros que recibirá ese método. Aunque no se necesario, se puede agregar "public abstract" en el método, solo para facilitar la lectura. 
+ Luego de crear la interfaz tenemos que explicitar que tanto las palómas como los teléfonos implementan esa interfaz:
+
+ public class PalomaMensajera extends Ave implements EnviadorDeMensaje{
+ 		public void volarRápido(){
+ 			 System.out.println("Volando...")}
+ 		@Override
+ 		public void enviarMensaje(String mensaje){
+ 			volarRápido();
+ 			System.out.println(mensaje)}
+ }
+
+ y lo mismo con teléfono:
+
+ public class TelefonoMovil extends Dispositivo implements EnviadorDeMensaje{
+ 		//En este caso el método encender lo hereda por ser un dispositivo y el mismo está en la superclase
+
+ 		@Override
+ 		public void enviarMensaje(String mensaje){
+ 			encender();
+ 			System.out.println(mensaje)}
+ }
+
+ Luego entonces solamente resta crear una Compañia que quiera hacer campaña
+
+ public class Compañia {
+ 		private ArrayList<EnviadorDeMensaje> mensajeros;
+
+ 		public Compañia(){
+ 			mensajeros = new Arraylist<>();
+ 		}
+
+ 		public void agregarMensajero(EnviadorDeMensaje mensajero){
+ 			this.mensajero.add(mensajero)
+ 		}
+
+ 		public void hacerCampaña(){
+ 			for(EnviadorDeMensaje mensajero: mensajeros)
+ 			mensajero.enviarMensaje("Compre nuestro producto")
+ 		}
+}
+
+Por último desde un main se puede instanciar mensajeros, del tipo PalomaMensajera o TeléfonoMovil, ya que no se puede crear instancias de "EnviadoreDeMensajes", y se le pedirá enviarMensaje() mediante el método hacerCampaña() a cada uno independientemente de cómo lo haga y de qué tipo de enviador de mensaje sea (paloma o teléfono). Aqui vemos el increible poder de estas herramientas donde una campaña solo crea una colección de EnviadoresDeMensajes (que no son instanciables) pero mediante la herencia, polimorfismo, abstacción de clases, y upcasting (al recibir una paloma o un teléfono y guardarlo como EnviadorDeMensajes en la colección), no tiene que saber qué tendrá adentro en esa colleción (que manejará sólo como enviadores de mensajes), ni cómo harán para enviar un mensaje.
+Podemos luego de tener establecido todo este código, crear un nuevo mensajero o clase -por ejemplo: Persona-, que implemente a la interfaz EnviadorDeMensaje, lo que nos obligará a que tenga un método enviarMensaje() en esta nueva clase -ya que la interfaz tiene el mismo método abstacto lo que obliga la sobreescritura- donde, adentro del mismo, podrá tener cualqueir tipo de implementación. Luego solo con instanciar a esa "Persona" podemos guardarla en la colección como un "EnviadorDeMensaje" y pedirle que envíe un mensaje mediante el método enviarMensaje(). Sin tocar ni una linea de la clase Campaña, podemos guardar una persona en su colección y manipularla de igual manera que una Paloma o un Teléfono. Esto nos demuestra una gran reutilización y gran robustez del código. 

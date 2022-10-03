@@ -1,0 +1,153 @@
+POLIMORFISMO POR HERENCIA
+
+Llamado polimorfismo a secas, es un mecanismo que nos permite enviar mensajes sintáctiamente iguales a diferentes tipos de objetos, siempre y cuando pertenezcan a la misma jerarquía, cada uno con su propio comportamiento y resultado.
+
+Por ejemplo podemos dar el mensaje "encender" a nuestra flota de vehículos, y según el tipo de vehículo pueden responder de formas muy diferentes. No van a encender de la misma forma un avión o una moto. Ambos comprenden el mismo mensaje (sin usar el instanceof) pero van a reponder de manera diferete dependiendo de su propia naturaleza.
+
+Veamos un ejémplo más específico:
+
+                      ┌───────────────────────┐
+                      │    Vehículo           │
+                      ├───────────────────────┤
+                      │  +encender(): void    │
+                      └───────────────────────┘
+                            ^          ^
+                    ┌───────┘          └──────┐
+                    │                         │
+   ┌────────────────┴─────────┐       ┌───────┴──────────────────────────┐
+   │   BicicletaEléctrica     │       │    Avión                         │
+   ├──────────────────────────┤       ├──────────────────────────────────┤
+   │ +prenderPantalla(): void │       │ +calentarCarburador(): void      │
+   │ +energizarMotor(): void  │       │ +regularMezcaCombustible(): void │
+   └──────────────────────────┘       │ +inyectarCombustible(): void     │
+                                      │ +masPasos():void                 │
+                                      └──────────────────────────────────┘
+
+Podemos ver en este diagráma UML la jerarquía de nuestro vehículos, donde todos tendrán la capacidad de "encender()". Cada subclase tendrá sus métodos propios para encenderse, muy distintos entre si, pero ambos aceptarán el mismo mensaje.
+
+Mediante este diagrama podemos definir el siguiente código para la superclase Vehículo:
+
+
+En este caso tendremos por ejemplo una SUPERCLASE vehículo
+
+		public class Vehículo {
+			public void encender(){
+				System.out.println("Vehículo encendido...")
+			}
+		}
+
+Y supongamos también que tenemos las siguentes sublcases que extienden a vehículo:
+
+		public class Avión extends Vehículo{
+			public void calentarCarburador() { System.out.println("Calfeaccionando carburador...") }
+			public void regularMezcaCombustible() { System.out.println("Regulando Mezcla...") }
+			public void inyectarCombustible() { System.out.println("Inyectando combustible...") }
+			public void masPasos() { System.out.println("Finalizando el encendido...") }
+		}
+
+		public class BicicletaEléctrica extends Vehículo{
+			public void prenderPantalla() { System.out.println("Prendiendo pantalla...") }
+			public void energizarMotor() { System.out.println("Energizando motor...") }
+		}
+
+
+Por útimo podemos escrbir el main de la siguiente manera:
+
+		public class Principal{
+			
+			public static void main(String[] args){
+				probar(new Vehículo())
+			}
+
+			public static void probar(Vehículo v){
+				v.encender();
+			}
+		}
+
+Al ejecutar este main, como Vehículo no es abstacto, tendremos un cartel que nos diga "Enciendiendo vehículo...", lo mismo si reemplazamos 
+		probar(new Vehículo())
+por
+		probar(new Avión())
+		probar(new BicicletaEléctrica())
+
+Ahora gracias al downcasting, podemos castear el avión y la bicicleta como vehículos y encenderlos a ambos obteniendo 2 veces en consola el mensaje "Encendiendo vehículo". Pero tendremos que sobreescribir o redefinir el comportamiento de cada uno ya que el encendido tanto de una bicicleta y un avión son extremademente distintos. Esto se hace mediante un nuevo método "encender()" en cada una de las subclases avión y moto que sobreescriba al método de la superclase (esto obviamente se puede hacer solo mediante la herencia). Veamos las sobreescrituras de los métodos:
+
+		public class BicicletaEléctrica extends Vehículo {
+			public void prenderPantalla() { System.out.println("Prendiendo pantalla...") }
+			public void energizarMotor() { System.out.println("Energizando motor...") }
+
+			@Override //sirve como anotación y deja en evidencia que está sobreescribiendo el método encender de la superclase
+			public void encender(){
+				prenderPantalla();
+				energizarMotor();
+			}
+		}
+
+		public class Avión extends Vehículo{
+			public void calentarCarburador()...
+			...
+
+			@Override
+			public void encender(){
+				calentarCarburador();
+				regularMezcaCombustible();
+				inyectarCombustible();
+				masPasos();
+			}
+		}
+
+Ahora cuando volvemos a ejecutar el main con las lineas 
+
+		public static void main(String[] args){
+			probar(new Avión())
+			probar(new BicicletaEléctrica())
+		}
+
+ambas subclases tienen el override del método encender(); por lo cual obtendremos los siguientes mensajes en consola:
+
+		Calfeaccionando carburador...
+		Regulando Mezcla...
+		Inyectando combustible...
+		Finalizando el encendido...
+
+		Prendiendo pantalla...
+		Energizando motor...
+
+Entonces para resumir tenemos un avión y una bicicleta, que se generalizan utilizando el upcasting y llegan como "vehículos" al método "probar()" del main, dentro del cual se le pide que encienda mediante un método "encender()" de la superclase vehículo, pero a la hora de hacerlo JAVA sabe qué es lo que hay adentro de esa generalización "vehículo" y utiliza el método sobreescrito "encender()" dentro de la subclase correspondiente al típo de vehículo que hay dentro de la generalización.
+Por fin entonces logramos que ambas sublcases completamente distintas ejecuten su encendido escuchando el mismo mensaje "encender", pero realizando un comportamiento completamente distinto gracias a la sobreescritura del método mediante el polimorfismo por herencia.
+Entonces una superclase, en tiempo de ejecución, antes de ejecutar un método intenta delegarlo a métodos con el mismo nombre que lo sobreescriban en las sublcases correspondientes.
+
+Todo esto nos ahorra hacer lo siguiente por ejemplo:
+
+		if(v instanceof Avión){
+			((Avión) v).encender()
+		} else...
+
+si usamos el downcasting para poder usar por ejemplo una sola colección para agrupar todos nuestros vehículos y luego queremos encender algún vehículo en especial, deberíamos preguntarnos antes de delegar el método encender qué tipo de instancia es cada vehículo que pasemos y luego castearlo como un avión, bicicleta, o cualqueir otro tipo de vehículo que tengamos en la flota (un if para cada tipo de vehículo) y luego usar el método encender de esa subclase mediante el vehículo casteado.
+
+ES MUY IMPORTANTE acordarse de que la superclase Vehículo DEBE TENER un método encender() para poder delegarlo a las sublcases correspondientes. Si eliminamos o comentamos el método encender de la linea 34, los @Override no funcionan por lo que tendremos errores en compilación y los métodos encender() de cada sublcase serían métodos independientes que no están relacionados de ninguna manera con su superclase, y también tendremos un error de compilación cuando le pidamos a un vehículo -cualquier tipo- que encienda -dentro del método probar de la linea 62-, ya que ese método ya no existe.
+Lo que podríamos hacer y veremos más adelante, es definir al método encender() de vehículo -lógica que nunca se va a ejecutar- de manera abstacta para no confundirse. Lo mismo que la clase vehículo.
+
+Un ejemplo de polimorfismo que hemos usado muchas veces es el "toString". Hemos visto que cuando queremos hacer un println de un objeto -println(v)-, la consola nos devuelve la referencia del objeto -dato inutil- y no los valores de los atributos del mismo -dato que queremos-, y esto es porque no hemos hecho un método "@Override toString" dentro de la clase que define la instancia del objeto que hace referencia. Si vemos el método sobrecargado de println cuando el mismo recibe un Object (superclase de nuestra clase vehículo) veremos los iguiente:
+
+		public void println(Object x){
+			String s = String.valueOf(x);
+			if(getClass() == PrintStream.class){
+				writeln(String.valueOf(s));
+			...
+		}
+
+Vemo que usa el método valueOf del String, y si nos metemos dentro del método valueOf vemos lo siguiente:
+
+		public static String valueOf(Object obj){
+			return(obj == null) ? "null" : obj.toString();
+		}
+
+Y aquí vemos que se recibe un objeto y mediante el operador ternario se intenta devolverlo como string mediante el método toString() de la superclase Object, que al ejecutarse intenta delegarlo a un método con el mismo nombre en la subclase. Por lo tanto si nosotros escribimos ese método @Override toString, mediante el polimorfismo, la superclase Object lo delega al método con el mismo nombre de la subclase.
+Si nunca escribimos el método @Override toString en la subclase, se ejecutará el método toString de la superclase Obect que es el siguiente:
+
+		public String toString(){
+			return getClass().getName() + "@" + Integer.toHexString(hashCode());
+		}
+
+Que como vemos es el nombre de la clase/paquete seguido por un @ y la referencia del objeto que siempre nos quejamos porque no nos sirve para nada, ya que lo que queríamos son los valores de los atributos de ese objeto.

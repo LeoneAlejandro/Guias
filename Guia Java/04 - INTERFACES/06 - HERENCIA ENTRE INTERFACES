@@ -1,0 +1,68 @@
+HERENCIA ENTRE INTERFACES
+
+Supongamos el siguiente modelo donde tenemos 2 interfaces Vehículo y Recargable, donde se implementan en otras 3 clases. Podemos ver que este modelo es un poco molesto ya que en todas las clases debemos implementar estas 2 interfaces, lo que es un poco engorroso y hasta puede ser confuso en código:
+
+
+                 ┌─────────────────────┐         ┌─────────────────────┐
+                 │  BiciElectrica      │         │ MonopatinEléctrico  │
+                 ├─────────────────────┤\       /├─────────────────────┤
+                 │ +recargar(): void   │ \     / │ +recargar(): void   │
+                 │ +acelerar(): void   │  \   /  │ +acelerar(): void   │
+                 └─────────┬───────────┘   \ /   └──────────┬──────────┘
+                           |                X               |
+                           |               / \              |
+                           v              /   \             v
+                  ┌───────────────────┐  /     \  ┌───────────────────┐
+                  │   <<interface>>   │<         >│  <<interface>>    │
+                  │     Vehículo      │           │    Recargable     │
+                  ├───────────────────┤           ├───────────────────┤
+                  │ +acelerar():void  │           │+recargar(): void  │
+                  └───────────────────┘           └───────────────────┘
+               		  	 		        ^	  	             ^
+                    				       \                /    
+                    				        \     			   /
+                    				         \		    	  /
+                                ┌─────────────────────┐
+                                │ AutoEléctrico       │
+                                ├─────────────────────┤
+                                │ +recargar(): void   │
+                                │ +acelerar(): void   │
+                                └─────────────────────┘
+
+Para simplificar un poco esta herencia múltiple de tres subclases y buscar la manera de que implementen solo una interface podemos usar la herencia entre interfaces. Como hemos dicho antes, la herencia múltiple entre CLASES está prohibida en JAVA, pero no así la herencia múltiple entre INTERFACES. Vamos a refactorear este modelo, y como veremos, la herencia múltiple entre interfaces es una herencia, no una implementación múltiple, por eso NO lleva lineas punteadas, tal como es una herencia entre clases. Ahora vemos una nueva interface VehículoRecarbale que hereda los métodos de Vehículo y de Recargable. Esta nueva interfaz va a ser implementada por las clases tal como antes, obligando a cumplir el contrato de sobreescritura de lo métodos heredados. La nueva refactorización quedaría de la siguiente manera:
+
+
+
+             ┌───────────────────┐               ┌───────────────────┐
+             │   <<interface>>   │               │  <<interface>>    │
+             │     Vehículo      │               │    Recargable     │
+             ├───────────────────┤               ├───────────────────┤
+             │ +acelerar():void  │               │+recargar(): void  │
+             └───────────────────┘               └───────────────────┘
+                       ▲                                    ▲
+                       │                                    │
+                       │      ┌─────────────────────┐       │
+                       │      │    <<interface>>    │       │
+                       └──────┤ VehículoRecargable  ├───────┘
+                              ├─────────────────────┤
+                              └─────────────────────┘
+                              ^	    		^           ^
+                             / 		     	|			       \
+                            /  			    |			        \
+                           /   			    |     			   \
+    ┌─────────────────────┐  ┌─────────────────────┐   ┌─────────────────────┐
+    │  BiciElectrica      │  │  AutoEléctrico      │   │ MonopatinEléctrico  │
+    ├─────────────────────┤  ├─────────────────────┤   ├─────────────────────┤
+    │ +recargar(): void   │  │ +recargar(): void   │   │ +recargar(): void   │
+    │ +acelerar(): void   │  │ +acelerar(): void   │   │ +acelerar(): void   │
+    └─────────────────────┘  └─────────────────────┘   └─────────────────────┘
+
+
+Ahora tenemos una jerarquía mucho más sencilla, con implementaciones más sencillas gracias a la herencia entre interfaces. Tenemos la implementación de una sola interfaz en una clase, pero reaprovechando código, logica y contratos que provengan de otras interfaces.
+Hay que volver a recordar y aclara que esto es una HERENCIA entre interfaces, por lo que la interfaz VehículoRecargable EXTIENDE (extends) a las otras interfaces, por lo que nos quedaría de la siguiente manera:
+
+	public interface VehículoRecargable extends Vehículo, Recargable{
+	}
+
+Y en este caso queda vacía ya que hereda los métodos de las interfaces que extiende.
+Ahora tenemos un nuevo tipo de dato "VehículoRecargable", y tanto la bici, auto o monopatín SON vehículos recarbales. Esto nos permite ahora, mediante el upcasting, ver a estas tres clases como VehículosRecargables, y agruparlos en una nueva colección de éste tipo de dato para manejarlos a todos juntos como ya vimos en unidades anteriores. Antes éste no era el caso ya que podíamos tener vehículos por un lado y recargables por el otro, pero ahora podemos ser más específicos en nuestras colecciones, y agrupar todos los VEHÍCULOS que además sean RECARGABLEs en la nueva colección.

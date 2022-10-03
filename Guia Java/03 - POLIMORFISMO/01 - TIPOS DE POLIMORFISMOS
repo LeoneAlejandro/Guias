@@ -1,0 +1,67 @@
+POLIMORFISMO
+
+Es el pilar fundamental del paradigma orientado a objetos. Cuando decimos "polimorfismo" a secas hacemos referencia al polimorfismo por herencia que es uno de los más usados y más potentes tipos de polimorifmos, pero hay 4 tipos:
+
+                                          ┌───────────────┐
+                                      ┌───┤POR SOBRECARGA │
+                        ┌──────────┐  │   └───────────────┘
+                   ┌────┤ AD-HOC   ├──┤
+                   │    └──────────┘  │   ┌───────────────┐
+                   │                  └───┤ POR COERCIÓN  │
+  ┌──────────────┐ │                      └───────────────┘
+  │ POLIMORFISMO ├─┤
+  └──────────────┘ │                      ┌───────────────┐
+                   │                   ┌──┤ PARAMÉTRICO   │
+                   │    ┌──────────┐   │  └───────────────┘
+                   └────┤UNIVERSAL ├───┤
+                        └──────────┘   │  ┌───────────────┐
+                                       └──┤ POR HERENCIA  │
+                                          └───────────────┘
+
+La primera descripción o diferencia son los adhoc (para un momento o uso) y los universales, que a su vez están dividios en dos tipos cada uno.
+
+S͟O͟B͟R͟E͟C͟A͟R͟G͟A͟:
+
+Un polimorfismo por sobrecarga es lo que conocemos como por "sobrecarga" a secas y lo hemos usado mucho en, por ejemplo, sobrecarga de constructores o métodos donde éstas son simplemente funciones que pueden o no aceptar parámetros por ejemplo:
+
+	public class Robot {
+		public void saludar(String nombre){
+			System.out.println("Hola " + nombre);
+		}
+		public void saludar(){
+			System.out.println("Hola extraño");
+		}
+	}
+
+Esta sobrecarga como ya vimos hace mucho tiempo es un tipo de polimorfismo.
+
+C͟O͟E͟R͟C͟I͟Ó͟N͟:
+
+La coerción es la acción mediante la cual se ejerce presión sobre algo para condicionar su comportamiento. Este tipo de polimorfismo también lo hemos visto, veamos un ejemplo:
+
+	public class Triplicado {
+		public double triplicar(double num){
+			return 3 * num;
+		}
+	}
+
+En este caso tenemos un método que acepta un double y lo devuelve mutiplicado por 3 y podemos forzar su comportamiento de la siguiente manera:
+
+	Triplicador t = new Triplicador();
+	double num1 = 2.5;
+	int num2 = 5
+	System.out.println(t.triplicar(num1));	// 7,5
+	System.out.println(t.triplicar(num2));	// 15,0
+
+En estecaso no hace falta sobrecargar el método para que reciba un entero, sino que por mediante el polimorfismo por coerción, podemos pasarle un int y forzarlo a que nos devuelva un double.
+
+P͟A͟R͟A͟M͟É͟T͟R͟I͟C͟O͟:
+
+Es el primer tipo de polimorfismo universal y es uno de los más potentes ya que nos permite un gran desacople entre clases. Un ejemplo muy claro son los tipos de ArrayList que venimos usando. JAVA tiene una sola clase de tipo Arraylist<E> en su API, y por mediante polimorfismo paramétrico nosotros podemos definir a ese tipo de ArrayList para que guarde no solo distintos tipos de datos establecidos, sino nuestros propios tipos de datos creados en el momento como los ejemplis vistos de ArrayList<Vehículo>, o de autos, o de motos, etc, siempre adaptándose al tipo de datos que le pasemos por parámetro. Entonces gracias al polimorfismo paramétrico tenemos una sola clase de arraylist que ve a los tipos de datos con los que está trabajando de forma genérica. Esto se va a ver más en 'GENERICS' más adelante.
+
+
+H͟E͟R͟E͟N͟C͟I͟A͟:
+
+Llamado polimorfismo a secas, es un mecanismo que nos permite enviar mensajes sintáctiamente iguales a diferentes tipos de objetos, siempre y cuando pertenezcan a la misma jerarquía, cada uno con su propio comportamiento y resultado.
+
+Es uno de los mecanismos más usados en el POO, y lo podemos ver con más detalle en "02 - POLIMORFISMO POR HERENCIA".

@@ -1,0 +1,48 @@
+REVIEWING THE STAGING AREA
+
+Para ver no solamente los archivos modificados, sino las lineas de código modificados tenemos que usar la linea
+
+		get diff --staged
+
+Esto nos devolverá para el caso anterior 
+
+1		$ git diff --staged
+2		diff --git a/file1.txt b/file1.txt
+3		index ce01362..eff305b 100644
+4		--- a/file1.txt
+5		+++ b/file1.txt
+6		@@ -1 +1,2 @@
+7		hello
+8		+ocean
+9		diff --git a/file3.txt b/file3.txt
+10		new file mode 100644
+11		index 0000000..ce01362
+12		--- /dev/null
+13		+++ b/file3.txt
+14		@@ -0,0 +1 @@
+15		+hello
+
+Donde nos indica, en la linea 2, que estamos comparando a/file1 vs b/file1 que hace refencia al file1 que tenemos en nuestro último commit, y el file1 que tenemos en la SA respectivamente.
+En la linea 4 y 5 vemos que los cambios realizados en el archivo viejo se indican con --- y cambios realizados en el nuevo archivo con +++.
+Luego en lina 6 tenemos un header que nos indica que partes de nuestros archivos fueron modificados, cada bloque de código modificado tendrá su header que da contexto de a que parte del código pertenece. Tenemos 2 segmentos, el primero sería "-1" que nos indica que en la linea 1, 1 lineas fueron extraídas, y en el segundo segmento "+1,2" indica que empezando de la linea 1, 2 lineas fueron agregadas, y abajo vemos la lineas 7 "hello" y la linea 8 "+ocean" que indica con el + que la linea ocean fue agregada.
+Luego tenemos desde la linea 9 otra comparación entre file 3. Las lineas 10 y 12 nos indican que es un archivo nuevo y que antes no estaba en la SA. Por esto en la linea 14 tenemos 0,0 que indican que desde la linea 0, 0 lienas fueron extarídas, y la última linea nos muestra la diferencia (una sola linea con donde se agrega hello).
+
+Para ver la diferencia entre nuestro directorio local y la SA podemos tirar el comando anterior pero sin --staged, osea:
+		git diff
+En este caso no nos muestra nada ya que habíamos agregado ambos archivos con 'git add *.txt'
+
+Visual Diff Tools:
+Para ver todas estas git diff en algun programa y visualizar los cambios más facil, primero debemos elegir el programa. En este caso vamos a ver VSCODE.
+
+		git config --global diff.tool vscode
+		git config --global difftool.vscode.cmd "code --wait --diff $LOCAL $REMOTE"
+
+Seteamos VSCODE como nuestro diff tool, y luego podemos ejecutar
+
+		git difftool
+
+Y nos traerá en VSCODE las 2 copias y las diferencias, en el caso de que no haya ninguna diferencia entre el dir local y la SA, el comando no hará nada. También podemos consultar las diffs entre la SA y el último commit con:
+
+		git difftool --staged
+
+Hace lo mismo, nos pregunta si queremos abrir VSCODE y nos muestra las diferencias. Esto lo hace ARCHIVO POR ARCHIVO. Si tenemos 20 archivos distintos cambiados nos preguntará 20 veces y nos abrirá el VSCODE 20 veces mostrándonos todos los cambios.

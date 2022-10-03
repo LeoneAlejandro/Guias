@@ -1,0 +1,5 @@
+CREANDO SNAPSHOTS
+
+Crear un nuevo repositorio: desde la carpeta donde querramos crear el repo, podemos dirigirnos con el Git Bash o directamente hacer click derecho y abrir con GB y tipeamos:
+		git init 
+una vez creado podemos tipear "ls" para ver todos los archivos en el repo, o "ls -a" para mosrar además también los archivos ocultos como el subdirectorio ".git".

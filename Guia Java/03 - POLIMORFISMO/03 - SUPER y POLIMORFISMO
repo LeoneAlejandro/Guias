@@ -1,0 +1,78 @@
+SUPER y POLIMORFISMO
+
+Como hemos visto en herencia, los constructores de las superclases nunca se heredan, por lo que los constructores de las sublcases deben primero llamar al constructor de la superclase mediante el método super().
+Ahora veremos una nueva aparición de esta palabra en un contexto diferente que nos va a permitir desde un método ya sobreescrito llamar a la misma versión de ese método pero de la superclase, para evitar ambiguedades.
+
+Veamos el siguiente modelo:
+			 ┌────────────────────────────────────────────────────┐
+			 │                     Taller                         │
+			 ├────────────────────────────────────────────────────┤
+			 │ +cantServiciosPosibles(ArrayList<Bicicleta>): int  │
+			 └───────────────────────┬────────────────────────────┘
+			                         │
+			                         │  tiene
+			                         ▼
+			                ┌──────────────────┐
+			                │     Bicicleta    │
+			                ├──────────────────┤
+			                │ -marca: String   │
+			                │ -rodado: String  │
+			                │ -cantKms: int    │
+			                └──────────────────┘
+			                         ^
+			                         │  es una
+			               ┌─────────┴──────────┐
+			               │ BicicletaElectrica │
+			               ├────────────────────┤
+			               │ -potencia: int     │
+			               └────────────────────┘
+
+Supongamos ahora que el método cantServiciosPosibles es sencillamente un contador que recorrerá la ArrayList de bicicletas y se fijará en el caso de las bicicletas, si tienen menos de 50km, y en el caso de las bicicletas eléctricas, si tienen más de 400kw de potencia.
+
+Para estoy tendremos un contador, como dijimos, que hará un "contador++" si las bicicletas cumplen con el requisito preestablecido, y siguiendo la regla "tell dont askt", en vez de chequear si cumple con el requisito, se lo vamos a derivar para que lo haga la bicicleta, por lo tanto nos quedaría así:
+
+		public int cantServiciosPosibles(ArrayList<Bicicleta> bicis){
+			int contador = 0;
+			for(Bicicleta bici: bicis){
+				if(bici.cumpleRequisitos()){
+					contador++;
+				}
+			}
+		}
+
+Por lo que ahora tendremos que crear este método en la superclase bicicleta
+
+	public class Bicicleta{
+		private final int CANT_KMS_MAX = 50;
+		private int cantKms;
+		...
+
+		public boolean cumpleRequisitos(){
+			return this.cantKms < CANT_KMS_MAX;
+		}
+	}
+
+Pero ahora tenemos un problema, al tener herencia, si tenemos bicicletas ELÉCTRICAS con menos de 50 kilómetros pero también con más de 400kw, el contador las sumará, ya que al no encontrar el método cumpleRequisitos() en la sublcase BicicletaEléctrica, se ejecutará el método cumpleRequisitos() de la superclase Bicicleta que solo chequea el requisito de los KMs, por lo que tendremos que definir ese metodo también:
+
+	public class BicicletaEléctrica extends Bicicleta {
+		private final int CANT_POT_MAX = 400;
+		private int potencia;
+
+		public boolean cumpleRequisitos(){
+			return this.potencia < CANT_POT_MAX;
+		}
+	}
+
+Perfecto, ahora funciona todo, pero supongamos que cambian las reglas y los requisitos establecidos para proporcionar un servicio, y ahora nos piden que además de que las bicicletas eléctricas tengan como potencia máxima de 400kms, también cumplan con el requisito de que tengan menos de 50kms. Pero, como hacemos para cumplir con ese requisito desde el método de la subclase BicicletaEléctrica si los KMs los heredamos de la superclase Bicicleta, y además, el atributo cantKms es privado  ? Podríamos setear un getKms() en la superclase y usarlo en la subclase y nuevamente compararlo con los KMs máximos permitidos, pero estaríamos repitiendo lógica y haciendo al código más dificil de mantener, ya que el día de mañana, al cambiar los requisitos, tendremos que cambiar los kilómetros máximos permitidos en varios lugares distintos del código. Deberíamos entonces reutilizar el código ya escrito, el método cumpleRequisitos de la superclase, mediante la palabra super, ya que ambos métodos tienen el mismo nombre:
+
+
+		public class BicicletaEléctrica extends Bicicleta {
+			private final int CANT_POT_MAX = 400;
+			private int potencia;
+
+			public boolean cumpleRequisitos(){
+				return this.potencia < CANT_POT_MAX && super.cumpleRequisitos();
+			}
+		}
+
+Ahora entonces hacemos referencia al método cumpleRequisitos() de la superclase Bicicleta desde el método del mismo nombre de la subclase BicicletaEléctrica y tendremos 2 boolens donde tendrán que ser ambos true para que el contador de cantServiciosPosibles sume a la bicicleta como apta para reparación.

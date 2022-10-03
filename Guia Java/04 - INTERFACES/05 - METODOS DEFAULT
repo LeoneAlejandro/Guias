@@ -1,0 +1,26 @@
+METODOS DEFAULT
+
+Nos permiten tener interfaces con métodos abstactos, pero tamibén con algunos métodos -default- que lleven una implementación por defecto y no sean sobreescritos por las clases que implementan tales intefaces. Esto nos permite lograr cambios en las implementaciones de las interfaces sin que sea tan caótico ir a buscar y modificar todas las clases que implementaron la interfaz. Es una herramienta de la que no hay que abusar porque sino estaríamos intentando hacer una pseudo herencia múltiple que nos volverá a traer el problema del rombo o diamante que ya vimos, donde una clase hereda métodos del mismo nombre de 2 o más superclases o interfaces.
+
+Veamos un ejemplo sencillo, supongamos que tenemos las clases "Persona", "Automovil" y "Reserva". A simple vista no tienen ninguna relación, pero supongamos que queremos que las 3 clases implementen una interfaz "Identificable" que obligue a que todas las clases tener un método llamado "mostrarIdentificación()". Para ello definimos la interfaz con su método abstacto, luego añadimos la cláusula "implements Identificable" en cada una de las clases, que nos obligará a definir un método del nombre "mostrarIdentificación()" en cada clase. Hasta ahora no hay ningún problema, pero supongamos que más adelante necesitamos cambiar la interfaz o agregar un método; esto nos obliga a ir a cada una de las clases que la implementan y agregar éste nuevo método -obligatoriamente abstacto- en cada una de ellas. 
+Para éste tipo de casos muy puntuales se inventó este mecanismo de métodos "default". Al cambiar el típo de método de "abstract" a "default" en una interfaz, el mismo deberá llevar obligatoriamente una implementación, aunque pueda ser sobreescrito o no en una clase que la implemente al igual que un método heredado por una superclase (@Override).
+
+Esto puede traer de nuevo el problema del rombo o diamante donde una clase hereda un método con el mismo nombre por 2 o más interfaces, veamos el siguiente ejemplo:
+Supongamos que tenemos una Persona, que puede implementar tanto la interfaz Estudiante como Empleado y ambas tienen métodos realizarTarea() con diferentes implementaciones. Al definir la clase persona estamos obligados a, o sobreescribir los métodos heredados con uno propio del mismo nombre, o elegir cual de estos dos métodos con el mismo nombre queremos heredar, y lo hacemos de la siguiente manera:
+Podemos, como dijimos, sobreescribir el método como o venimos haciendo:
+
+	public class Persona implements Empleado, Estudiante {
+		@Override
+		public void realziarTarea(){
+			System.out.println("Realizando tarea como empleado y estudiante")
+		}
+	}
+
+O elegir cual de los métodos de las distintas interfaces heredamos con la palabra super:
+
+	public class Persona implements Empleado, Estudiante {
+		@Override
+		public void realziarTarea(){
+			Empleado.super.realizarTarea()
+		}
+	}

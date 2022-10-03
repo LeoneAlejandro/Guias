@@ -1,0 +1,28 @@
+UNSTAGING FILES
+
+Si hicimos un cambio en un archivo local, luego hicimos un "git add file1.txt", como ya vimos, veremos que si ejecutamos un "git status -s", nos devolverá una linea
+
+		M file1.txt
+		A file2.txt
+
+Con M en verde como ya vimos, ya que el cambio está en el dir local y también está en la SA. Como hacemos para deshacer ese cambio? Supongamos que no queremos commitir la nueva versión con ese cambio porque nos arrepentimos, para este caso tenemos que ejecutar la linea
+
+		git restore --staged file1.txt
+
+Ahora no tendremos más la M en verde, la tendremos en rojo. El comando restore toma una copia del envirorment siguiente, cual es el envirorment siguiente de la SA ? el último commit, entonces en este caso toma el file1.txt del último commit y reemplaza al file1 de la SA con cambios indeseados. En este caso, la M cambia de verde a rojo ya que el file1 luego del restore es el del último commit, que es distinto al de nuestro dir local.
+Que sucede cuando hacemos un:
+
+		git restore --staged file2.txt 
+
+De nuevo, el comando toma al file2 del siguiente envirorment, que sería el último commit y reemplaza al file2 del SA, pero como vemos arriba, indicado con "A", file2 no existe en nuestro commit ya que es un archivo nuevo. Entonces en este caso, como file2 no existe en el commit, tampoco existirá en el SA, entonces lo borra y si tiramos git status de nuevo nos devolverá "??" en rojo, que significa que hay un archivo en el dir local nuevo que no existe en la SA.
+Lo mismo podemos hacer otra vez. Si hicimos el primer restore y ahora tenemos el file1 con una "M" roja, que 
+significa que nuestro file1 es distinto al del SA, y ahora ejecutamos de nuevo un resotre sin el --staged (queremos cambiar el file1 del dir local, no el de la SA, por eso es sin el --staged):
+
+		git restore file1.txt
+
+se toma el file1 del siguiente envirorment al dir local, que es el SA, y reemplaza al file1 local nuestro. Luego al tirar de nuevo status no veremos ningún cambio ya que en el primer restore tomamos el file1 del commit y lo pegamos en el SA, y con el segundo restore copiamos el mismo file1 y lo pegamos en el dir local.
+En el caso de file2 no podemos hacer un restore para eliminarlo del dir local, tenemos que hacer un:
+
+			git clean -fd
+
+que -f significa forzar y -d remover directorios compeltos. Si tiramos un nuevo git status -s no veremos nada.

@@ -1,0 +1,24 @@
+ABSTRACT
+
+La abstacción de una clase es la prohibición a la creación de una instancia de esa clase. Para que sirve esto?
+Tomemos el ejemplo de concecionaria con el que veníamos trabajando, podíamos agrear autos o motos a una colección de la siguiente manera:
+
+		c.agregarVehículo(new Auto());
+		c.agregarVehículo(new Moto());
+
+y como siempre, los castabamos como vehículos antes de guardarlos. Pero lo que también podemos hacer es guardar un vehículo en la colección:
+
+		c.agregarVehículo(new Vehículo());
+
+y esto conceptualmente está mal, porque la concecionara no tiene vehículos en general. Podríamos imaginar una lista de autos y motos en venta de una concecionaria, pero se nos va a dificultar imaginar un "Vehículo" en venta.
+Las clases abstractas sirven entonces para diferenciar una clase -usualmente una superclase- de otras clases derivadas y prohibir que se puedan instanciar.
+No queremos tener una instancia "vehículo" pero si instancias de "auto" y "moto" por lo cual denotamos como "abstact" solo la superclase.
+En el diagrama UML se denota una clase como abstacta cambiando el estilo a "itálico" y para definir una clase como abstacta en JAVA se le agrega "abstact" antes o después del modificador de la clase (public, private, etc).
+Podríamos preguntarnos, para que tienen constructores las clases abstactas si nunca se pueden instanciar o construir? Los constructores siguen siendo importantes para que las sublcases derivadas puedan construirse a partir de los constructores más altos en la jerarquía.
+
+Haber hecho la clase vehículo abstracta no nos va a impedir de todas maneras trabajar con variables o con parámetros de tipo vehículo, por lo que podemos seguir trabajando igual que antes con autos o motos casteados como vehículos. Lo único que nos cambia es asegurarnos que dentro de una variable "vehículo v" no haya un vehículo, sino una moto o auto casteada como vehículo.
+
+┌──────────────────────────────────────────────┐
+│ NO TODAS LAS SUPERCLASES DEBEN SER ABSTACTAS │
+└──────────────────────────────────────────────┘
+No equivocarse con el concepto de abstacción, no es necesario que todas las superclases sean abstractas. En este caso vehículo se transformó en una clase abstacta porque un vehículo es abstacto, no es algo concreto, pero esto no significa que no pueda haber superclases concretas. De hecho la superclase más superclase de todas, como ya vimos OBJECT, es una clase concreta y en cualquier momento podemos instanciar un new Object(). Todo esto depende del modelo con el que estamos trabajando.

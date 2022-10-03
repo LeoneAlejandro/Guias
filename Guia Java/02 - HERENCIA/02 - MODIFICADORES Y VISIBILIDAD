@@ -1,0 +1,22 @@
+MODIFICADORES Y VISIBILIDAD
+
+Cuando explicamos herencia dijimos que en JAVA van a heredarse de una SUPERCLASE, todos los miembros NO privados de esa superclase. Por que decimos los NO privados y no solo "publicos"? Porque los atríbutos no son solo publicos o privados, sino que tamibén podemos definirlos como PROTECTED o sin definirlos y dejarlos con el modificador "de paquete". Este nuevo modificador PROTECTED suele ir de la mano con herencia, y a continuación veremos el reach de cada uno de los modificadores que hemos visto:
+
+	┌──────────────────────┬─────────────┬─────────────┬───────────────┬───────────────┬──────────────┬─────────────┐
+	│ Modificador en Java  │ Modificador │ Misma Clase │  Sublcase en  │   Clase en    │  Sublcase en │  Clase en   │
+	│                      │   en UML    │             │ mismo paquete │ mismo paquete │ otro paquete │ otro paquete│
+	├──────────────────────┼─────────────┼─────────────┼───────────────┼───────────────┼──────────────┼─────────────┤
+	│       public         │      +      │      √      │       √       │       √       │       √      │      √      │
+	│                      │             │             │               │               │              │             │
+	│      protected       │      #      │      √      │       √       │       √       │       √      │      X      │
+	│                      │             │             │               │               │              │             │
+	│  (sin modificador)   │             │      √      │       √       │       √       │       X      │      X      │
+	│                      │             │             │               │               │              │             │
+	│       private        │      -      │      √      │       X       │       X       │       X      │      X      │
+	└──────────────────────┴─────────────┴─────────────┴───────────────┴───────────────┴──────────────┴─────────────┘
+
+El modificador protegido tiene visibilidad igual a la de paquete, pero agregando también el reach a una sublcase en otro paquete. Esto hace que PROTECTED tenga un poco más de visibilidad que la "de paquete", por lo que hay que tener en cuenta que PROTECTED no nos garantiza el encapsulamiento. 
+
+Para poder garantizar el encapsulamiento usando PROTECTED tendremos entonces que crear un nuevo paquete e incluir en este a la superclase y subclases que queremos que se encapsulen. De esta manera podemos acceder a atributos y métodos PROTECTED de la SUPERCLASE desde las SUBCLASES pero no así desde todo código que esté afuera de este paqute, como por ejemplo el main.
+Pero, deberían las sublcases poder acceder a los atributos de la SUPERCLASE ? Conceptualmente entrar al atributo marca del vehículo desde la sublcase auto está mal y puede romper la integridad del modelo. Por ejemplo si desde auto entramos al atributo marca, podemos setearle cualquier valor sin pasar por la validación del método "setMarca" que podríamos definir en la superclase vehículo. En estos casos es recomendable que los atributos sigan siendo privados y consultarlos y modificarlos por getters y setters.
+Por esto, el modificador protected suele usarse solo en métodos que queremos que accedan las subclases pero no cualquier clase fuera del paquete que definimos.

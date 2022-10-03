@@ -1,0 +1,66 @@
+TIPOS DE EXCEPCIONES
+
+Antes de enumerar cuales son los tipos de excepciones tenemos que saber que hay una superclase de la cual derivan todos los errores y excepciones en el lenguaje JAVA. Esta superclase es la llamada "TROWABLE". Solo las instancias de esta clase (o de sus subclases) pueden ser lanzadaos por la JVM o manualmente con la sentencia "trow".
+
+             ┌──────────┐
+             │  Object  │
+             └──────────┘
+                   ^
+                   │
+  ┌────────────────┴──────────────────────┐
+  │   Throwable                           │
+  ├───────────────────────────────────────┤
+  │ - message: String                     │
+  ├───────────────────────────────────────┤
+  │ + Throwable()                         ├────┐
+  │ + Throwable(String)                   │    │
+  │ + Throwable(Throwable)                │    │-cause
+  │ + Throwable(String,Trhowable)trica    │    │
+  │ + getCause(): Throwable               │    │
+  │ + getMessage(): Stringecargar(): void │◄───┘
+  │ + printStackTrace():+voiderar(): void │  1
+  │ + printStackTrace(PrintStream): void  │
+  │ + printStackTrace(PrintWriter): void  │
+  └───────────────────────────────────────┘
+     			 ^				         	     ^
+  	  	  /         				   	  	\
+    ┌───────────┐              ┌──────────┐
+    │ Exception │              │  Error   │
+    └───────────┘              └──────────┘
+
+
+Como vemos en el modelo, todo objeto arrojado deberá tener un atributo mensaje que detalla el problema. Si no hay mensaje, su valor será null. Y también tendremos un seguro atributo "cause" que es la causa por la cual saltó la excepción. Opcionalmente, se puede hacer referencia a otra causa (throwable), para permitir un encadenamiento de excepciones que describa más y mejor el problema, o para encapsular ciertos detalles de implementación ya que si lanzamos la verdadera causa del problema, podemos llegar a mostrar ciertos detalles internos del sistema que quizás no querramos exponer. Por esta segunda causa muchas veces se suele capturar una excepción y relanzarla bajo otro nombre para ocultar detalles de implementación para que no los vea el usuario. 
+Al tener estos dos atributos vamos a tener luego dos métodos getters para los mismos, y también podremos ver los constructores sobrecargados de la clase Throwable. Por convención Throwable y sus sublcases tienen dos constructores, uno que no toma parámetros y otro con uno de tipo String que representa un mensaje detalaldo. Las subclases que probablemente tengan una causa asociada deberían tener dos constructores más; uno que tome un Throwable (la causa) y otro que tome un String(el mensaje detalaldo) y un Throwable (la causa).
+Por último tenemos el metdo printStackTrace sobrecargado 3 veces, que básicamente nos permite mostrar como quedó la pila o stack de llamados a los métodos de nuestro programa en el momento que ocurre la excepción, nomralmente para poder seguir el flujo del programa y entender como y donde se pudo haber roto nuestro programa. La sobrecarga es para poder copiar este stack trace en un archivo de texto por ejemplo, generando un log.
+
+Luego tendremos las dos subclases EXCEPTION y ERROR. De acuerdo con la documentación oficial, un ERROR indica problemas graves que nosotros como programadores no deberíamos intentar manejar. Esto podrái ser por ejemplo algún error en el hardware de nuesta pc (algo que no se pude arreglar por software). Se dan en condiciones muy anormales y es muy raro verlos.
+Por en cambio, una EXCEPTION o excepción SI representa errores lógicos de software que una aplicación hecha por nosotros debería poder manejar para lograr que nuestro programa no finalice prematuramente.
+
+Dentro de las excepciones existen +80 sublcases como por ejemplo IOException (con otras 40 subclases), SQLException (con +10 sublcases), y RuntimeException (con +80 subclases). Como vemos es imposible detallarlas todas y analizarlas, pero si cabe resaltar que la clase RuntimeException es la superclase de todas las excepciones que normalmente ocurren en el día a día. Algunos ejemplos pueden ser; dividir por 0 (ArithmeticException), cuando se intenta manejar alguna variable sin referencia (NullPointerException), o cuando nos vamos de los límites de una colección (IndexOutOfBoundsException, la cual tiene 2 subclases ArrayIndexOutOfBoundsException para arraylists y StringIndexOutOfBoundException para strings).
+
+
+C͟H͟E͟C͟K͟E͟D͟ Y͟ U͟N͟C͟H͟E͟C͟K͟E͟D͟:
+
+Esta superclase RuntimeException y sus subclases se las denomina "UNCHECKED" -al igual que ERROR y sus subclases-. Estas clases NO verificadas (unchecked exceptions) no van a ser necesarias declararlas en la cláusula throw de un método o constructor si no van a ser manejadas allí por un try...catch. Osea, el compilador no se pone tan rígido y no nos obliga a tratarlas específicamente.
+En cambio, las subclases CHECKED (IOException, SQLException, y +80 otras subclases que tienen que ver con factores externos) si deben ser declaradas explicitamente y obligatoriamente, como por ejemplo en el siguiente ejemplo: puede o no tener el try...catch, pero SI debe estar explícito el "throws IOException"
+
+  public static void mostrarTxt(int x) thorws IOException{
+    try{
+    } catch(IOException ioe){}
+  } 
+
+Ahora, cualqueir código que implemente el método mostrarTxt tendrá también que tener explicitamente declarado que puede arrojar una excepción del tipo IOException.
+
+
+F͟L͟U͟J͟O͟S͟ D͟E͟ S͟A͟L͟I͟D͟A͟:
+
+Hay que aclarar también que en JAVA tenemos dos flujos de salida diferentes. Por ejemplo en el siguiente trozo de código veremos:
+
+	catch(Exception ex){
+		System.out.println("Error: " + ex.getMessage());
+		ex.printStackTrace();
+	}
+	System.out.println("Adiós");
+
+Veremos por consola el mensaje de error, seguido por "Adiós" y luego el stacktrace. Para arreglar esto podemos forzar al stacktrace a que se imprima por el flujo de consola agregando --> ex.printStackTrace(System.out);
+El flijo de errores se hace referencia mediante System.err

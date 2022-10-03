@@ -1,0 +1,25 @@
+MULTICATCH
+
+En una cláusula TRY, que intenta ejecutar código propenso a errores, podemos tener más de un bloque catch para tener un mejor manejo y más discriminado de excepciones según su tipo.
+Esto nos pertmite tomar diferentes caminos depende del tipo de excepción que arroje nuestro código. Veamos un ejemplo sencillo donde se le pide un input al usuario y luego se divide 10 por ese input. Como vimos antes, cuando el usuario ingresaba un 0 la excepcón será de tipo "ArithmeticException", mientras que si ingresaba un String, la excepción cambiaba al tipo "InputMismatchException". Sabiendo esto podemos discriminar el tipo de excepción de la siguiente manera: 
+public static void main(String[] args) {
+	int x = 10, y, z;
+	System.out.print("Ingrese y: ");
+	try{
+		y = new Scanner(System.in).nextInt();
+		z = x / y;
+		System.out.println("Resultado: " + z);
+	}
+	catch(InputMismatchException ime){
+		System.out.println("No es un número...");
+	}
+	catch(ArithmeticException ae){
+		Sustem.out.println("No se pude dividir por 0");
+	}
+	catch(Exception ex){
+		System.out.println("Error: " + ex.getMessage());
+		ex.printStackTrace(System.out);
+	}
+}
+
+tener en cuenta que el catch más general de todos queda siempre para el final, sino nunca se llega a agarrar los tipos específicos de excepciones. Ahora si de esta manera podemos ser más específicos en qué tipo de excepción agarramos y como seguirá nuestro código luego de hacerlo.

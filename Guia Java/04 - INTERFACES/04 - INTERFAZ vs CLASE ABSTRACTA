@@ -1,0 +1,17 @@
+INTERFAZ vs CLASE ABSTRACTA
+
+El primer dilema que nos incurre cuando aprendemos INTERFAZ es, cuando usamos una INTERFAZ y cuando usamos una CLASE ABSTRACTA ? 
+Cuando tenemos 2 clases que queremos generalizar mediante una superclase o una intefaz, hay que tener en cuenta que cuando el modelo nos permite ver que hay atributos o métodos que ambas clases comparten, necesitamos obligadamente aplicar una superclase ya que las 2 sublcases heredarán todos sus atributos y métodos. Por lo tanto:
+┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Si necesitamos compartir atributos y métodos con implementación en las diferentes subclases obligadamente necesitamos clases abstactas │
+└───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+En cambio, como vimos en INTEFACES, las clases que la implementan solo podrán sobreescribir los métodos de esa interfaz y podrán "heredar" solo atributos privados y estáticos.
+Supongamos que en nuestro caso, queremos que la generalización nos obligue a otras subclases a implementar un método, en este caso podríamos elegir entre definir a esa generalización como una superclase o como una interfaz, pero como sabemos, una clase puede tener UNA SOLA superclase y MUCHAS implementaciones, por lo tanto, si podemos, deberíamos optar siempre por modelar esa generalización como una INTERFAZ dejando libre la posibilidad de que la clase que la implementa pueda heredar métodos y atributos de otra superclase.
+
+Supongamos que tenemos una clase Murciélago y queremos relacionarla con otra clase o interfaz -ya veremos que es- "Volador" para que obligue a la clase Murciélago y otra clases, a implementar un método "Volar()". Si sólo tenemos esas condiciones deberíamos definir a "Volador" como una interfaz, ya que si lo definimos como superclase, estamos perdiendo la oportunidad de que Murciélago herede métodos y atributos de una superclase "Mamíferos", por ejemplo. Aunque no podríamos definir Mamíefro como interfaz si definimos a la misma como una clase que tiene atributos y métodos que no son abstractos y que "Murciélago" heredará.
+La interfaz permite no limitarnos en el sentido de la herencia siemple con una sola superclase por cada clase, si es que se puede implementar.
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│En lo posible debemos elegir interfaces para modelar relaciones ya que no nos limita en su implementación siendo más flexible que la herencia en JAVA│
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+En el caso del murciélago podemos inferir que un muciélago ES un mamífero y comparte sus atributos (mandíbula, pelaje, etc), en cambio "Volador" parece ser más un contrato de comportamiento ya que no define de que tipo es un murciélago, sino más bien define qué es capaz de hacer. Si seguimos agrandando el modelo, podemos ver que un dron puede implementar y compartir la interfaz "volador" con un murciélago, siendo algo completamente diferente.
+Entonces cuando tenemos situaciones en la que nosotros modelamos QUE son capaces de hacer los objetos y no, más específicamente, DE QUE tipo son, conceptualmente es más candidato a ser una INTERFAZ. 

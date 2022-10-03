@@ -1,0 +1,29 @@
+STATUS
+
+Se le agrega -s a a status para ver de modo más resumido el estado de git. Al ejecutar
+
+		git status -s
+
+La respuesta en el caso donde en la SA tengamos un file1.txt y en el dir tengamos ese file1 modificado + un nuevo file2 será
+
+		M file1.txt
+		?? file2.txt
+
+La respuesta de status -s son solo 2 columnas, donde en la primera vemos una 'M' que significa que hubo una modificación en file1 con respecto al file1 que está en la SA, y en la segunda linea vemos un '??'' que significa que hay un file2 en el dir que no está en la SA. Tanto 'M' como '??' están en rojo ya tanto el cambio como el nuevo archivo no están en el SA como ya dijimos. Si después hacemos un: 
+
+		git add file1
+
+Nos devuelve lo mismo que antes pero ahora 'M' está en verde ya que el cambio está en el SA esperando ser comitido, no así '??' que sigue estando en rojo, para agregarlo al SA y verlo en verde habrá que hacer un
+
+		git add file2
+
+Ahora en la respuesta de 'status -s' vemos una 'A' en vez de '??' que significa "added" y tanto M como A están en verdes ya que los archivos actualizados ahora si se encuentran en el SA, y no están comitidos. Si antes de comitir agregamos una nueva linea en file1, ahora el 'git status -s' nos mostrará:
+
+		MM file1.txt
+		A file2.txt
+
+Donde la primer M de la primera linea estará en verde, que indica que hay un cambio realizado que está en la SA pero no comitido, y la segunda M estará en rojo ya que hay un nuevo cambio que no fue agregado a la staging area. Al hacer un nuevo
+
+		git add file1
+
+Ahora nos vuelve a mostrar una sola M en verde como antes ya que nos indica que hubo cambios en file1 que están en la SA y no fueron comitidos, igual que antes.

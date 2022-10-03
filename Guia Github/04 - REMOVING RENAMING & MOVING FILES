@@ -1,0 +1,37 @@
+REMOVING FILES:
+
+Al remover un archivo (en el directorio o mediante cmd ejecutando "rm file1.txt" por ej) y tirar "git status" nos va a aprecer en rojo y nos va a indicar que este archivo fue eliminado, y esto significa que el archivo no se encuentra en nuestro directorio local pero si en la SA. Podemos ver los archivos de la SA con el comando:
+
+		git ls-files
+
+y nos mostrará que todavía tiene file2 en la SA por lo que para eliminarlo tendremos que ejecutar:
+
+		git add file2.txt 
+
+Ahora si tiramos de nuevo ls-files solo veremos file1.txt, y si tiramos 'git status' veremos en verde "deleted: file2.txt", esto significa que el cambio del directorio local está actualizado en el SA y están en el mismo estado, y el cambio (eliminación de file2) está listo para ser comitido:
+
+		git commit -m "Removed unsued file2"
+
+Tener en cuenta entonces que para eliminar un archivo de nuestro proyecto hay que eliminarlo del dir local y también de la SA para que este archivo no esté más en el snapshot final commitido.
+También se puede eliminar un archivo directamente de nuestro dir local Y TAMBIÉN de la SA al mismo tiempo, esto se hace mediante el comando
+
+		git rm file2.txt			//igual que antes se pueden eliminar muchos archivos separados por espacio, o *.txt, etc.
+
+Y luego solo resta hacer un commit y listo.
+
+RENAMING OR MOVING FILES:
+
+Para realizar estas opreaciones podemos hacerlo desde el directorio windows o desde cmd ejecutando
+		mv file1.txt main.js
+De esta manera cambiamos el archivo de "file1.txt" a "main.js". Si luego hacemos un 'git status' de este cambio veremos 2 cambios, "file1.txt" ha sido eliminado y se agregó un nuevo archivo "main.js". Los veremos ambos en rojo ya que estos cambios no están reflejados en la SA todavía. Si luego ejecutamos
+
+		git add file1.txt
+		git add main.js
+		git status
+
+Veremos ahora si en verde la linea 'renamed:  file1.txt -> main.js', git reconoce que el archivo fue cambiado de nombre. También podemos hacer lo mismo agregando el git antes del "mv" para hacer todo en un solo movimiento:
+
+		git mv main.js file1.txt
+		git status
+
+Ahora vemos de nuevo en verde la linea 'renamed: main.js -> file1.txt', por lo que hicimos el cambio en un solo movimiento en vez de hacer un delete y un add como antes.

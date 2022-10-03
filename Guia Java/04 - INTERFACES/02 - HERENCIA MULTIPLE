@@ -1,0 +1,31 @@
+HERENCIA MULTIPLE
+
+La herencia múltiple se da cuando una subclase hereda métodos y/o atributos de 2 o más superclases. Esto trae ventajas y desventajas, una de las desventajas más conocidas por herencia múltiple es el de "rombo" o "diamante", veámoslo con el siguiente modelo:
+
+                ┌───────────────────────┐
+                │       Persona         │
+                ├───────────────────────┤
+                │-nombre: String        │
+                ├───────────────────────┤
+                │+realizarTarea(): void │
+                └───────────────────────┘
+                     ^             ^
+	                   │             │
+            ┌────────┘             └────────┐
+	          │                               │
+ ┌──────────┴───────────┐        ┌──────────┴────────────┐
+ │    Empleado          │        │    Estudiante         │
+ ├──────────────────────┤        ├───────────────────────┤
+ │+realizarTare(): void │        │+realizarTarea(): void │
+ └──────────────────────┘        └───────────────────────┘
+            ^                               ^
+            │                               │
+            └─────────┐           ┌─────────┘
+                      │           │
+                 ┌────┴───────────┴────┐
+                 │ EmpleadoEstudiante  │
+                 │                     │
+                 │                     │
+                 └─────────────────────┘
+Como vemos en este ejemplo, tenemos la superclase persona que por herencia deriva en las subclases Empleado y Estudiante, pero a su vez tenemos una nueva herencia a una subclase EmpleadoEstudiante que se heredaría de las dos anteriores. En el caso del método realizarTarea() vemos que las subclases Empleado y Estudiante sobreescriben al método de su superclase donde redefinen la forma en la cual van a realizar una tarea, pero en este caso particular tenemos una nueva subclase EmpleadoEstudiante que debería heredear el método de 2 superclases distintas, lo cual genera un problema de ambiguedad conocido como "rombo o diamante". Cual heredaríamos?
+Hay lenguajes que soportan la herencia múltiple y solucionan este problema con diferentes técnicas, pero nuestro lenguaje JAVA no soporta herencia múltiple por lo cual emula la herencia y soluciona esta ambiguedad mediante INTERFACES.

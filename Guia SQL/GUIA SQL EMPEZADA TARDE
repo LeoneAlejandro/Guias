@@ -1,0 +1,557 @@
+GUIA SQL EMPEZADA TARDE
+
+JOIN
+
+Al hacer un JOIN puede elegirse como campo de unión USING(campo) si comparten el mismo nombre en ambas tablas, de lo contrario de une como
+ON tabla1.campo = tabla2.campo
+
+Puede filtrarse la tabla usando un WHERE luego del JOIN
+Luego puede llamarse al GROUP BY para agrupar por algún campo que se repita.
+Puede agruparse por más de un campo.
+Puede llamarse a la opción WITH ROLLUP para tirar los totales de cada campo. Si se agurpa por más de una columna (CITY, STATE) el ROLLUP tira la SUM por ambos campos (total por CITY, total por STATE sumando todas las CITYs de ese STATE)
+Luego de aguparse se puede volver a filtrar usando HAVING
+
+ORDER BY es lo último que se llama
+
+Las tablas pueden referirse con un alias al momento de llamarlas en el FROM
+FROM tabla1 t1
+JOIN tabla2 t2
+	ON t1.campo = t2.campo
+
+SUBQUERYS CORRELACIONADAS
+Se puede terner referencias a tablas externas haciendo JOINs, pero se puede filtrar una tabla por usando otras haciendo una subqueries correlacionadas
+
+-----------------
+
+CASE:
+
+Cuando se una un CASE en la sección de SELECT, el código excapa cuando se cumple una condición
+SELECT 	points
+		CASE
+			WHEN points > 3000 THEN 'CATEGORIA1'
+			WHEN points > 2000 THEN 'CATEGORIA2'
+			ELSE 'CATEGORIA3'
+		END AS Categorías
+Al cumplirse la primera condición se escapa del CASE sin leer las siguientes.
+
+-----------------
+
+VIEWS
+
+CREATE VIEW nombre_del_view AS antes del SELECT genera una VIEW. Luego se puede usar ese VIEW para hacaer cualquier operación al igual que una tabla. La VIEW no guarda datos, solo los muestra. Una VIEW puede ser modificada si la misma no contiene alguna de las siguientes operaciones:
+	DISTINCT
+	Aggregate functions (SUM, MIN, MAX, AVG...)
+	GROUP BY/HAVING
+	UNION
+Al final de la VIEW se puede agregar la cláusula WITH CHECK OPTION, ésta hace que al modificar una ROW que hace que la misma sea excluída, nos tira ERROR y no realzia la modificación (EJ: mi view no muestra balances = 0, y modifico una row para que sea 0)
+Normalmente se guardan las VIEWS en un archivo SQL con el mismo nombre de la tabla. 
+
+-----------------
+
+STORED PROCEDURE
+
+Son funciones que pueden ser llamadas dentro del código u otras QUERIES. Son llamadas con el operador CALL.
+Para crearlas hay que definir un nuevo delimitador para poder usar ; dentro del 
+
+DELIMITRE $$
+CREATE PROCEDURE get_clients()
+BEGIN
+	SELECT * FROM clients;
+END $$
+
+DELIMITER ; // Hay que volver a cabmbiar el delimiter luego de crear el PROCEDURE
+
+Los PROCEDURES pueden contener parámetros
+CREATE PROCEDURE get_client_by_id ( INT )
+Al ser llamados se necesita pasar parámetros obligadamenete. 
+También se pueden agregar valores por defecto en caso de que no se pasen parámetros.
+EJ
+
+CREATE PROCEDURE get_client_by_state ( state CHAR(2) )
+BEGIN
+	IF state IS NULL THEN
+		SET state = 'CA';
+	END IF;
+
+	SELECT * FROM clients c
+	WHERE c.state = state;
+END $$
+
+Si llamamos al PROCEDURE
+CALL get_client_by_sate(NULL) // devuelve los clientes con state = CA
+
+Otra forma sería la siguiente: Crear un PROCEDURE que devuelve clientes por state, pero si se le pasa NULL devuelve todos los clientes:
+
+CREATE PROCEDURE get_client_by_state ( state CHAR(2) )
+BEGIN
+	IF state IS NULL THEN
+		SELECT * FROM clients;
+	ELSE
+		SELECT * FROM clients c
+		WHERE c.state = state;
+	END IF;
+END $$
+
+Esto se puede escribir mucho más facil como:
+
+BEGIN
+	SELECT * FROM clients c
+	WHERE c.state = IFNULL(state, c.state); 
+	// 	Se pasa state, pero si state es NULL, se pasa c.state = c.state, que devuelve todo.
+END $$
+
+
+-----------------
+
+VARIABLES
+
+Se declaran en el PROCEDURE o FUNCIONES y quedan en memoria hasta el que se termina la query (END). Ver ej en funciones
+
+
+FUNCIONES
+
+Son muy parecidas a las PROCEDURES pero solo devuelven 1 valor, no una tabla. Se le agrega la cláusula RETURNS y el tipo de valor que devuelve (INT, TINYINT, CHAR, etc) y luego se le agrega el atriburto de la función. Toda función debe tener al menos un atributo, que pueden ser:
+DETERMINISTIC: si se le da los mismos valores a la funcion, devuelve simpre el mismo valor, no se modifica. ejemplo: devolución de algún cáculo de impuesto
+READS SQL DATA: la función tiene un SELECT que lee data
+
+
+CREATE FUNCTION get_risk_factor_for_client( client_id INT )
+RETURNS INTEGER
+READS SQL DATA
+BEGIN
+	//Se delcaran las variables
+	DECLARE risk_factor DECIMAL(9, 2) DEFAULT 0;
+	DECLARE invoices_total DECIMAL(9, 2);
+	DECLARE invoices_count INT;
+
+	//Se les asigna valores a las variables
+	SELECT COUNT(*), SUM(invoice_total)
+	INTO invoices_count, invoices_total
+	FROM invoices i
+	WHERE i.client_id = client_id;
+
+	//Se setea y devuelve el resultado
+	SET risk_factor = invoices_total / invoices_count * 5;
+
+	RETURN IFNULL(risk_factor, 0); // Si COUN(*) = 0 & SUM(invoice_total) = NULL, devuelve NULL. Mejor 0.
+END
+
+Las funciones pueden llamarse cuando quieras. EJ útil:
+
+SELECT
+	client_id
+	name,
+	get_risk_factor_for_client(client_id)
+FROM clients
+
+
+-----------------
+
+TRIGGERS
+
+Se usan para generar consistencia de datos. El TRIGGER actualiza datos de campos que están relacionados en otras tablas. Imaginemos que tenemos 2 tablas, PAGOS y FACTURAS. Cuando ingreso un nuevo pago en la tabla PAGOS, quiero que el monto de pagos hechos en la tabla FACTURAS se acutalice mostrando el nuevo saldo. Para eso usamos un TRIGGER:
+
+DELIMITER $$
+
+DROP TRIGGER IF EXISTS payments_after_insert		//Se agrega antes para actualizar ya si existe
+
+CREATE TRIGGER payments_after_insert 				//El nombre define bien lo que hace
+	AFTER INSERT ON payments 						//AFTER o BEFORE
+	FOR EACH ROW									
+BEGIN
+	UPDATE invoices
+	SET payment_total = payment_total + NEW.amount 	//NEW toma el valor de la nueva ROW, también se puede 
+	WHERE invoice_id = NEW.invoice_id;				//usar OLD en el caso de borrar una ROW.
+											(***)	//Ver más abajo
+END $$
+
+DELIMITER ;
+
+Luego insertamos una columena en la tabla payments de la siguiente manera
+
+INSERT INTO payments
+VALUES (payment_id, client_id, invoice_id, date, amount)
+
+En este caso, al insertar una nueva columna en payments, se actualizará la tabla invoices: el valor de payment_total tomará su valor + el campo amount (NEW.amount) de la nueva ROW insertada en payments, solo para la factura donde el id sea igual al campo id de la nueva ROW inesrtada en payments (NEW.invoice_id).
+De esta manera tendremos el nuevo monto de payments_total que es el monto cancelado de la factura.
+Para visualizar los TRIGGERs podemos usar la cláusula SHOW TRIGGERS. También se puede agregar la cláusula LIKE para filtrar por ej LIKE '%payment%' va a mostrar todos los TRIGGERS que tengan payment en su nombre.
+Los triggers usan la siguiente convención para nombrarse: tabla_after_insert donde tabla es la tabla que se modifica incialmente, after o before indica cuando se hace el TRIGGER y insert, delete o update es la acción que genera el trigger.
+Para eliminar TRIGGERS se utiliza la cláusula DROP TRIGGER nombre_de_trigger.
+Usualmente se prefija el nuevo TRIGGER con la linea DROP TRIGGER IF EXISTS nombre_de_trigger, entonces se borra y crea el trigger nuevamente, actualizandolo basicamente.
+Los TRIGGERS también se utilizan para guardar en un log todos los cambios de tablas. Si elimino una ROW en la tabla payments, va a quedar guardado ese movimiento en una tabla log para tener un historial de todas las modificaciones de tablas en una BD. Ejemplo, luego de modificar los datos en (***) más arriba, se pude agregar la siguiente lógica:
+
+INSERT INTO payments_audit
+VALUES (NEW.client_id, NEW.date, NEW.amount, 'Insert', NOW());
+
+Entonces al insertar una nueva ROW, el TRIGGER actualizará la tabla relacionada (invoices) y guardará en una nueva tabla(payments_audit) una nueva ROW con todas las modificaciones hechas (id cliente, fecha de pago, monto, tipo de accion y fecha de modificación).
+
+-----------------
+
+EVENTOS
+
+Los eventos son bloques de SQL que se ejecutan cada cierto tiempo. Por ejemplo, todos los días a las 8pm copiar todas las tablas en tablas_archivo.
+Primero hay que activar la variable event_scheduler, se pude buscar y activar de la siguiente manera: 
+
+SHOW VARIABLES LIKE 'event%'
+SET GLOBAL event_scheduler = ON
+
+Ejemplo de evento anual para eliminar audits con más de un año de antiguedad:
+DELIMITER $$
+
+CREATE EVENT yearly_delete_stale_audits_rows
+ON SCHEDULE
+	-- AT '2022-12-31' 									// en el caso que solo se ejecute una vez
+	EVERT 1 YEAR STARTS '2023-01-01' ENDS '2030-01-01'	//STARTS y ENDS son opcionales
+DO BEGIN
+	DELETE FROM payments_audit
+	WHERE action_date < NOW() - INTERVAL 1 YEAR;
+END $$
+
+DELIMITER ;
+
+Es muy importante dejar en claro en el nombre la recurrencia del evento (yearly, monthly, daily, hourly, once) sobre todo para filtrarlos con el LIKE 'yearly%' por ej. 
+Para visualizar, borrar y modificarlos eventos se pueden usar las cláusulas:
+SHOW EVENTS; -- acompañado por el LIKE para filtrar
+DROP EVENT IF EXISTS nombre_del_evento; -- para borrar el evento
+ALTER EVENT y luego todo lo mismo que escribimos después del CREATE EVENT con las modificaciones necesarias. También se puede usar ALTER EVENT para habilitar o deshabilitar eventos temporariamente.
+ALTER EVENT nombre_del_evento DESABLE (o ENABLE).
+
+-----------------
+
+TRANSACCIONES
+
+Son unidades de trabajo donde 2 o más operaciones deben realizarse para ser completadas. Una transferencia bancaria se completa cuando se debita de una cuenta y se acredita en otra. Si solo se realiza una acción la transacción no se completa y hay que hacer un ROLLBACK o cambio de la acción realizada. 
+Propiedades ACID de las transacciones:
+Atomicidad: las transacciones son como átomos, son unidades únicas de trabajo irrompibles. O todas las tareas tienen éxtio o todas fallan como una sola unidad.
+Consistencia: con transacciones las bd permanecen en un estado consistente. Nunca vas a tener una orden sin un item por ej, o una factura sin un monto.
+Isolation: las transacciones están aisladas entre si. Si hay 2 transacciones que quieren modificar la misma data, primero debe terminarse una para que se ejecute la siguiente. 2 o más transacciones no pueden interactuar entre si o interrumpirse. Solo una transacción por ver puede modificar data.
+Durabilidad: una vez que la transacción se completa, los cambios son permanentes en la bd, por más que se pierda la conección, energía, etc, los cambios ya fueron realziados y guardados.
+Se crea con la cláusula
+
+START TRANSACTION;				//Creación de la transacción, luego van las acciones
+
+INSERT INTO orders (customer_id, order_date, status)
+VALUES (1, '2022-01-01', 1);
+INSERT INTO order_id
+VALUES (LAST_INSERT_ID(), 1, 1);
+
+COMMIT;							//Cierre de transacción, también se puede usar la cláusula ROLLBACK para
+								//cancelar una transacción hecha
+
+SQL envuelve cualquier cosa que escribamos en una Transacción y luego hace un COMMIT si no encontró ningún error. Es un método que se llama AUTOCOMMIT, lo podemos ver si escribimos SHOW VARIABLES LIKE 'autocommit'
+
+-----------------
+
+CONCURRENCY
+
+Muchas veces 2 o más usuarios comparten la misma BD e intentan acceder a la misma data en el mismo momento y esto es un problema: por ej. cuando un usario está modificando data que otro usuario está intentando consultar. Cuando se modifica una tabla (UPDATE, INSERT, DELETE, etc) y todavía no se terminó de ejectuar todo el bloque de SQL en la transacción (no se llegó hasta la linea COMMIT o ROLLBACK), SQL bloquea la tabla, entonces cuando una segunda persona o sesión intenta modificarla va a quedar esperando (ruedita cargando) hasta que la primer transacción termine (si espera mucho tiempo puede cancelarse la segunda acción por timeout).
+
+Problemas que surgen:
+
+	Update perdidos: cuando el lockeo no está activo y dos acciones se ejectuan en el mismo momento, la 
+acción que llegue último a hacer el COMMIT va a sobreescribir la otra acción, haciendo que la primera acción en terminarse no tenga efecto y perdiendose.
+	Dirty reads: se da cuando una acción lee data de una tabla que todavía no fue modificada por otra  
+acción ejecutada en el mismo momento. ej: Transacción 'A' hace un UPDATE de un monto pagado, TR 'B' lee ese monto y lo devuelve, pero TR 'A' después llega al final y hace un ROLLBACK volviendo al valor inicial. TR B devolvió un monto equivocado. Osea, leimos data que no fue commitida a la BD todavía. Por esto se necesita cierto nivel de aislación al rededor de las transacciones. SQL tiene 4 niveles de aislación para las transacciones donde una es "READ COMMITED" donde solo puede leerse data que fue commitida la BD.
+	Non-repetible reads: sucede cuando se lee cierta data dos veces en una transacción y ambas lecturas
+devuelven diferentes resultados. ej: TR A lee 'points' y devuelve 10, TR B hace un UPDATE points = 0, y luego TR A vueve a leer 'points' en una subquery por ej. Ambas lecturas de 'points' devuelven distinto valor. Para eso también se puede definir un nivel de aislación para que la segunda lectuar devuelva lo mismo que la primera. Osea, todas las consultas van a devolver los valores de una foto inicial, sin importar los cambios que se ejecuten mientras corramos nuestra TR.
+	Phantom reads: Se da cuando hacemos una consulta, y al mismo tiempo modificamos data de cierta manera 
+data tal que el resultado del filtro A no devuelva toda la data correcta. Supongamos que buscamos todos los clientes con +10 puntos para aplicar un descuento, mientras se genera la consulta, otra TR B le suma 10 puntos a un cliente. TR A no devolverá a ese cliente como apto para descuento, aunque tenga los puntos necesarios. Esto puede ser molesto pero usualmente no es esencial. Puede agregarse un nivel de aislación (serializable) para que cuando se hace la TR A siempre esté aware de cambios posibles. Estos niveles más avanzados de aislación pueden alentizar mucho el sistema, sobre todo si hay mucha gente trabajando sobre la misma BD. 
+
+				  Lost Updates  | Dirrt reads	| Non-repeting reads | Phantom reads
+Read Uncommited	  			
+Read Commited	  					 OK		
+Repeatable read	  	  OK		  	 OK					 OK	
+Serializable	  	  OK			 OK				  	 OK					OK
+
+Mientras más aumentamos el  nivel de aislación menos cocurrencia y menos problemas de concurrencia, osea más problemas solucionamos, pero más lento e ineficiente se transforma nuestro sistema. 
+El nivel de aislación se pude consultar haciendo un SHOW VARIABLES LIKE 'transaction_siolation'; y
+SET TRANSTACTION ISOLATION LEVEL NIVEL; modificará el nivel de aislación para la próxima transacción, podemos cambiar el nivel para todas las futuras transacciones en la actual sesión agregando un SESSION entre SET y TR, y podemos cambiar el nivel globalmente para todas las futuras transacciones y sesiones agregando un GLOBAL en el mismo lugar. El nivel por defecto en SQL es Repeatable reads.
+
+DEADLOCKS: Sucede cuando dos transacciones nunca se completan porque cada transacción bloquea información que la otra necesita, entonces ambas transacciones están esperando a al otra y nunca se completan. Ejemplo: TR A modifica tabla1 y TR B modifica tabla2 al mismo tiempo, luego TR A intenta modificar tabla2 pero está bloqueda por TR B, entonces espera a que TR B termine primero. Pero TR B luego intenta modificar a tabla1 que está bloqueada por TR A, esperando a que TR A termine. Cuando esto sucede SQL devuelve error 'deadlock' y trata a una de las TR (la segunda en modificar una tabla bloqueda) como víctima, haciendo un rollback de la misma. Para solucionar estoy hay que tener en cuenta el orden en que se modifican multiples tablas para generar consistencia, y también podemos mantener transacciones pequeñas y rápidas para que haya menos probabilidades de que colisionen con otras transacciones. Si hay transacciones con tendencia a colisionar, es recomendable ejecutarlas en horarios donde la BD no tenga muchos usuarios conectados (non peak hours).
+
+-----------------
+
+TIPOS DE DATA
+
+-  CHAR(x): Se utilizan para strings de chars fijos (abreviación de paises: AR, MX, US)
+-  VARCHAR(x): Se usa para strings de largo variable (usuario, contraseña, comments)
+Ambos se pueden usar para guardar números sobre los cuales no se haga operaciones numéricas (teléfono, código postal). Es últi llevar una consistencia, por ejemplo siempre usar VARCHAR(50) para usuario y contraseña y VAR(255) para direcciones. De esta manera no tenemos que estar chequeando constantemente como son las variables. VARCHAR max chars es 65,535, si se necesita guardar más caracteres se puede usar MEDIUMTEXT con max 16MB o LONGTEXT con max 4GB.
+
+   INTEGERS: para guardar solo valores numéricos:
+-  TINYINT: guarda hasta 1b [-128, 127], si fuese UNSIGNED TINYINY sería [0, 255], sirve por ej para guardar edades donde no se aceptan numeros negativos.
+-  SMALLINT: 2b	[-32k, 32k]
+-  MEDIUMINT: 3b [-8M, 8M]
+-  INT: 4b [-2B, 2B]
+-  BIGINT: 8b [-9Z, 9Z]
+Si intentamos guardar un número más grande SQL tira error. También se puede agregar un número al final para que quede zeropadded. EJ INT(4): 0001, siempre llenará con 0 el número guardado hasta 4 dígitos.
+
+	RATIONALS:
+-  DECIMAL(p, s) = (max digits, punto) = (9, 2) = 1234567.89
+
+ENUMS: No son recomendables. Son muy costosos para modificar, hay que volver a definirlos si se quieren reutilizar en otra tabla. Es mejor tener otra tabla tipo lookup, ej: payment_method donde define tipo 1, 2 o 3 como method_id, Contado, Tarjeta débito, Tarjeta crédito.
+
+	TIEMPO:
+- 	DATE: solo día.
+-	TIME: solo la hora.
+- 	DATETIME: día y hora.
+-	YEAR: año en 4 dígitos.
+-	TIMESTAMP: igual que DATETIME pero solo con 4b, osea hasta el año 2038.
+
+	BLOB:
+-	Se usa para guardar gran cantidad de data binaria como imágenes, pdfs, videos, files, etc.
+Pueden ser TINYBLOB: hasta 255b, BLOB: hasta 65kb, MEDIUMBLOB: hasta 16MB, LONGBLOB: hasta 4GB.
+Es recomendable no guardar files en BD. Si se guardan muchos archivos los buckups son más lentos, la BD se hace muy grande, hay problemas de perfonrmance.
+
+	JSON: Hacer el resumen, es bastante complejo
+
+
+-----------------
+
+DISEÑO DE BD
+
+	Proceso de modelado de BD:
+Lo más importante es entender y analizar los requerimientos del negocio. Una BD mal diseñada desde el comienzo puede traer problemas muy grandes más adelante. Luego hay que crear un modelo conceptual del negocio, donde se analizan los conceptos del negocio y las relaciones entre si. Es una representación visual básica de lo que vamos a hacer para saber que todos estamos de acuerdo. Luego se crea un modelo lógico, que es un modelo abstacto independiente de la tecnología de BD. Es un diseño básico de tablas y columnas que vamos a necesitar. Luego refinamos este modelo para lograr un modelo físico. El modelo físico es la implementación del modelo lógico. En este modelo tenemos los tipos exactos de los campos que va a soportar nuestra tecnología de BD, los valores DEFALUT para cada columna, si son NULLABLE o no, así también como las VIEWS, PROCEDURES, TRIGGERS y demás.
+
+	MODELOS CONCEPTUALES:
+
+Representa las entidades y sus relaciones en un modelo. Se pueden hacer en UML o ER (Entity Relationship).
+Es un proceso iterativo, es imposible diseñar un buen modelo de una sola vez, hay que constantemente ir modiricando y mejorando el modelo para ir refinándolo. Ejemplo cursos:
+
+    ┌──────────────┐                ┌────────────┐
+    │Student       │                │ Course     │
+    ├──────────────┤    enrolls     ├────────────┤
+    │name          │◄──────────────►│ title      │
+    │email         │                │ price      │
+    │dateRegistered│                │ instructor │
+    └──────────────┘                │ tags       │
+                                    └────────────┘
+
+	MODELO LÓGICO:
+
+Hay que empezar a definir el tipo de los atributos, (STR, INT, etc) sin ser demasiado específico, por ejemplo podemos definir a "price" como float, sin especificar que tipo de float o con cuantos dígitos y decimales. Hay que empezar a definir si dividimos el atriburto name en firstName y lastName para que sea más facil filtrar, igual con direcciones(dir, city, state, country). Son decisiones que después nos facilitarán las busquedas, si es que es necesario. Complejizar las tablas no es útil si nunca se va a usar. Tenemos que definir la relación entre nuestras entidades, que pueden ser:
+	ONE TO ONE:   ───────────
+	ONE TO MANY:	───────────►
+	MANY TO MANY:	 ◄───────────►
+En nuestro caso muchos estudiantes pueden tener muchos cursos y viceversa. Tenemos que empezar a ver si los atributos tienen sentido. Por ejemplo, la fecha de inscripción no pertenece a "Strudent" ni a "Course", sería mucho mejor si perteneciese a "enrollment" por lo tanto deberíamos crear una nueva entidad para mejorar nuestro modelo. Debemos definir entonces las nuevas relaciones. Un estudiante puede tener muchos enrollments pero cada enrollment pertenece a un estudiante (relación one to many). Lo mismo con la relación entre Curso y Enrollment. También podemos tener en cuenta que el precio del curso puede cambiar con el tiempo. Sería correcto entonces agregar una propiedad "price" a la entidad enrollment para que quede por sentado cuanto pagó el estudiante por el curso en el momento que se inscribió.
+
+
+ ┌─────────────────────────┐                ┌────────────────────┐
+ │Student                  │                │ Course             │
+ ├─────────────────────────┤                ├────────────────────┤
+ │firstNamei(string)       │                │ title (string)     │
+ │lastName (string)        ├──┐             │ price (float)      ├───┐
+ │email (string)           │  │             │ instructor (string)│   │
+ │dateRegistered (dateTime)│  │             │ tags (string)      │   │
+ └─────────────────────────┘  │             └────────────────────┘   │
+                    ┌─────────┘                                      │
+                    │  ┌───────────────────┐                         │
+                    │  │ Enrollment        │                         │
+                    │  ├───────────────────┤                         │
+                    └─►│ date (dateTime)   │◄────────────────────────┘
+                       │ price (float)     │
+                       └───────────────────┘
+
+Claramente podemos observar las diferencias entre ambos modelos, el primer modelo no nos da información de como se guardará la data o su estructura, solo representa las entidades del negocio y sus relaciones y lo utilizamos para conocer el dominio del problema y comunicarnos con los expertos del dominio. El modelo lógico agrega más detalles y casi sabemos como serán las tablas que necesitamos para guardar nuestra data. Las entidades en este modelo normalmente terminan siendo las tablas de nuestra BD.
+
+	MODELO FÍSICO:
+Es la implementación del modelo lógico en nuestra DBMS (SQL en nuestro caso). Crear un modelo físico no es lo mismo que crear una base de datos. SQL tiene herramientas para generar este modelo muy parecido al diagrama UML. En este modelo si definimos específicamente las tablas, sus propiedades, y las caracterísitica de éstas. Cada String podrá ser un VARCHAR(X) dependiendo la longitud de chars necesarios. Es una buena recomendación utilizar longitudes similares para simplificar el uso, por ej: strings medianos como nombre, aprellido, username, password, usamos 50 chars, y para strings largos como dirección o email usamos 255. Debemos también definir como será el float "price" por ejemplo DECIMAL(5, 2). También tenemos que decidir cual va a ser la PK de cada tabla. Tenemos que definir el valor DEFAULT (si es que tiene) de todos los parámetros, y si los mismos son NULLABLE (puede asignarse NULL, NN = NOTNULL).
+Ej de Student, lo definimos como students ya que es mejor definirlo como plural si la tabla va a contener multiple estudiantes.
+
+  ┌───────────────────────────┐
+  │ students                  │
+  ├───────────────────────────┤
+  │ student_id INT            │ PK, AI, NN
+  │ firstName VARCHAR(50)     │ NN
+  │ lastName VARCHAR(50)      │ NN
+  │ email VARCHAR(50)         │ NN
+  │ date_registered DATETIME  │ NN
+  └───────────────────────────┘
+
+ 	PRIMARY KEYS: En el MF también hay que definir la PK, si va a ser simple o compuesta (por 2 o más pps). La PK no debe ser UNICA por lo que firstName no es posible, 
+ tampoco compuesta con lastName ya que hay gente con el mismo nombre y apellido. La PK no debe cambiar NUNCA por lo que tampoco email es una buen PK ya que puede cambiar en cualquier momento. Lo ideal en el caso Student será definir una nueva propiedad "student_id" que será única para cada estudiante (obviamente es NN por defecto). Lo mismo con la tabla courses. También podemos definir estas PK como AI (autoincrementales) ya que al ser INTs se puede elegir DEFAULT al insertar un nuevo estudiante, y el mismo tomará el siguiente número en student_id.
+
+	FOREIGN KEYs o CLAVES FORANEAS: en el caso de la tabla "enrollments" hay que definir la relación entre las tablas para definir la PK. Vamos a tener una relación ONE TO 
+MANY ya que una inscripción tiene un solo estudiante, pero un estudiante puede tener muchas inscripciones. Cuando tenemos esta relación una tabla se llama la "primary key talbe" o "parent table" y la otra se llama "foreign key table" o "child". En esta caso la tabla estudiantes es la PK table o la padre ya que no podemos tener una inscripción sin un estudiante, y la tabla enrollments, la tabla hija o foreign key table.	En SQL para definir esta relación seleccionamos el botón de ONE TO MANY y primero elegimos la tabla hija y luego la padre. Al crear esta relación, automáticamente se crea una nueva propiedad en "enrollments" (students_sutdent_id INT, en este caso) haciendo referencia a la PK de "students", entonces al insertar una nueva inscripción en la tabla enrollments, automáticamente se guarda el id del student en esa nueva propiedad. Se puede cambiar el nombre de la nueva propiedad a gusto. Esta propiedad o columna que hace referencia a una PK de otra tabla es lo que se llama clave foránea o "FOREIGN KEY".
+En nuestro caso pasa de nuevo al hacer la relación ONE TO MANY entre "enrollments" y "courses" generando una nueva clave foranea en "enrollments" haciendo referencia a la PK de la tabla padre "courses".
+
+Luego tenemos que tomar la desición de cual será la PK de "enrollments". Podemos tomar una combinación de las 2 claves foráneas generadas, o podemos introducir una nueva propiedad "enrollment_id" siendo la misma única y autoincremental. La ventaja de la priemra opción es que nos prohibe cometer el error de inscribir al mismo estudiante en el mismo curso 2 veces, ya que la combinación de PKs debe ser única. La contra de la primera opción es que si en un futuro creamos una nueva tabla relacionada con "enrollments" y hacemos una relación entre ambas donde "enrollments" es la padre, en la nueva tabla habrá que guardar la combinación de estas PK y a veces se complejiza mucho la estructura, y sería mucho más simple solo hacer referencia a una PK "enrollments_id".
+
+	FOREIGN KEY CONSTRAINS:
+Cuando tenemos claves foráneas, debemos setear restricciones para proteger que la data se corrompa. En SQL podemos ver las claves foraneas por convención llevan el nombre "fk_fktable_pktable" (un caso en nuestro ej: "fk_enrollments_students" y la otra terminaría con "curses"). Estos nombres deben se únicos. Luego tenemos opciones sobre que deben hacer cuando una tabla padre es modificada o borrada, ej, que hacer cuando la id de un estudiante cambia de 1 a 2. Las PK nunca deberían cambiarse, pero en el caso de que ocurra debemos asegurarnos que la FK se actualice también. En estos casos debemos elegir la opción "CASCADE". Las otras opciones son: "RESTRICT": rechaza la modificación, "SET NULL": en el caso de que la id cambie, la FK será NULL y tendremos un record sin padre, lo que se llama "record huérfano", que nunca es recomendable tener son mala data, "NO ACTION": deja la FK como está sin importar el cambio de la PK padre, es lo mismo que "RESTRICT".
+En el caso de que una PK de una tabla padre sea borrada, las opciones de la FK son las mismas, pero, que deberíamos hacer si un estudiante es eliminado con la inscripción de ese estudiante ? En "CASCADE" se eliminan todas las inscripciones de ese estudiante, es recomendable ? en nuestro caso, eliminamos data financiera de la tabla ya que se eliminan todos los campos "price" de esa tabla y básicamente son records de pagos que perdemos para hacer análisis. En este caso es mejor dejar la opción como "RESTRICT" o "NO ACTION" para no perder esta información.
+
+
+	NORMALIZATION:
+
+La normalización es el proceso de revisión de nuestro diseño y asegurarnos que sigue ciertas reglas predefinidas para evitar duplicación de data. Esto se refiere a por ejemplo un modelo donde los campo firstName y lastName se repiten en muchos lugares. Al modificar un nombre, tendremos que modificar muchas tablas lo que se hace muy ineficiente y atrae muchos problemas. La normalización consta de 7 reglas, pero para el 99% de las aplicaciones, con las primeras 3 reglas de normalización alcanza.
+
+	1NF - First Normal Form: "Cada celda debe tener un solo valor y no podemos tener columnas repetidas". 
+Con respecto a esta regla podemos ver que la violamos en la tabla "courses" con la propiedad "tags". Definmos que tags va a tener muchas palabras seapradas por coma. El problema es que no podemos saber desde el inicio cuantas tags necesitaremos para crear distintas columnas (tag1, tag2, etc.) y tal vez en un futuro siempre tendremos el problmea de necesitar agregar una nueva tag y tener que modificar nuestro diseño. Para solucionar esto lo mejor es extraer tags en una nueva tabla con una relación MANY TO MANY con "courses". Al crear la nueva tabla tags tenemos que definir que datatype será la nueva columna y PK necesaria "tags_id" (TINYINT en este caso). Luego tenemos que realizar la relación MANY TO MANY, pero en BD relacionales como SQL no tenemos este tipo de relación, por lo que hay que introducir una nueva talba denominada "linked" (que llamaremos por convención tabla1_tabla2, course_tags en nuestro caso ya que esta tabla define la relación entre las tags de UN curso) y tendremos 2 relaciones ONE TO MANY con esa tabla. Esta nueva tabla tendrá 2 propiedades "course_id" y "tag_id", ambas claves foráneas hacen referencia a las tablas padres. También estas 2 propiedades serán nuestra PK compuesta. Y luego podemos remover la propiedad "tags" de la tabla "courses". De esta manera nuestro modelo queda normalizado en la primera forma. Esto puede solucionar muchos problemas, por ejemplo, si tags estuviese en courses y queremos cambiar el nombre de una tag, tenemos que modificar la tabla "courses" y por lo tanto lockearla en el momento de modificación, algo no óptimo. Ahora solo modificamos una ROW de la tabla "tags" y listo, sin nunca molestar a la tabla "courses" y toda la gente que esté usándola.
+
+	2NF - Second Normal Form: "Cada tabla debe describir UNA y solo UNA entidad, y cada columna en esa tabla debe describir a esa entidad"
+En nuestro caso por ejemplo, la tabla "courses" tiene las propiedades "course_id", "title", "price" por lo que la tabla tiene un solo propósito: definir cursos, y cada columna de esta tabla es un atributo de un curso y describen al curso. Si tuviesemos por ejemplo una columna "enrollment_date" que define cuándo se inscribió un alumno, esta columna violaría la 2NF ya que ese atributo no describe a un curso. Otro ejemplo más claro es la tabla "orders" que usamos en ejercicios anteriores. Si la misma contuviese "order_id", "date", "customer_name" estaría violando la segunda forma ya que "customer_name" no describle una orden, sino un customer, por lo tanto debemos reemplazar a "customer_name" con "customer_id" y relacionarla con otra tabla que tenga "customer_id" y "customer_name" (tabla customers). De esta manera si necesitamos cambiar el nombre de un customer, modificamos solamente una ROW de la tabla "customers" y no multiples ROWs (depende cuantas compras hizo ese customer) de la tabla "orders". NO TIENE SENTIDO lockear la tabla "orders" para modificar el nombre de un "customer". Una forma fácil de verlo es cuando se duplican atributos que no tienen mucha relación. Por ejemplo cuando el customer "Mosh" hace 2 compras y tengo duplicado el valor "Mosh" en la tabla "orders", no tiene sentido, sería mucho mejor tener un "customer_id" que haga referencia a ese customer. El NOMBRE del customer no describe una compra pero CUAL customer (customer_id) hizo la compra si. Esta duplicación de nombre ("Mosh") en la tabla "orders" es evidente también ya que es mucho más ineficiente duplicar VARCHAR(50) todas las ROWS que solo un TINYINT.
+Esto mismo sucede en nuestra tabla "courses". Además de las propiedades nombradas al principio, también tiene una propiedad "instructor" VARCHAR(50) que viola la 2NF de la misma manera que "customer" en "orders": NO se debe referenciar el nombre de un instructor, sino su ID, y relacionar ese ID con una tabla "instructors" donde la misma defina el nombre y cualquier otra propiedad que necesitemos para describir un instructor en nuestro modelo. Creamos la tabla, hacemos la relación ONE TO MANY (un instructor puede dar muchos cursos) donde se creará una nueva clave foránea en "courses" (instructor_id) que hace referencia a la tabla "instructors". Definimos las propiedades de la nueva clave foránea (CASCADE ON UPDATE, NO ACTION ON DELETE).
+
+	3NF - Third Normal Form: "Una columna en una tabla no debe derivarse de otras columnas".
+Si tenemos en la tabla invoices las columnas "invoice_total", "payment_total" y "balance" que es la resta de las primeras 2, y modificamos alguna de las 2 tablas que definen balance, debemos modificar también balance, lo que es muy ineficiente y engorroso, y puede traer problemas en consistencia de data en el caso de que nos olvidemos actualizarla.
+
+Así quedaría nuestro modelo finalizado y cumpliendo las 3NF:
+
+   ┌─────────────────────────┐                ┌────────────────────┐
+   │students                 │                │ courses            │        ┌─────────────────┐
+   ├─────────────────────────┤                ├────────────────────┤        │instructors      │
+   │student_id INT           │                │ course_id INT      │        ├─────────────────┤
+   │firstName VARCHAR(50)    ├───┐       ┌────┤ title VARCHAR(255) │◄───────┤instructor_id INT│
+   │lastName VARCHAR(50)     │   │       │    │ price DECIMAL(5,2) │        │name VARCHAR(50) │
+   │email VARCHAR(255)       │   │       │    │ instructor_id INT  │        └─────────────────┘
+   │dateRegistered DATETIME  │   │       │    └───────────────┬────┘
+   └─────────────────────────┘   │       │                    │
+                                 │       │                    │
+                                 ▼       ▼                    ▼
+                         ┌─────────────────────┐        ┌────────────────┐      ┌────────────────┐
+                         │ enrollments         │        │course_tags     │      │tags            │
+                         ├─────────────────────┤        ├────────────────┤      ├────────────────┤
+                         │ student_id INT      │        │course_id INT   │◄─────┤tags_id TINYINT │
+                         │ course_id INT       │        │tags_id TINYINT │      │name VARCHAR(50)│
+                         │ date DATETIME       │        └────────────────┘      └────────────────┘
+                         │ price DECIMAL(5,2)  │
+                         └─────────────────────┘
+
+
+Faltaría aclarar cuales campos son PK (simples o cumpuestas) cuales son claves foráneas, si son NN o AI (NOTNULLable o Autoincremental) y las propiedades de las claves foráneas (ON UPDATE y ON DELETE)
+
+	Consejo pragmático:
+No hay que ser tan estricto con cada regla. Al diseñar un modelo lo más importante a tener en cuenta es la redundancia de datos. Si vemos muchos valores repetidos que no son claves foraneas (como 1, 2, 3, etc) como por ejemplo "Pergamino", "Nombre", "Admin" o Strings que describen algo, sigrnifica que no está normalizado. Otro ejemplo puede ser una tabla "orders" que tiene "customer_id", "name" y "shipping_adress" donde por preferencia queremos que cada customer pueda tener más de una dirección de envío, entonces tenemos que duplicar la ROW con los mismos datos excepto la última columna. Es evidente que está mal diseñado, sería mejor si creamos una nueva tabla "adresses" con una relación ONE TO MANY con customers, y listo. Es muy importante también tener en cuenta los requerimientos. Si no fuese necesario tener más de una dirección por customer, el ejemplo anterior está perfecto.
+Es mejor pensar en la lógica de las entidades y sus relaciones y no tanto en cada regla de normalización. Y lo más importante es tener un buen modelo conceptual y modelo lógico, y no empezar a crear tablas sobre la marcha, siempre se incurre a malos diseños de esta manera. Y siempre enfatizar los requerimientos y como afecta nuestro modelo.
+	DONT MODEL DE UNIVERSE: otro consejo pragmático, no generalizar tanto el modelo para el futuro, muchas veces intentamos complejizar mucho el modelo por si en un futuro
+algún requerimiento cambia por ejemplo, y el modelo termina siendo un modelo inutil, muy complejo, muy dificil de mantener, para soportar requerimientos que posiblemente nunca se apliquen. TENER EN CUENTA EL SCOPE DEL PROYECTO. No vamos a modelar una tabla adress para instructores relacionada ONE TO MANY cuando solamente necesito el nombre del instructor por ejemplo. Siempre buscar la mejor solucion para LOS PROBLEMAS ACTUALES, no intentemos solucionar problemas que no existen o tal vez nunca existan en el futuro. Build a problem for your problem domain, what happens in the real world. Los problemas dependen del negocio y de lo que piensa el dueño, cliente, CEO, no de lo que piensa un programmer.
+
+	Ingeniería de BD:
+Con el modelo terminado podemos crear la BD yendo a Database -> Forward Engenieer. Luego de muchas opciones y posibles modificaciones, nos crea la BD. Para modificar una BD lo mejor es modificar el modelo y sincronizarlo nuevamente (proceso muy parecido a la creación) desde Database -> Synchronize model. Cada vez que creamos o sincronizamos las nuevas modificaciones de BD, nos crea un script que podemos compartir en GIT para tener un log de todos los cambios de nuestra BD y poder replicar los mismos cambios en otras BD. En caso de que una BD no tenga modelo puede hacerse un reverse engineering para crear un modelo desde una BD sin modelo y luego usamos ese modelo para cualquier cambio futuro. Desde SQL Workbench podemos hacerlo desde Database -> Reverse Engineering. De esta manera si queremos modificar una BD sin modelo, podemos generar el modelo y luego modificarla desde allí.
+
+	CHARSET CHARACTER SET & COLLATIONS:
+CHARSET es una tabla que mapea y representa numéricamente un CHAR. Dependiendo que CHARSET usemos, cada char de un String supongamos se va a representar por un valor numérico distinto. Podemos consultarlos con la cláusula SHOW CHARSET. Usualmente usamos el CHARSET utf8.
+	Las COLLATIONS son reglas que determinan como los carácteres en un lenguaje son ordenados. La default collation para utf8 es utf8_general_ci. CI significa que es case 
+insensitive, por lo que no le importa el casing para ordenar. También vemos la columna maxlen que deine la cantidad de bytes que reserva para cada char.
+
+-----------------
+
+	INDEXES FOR PERFORMANCE: 
+Los INDEX son muy importantes para BD de gran tamaño para mejorara las performances de las queries. Los index son estructuras de datos que los DB engines usan para encontrar data. Supongamos que tenemos una tabla con un millón de customers y cada uno tiene su estado en un CHAR(2) como 'CA', 'TX', etc. Si quisieramos filtrar la lista de customers por state = 'CA', esta QUERY lee cada ROW de la tabla customers, y compara state con 'CA', algo que es muy ineficiente y lento. Para eso se puede crear un nuevo directorio (parecido a una tabla) o INDEX con todos los states ordenados alfabéticamente con una referencia a cada customer. Así al realizar esta query podemos leer solo las lineas que tienen CA en el index y devolver las  ROWS de la tabla customer de esas referencias. Esto aumenta las performance de las queries dramáticamente en BD grandes. Los index normalmente son tan pequeños que se pueden guardar en memoria, que es incluso más rápido para leer que en disco. Las desventajas de los index son que aumentan el tamaño de la BD ya que tienen que estar permanentemente guardados con las tablas. Los writes (add, update) son más lentos ya que si se modifican las tablas, también se deberán modificar los indexes. Por esto hay que reservar los INDEXes para queries criticos en performance, los INDEXes no se crean en base a las tablas, se crean en base a las queries. Nunca se hacen indexes en base al diseño de una tabla. Los indexes se guardan como binary trees, aunque para entenderlos mejor los podemos pensar como tablas. 
+	
+	Crear un INDEX:
+Para ver el tipo de scan que hace SQL en una QUERY podemos agregar la cláusula EXPLAIN antes de la query. Por ejemplo si ejecutamos:
+EXPLAIN SELECT customer_id FROM customers WHERE state = 'CA'; veremos distintos datos, dentro de los cuales nos interesa "type" que es el tipo de scan que hace la QUERY (ALL en este caso) y "rows" que muestra la cantidad de records que se escanean (1010 en nuestro caso, es lo mismo que escribir SELECT COUNT(*) FROM customers;).
+Podemos crear un index para este caso de la siguiente manera (la convención de nombres es ix o idx seguido por el nombre de la columna a indexar):
+
+CREATE INDEX idx_state ON customers (state);			//después del ON hay que definir en que tabla se crea el index y usando qué columna 
+
+Si ahora volvemos a ejecutar la misma linea QUERY "EXPLAIN SELECT customer_id FROM customers WHERE state = 'CA';" del caso anterior, nos devolverá como "type" "ref" que significa que no hacemos un full table scan, y en la columna "rows" vemos 112, que son los records escaneados (se redujo la cantidad de scans en 10 veces). 
+Si creamos un index "CREATE INDEX idx_points ON customers (points)" ahora veremos como "type" la palabra "range" ya que el tipo de escaneo es distinto, es en base al rango de INTs en vez de referencia de CHARS como en el caso anterior.
+
+	VIEW INDEXES:
+Para ver los indexes de una tabla podemos usar la cláusula "SHOW INDEXES IN tabla". Toda tabla con primary key tiene si o si un index llamado Clustered o PRIMARY donde indexea la taba por la PK. También podemos ver la "Collation" que define como se ordena la tabla por ese index (A: ascendente, B: descendente) y "Cardinality" que reperensenta un número estimado de valores distintos en ese index. Cardinality es un valor estimado, para ver el valor exacto podemos usar la cláusula "ANALYZE TABLE tabla" y luego volver a ejecutar "SHOW INDEXES IN tabla" para ver valores mas precisos. También vemos el "index_type" donde casi siempre es BTREE (binary tree). También podemos ver que en las tablas con claves foráneas, tendremos indexes creados automáticamente para poder unir las tablas.
+
+	INDEXES en Strings | PREFIX INDEX:
+Si el index lo queremos hacer en una columna String (CHAR, VARCHAR, TEXT, BLOB, etc), el index consumirá mucho espacio y no tendrá una buena performance. Para solucionar esto, cuando indexamos una columna String no queremos indexar la columna entera, solo basta con los primeros CHARS. Esto es un PREFIX INDEX y lo podemos hacer de la siguiente manera:
+
+CREATE INDEX idx_lastName ON customers (last_name(5)) 			//Se le agrega a la columna last_name entre parentesis cuantos chars queremos indexar.
+
+Para encontrar el número óptimo para indexar debemos ver nuestra DATA y decidir cuantos caracteres podemos incluir para identificar unívocamente cada customer. Para encontrar este número podemos hacer lo siguiente: Primero ejectuamos la QUERY
+SELECT COUNT(*) FROM customers;
+Supongamos que el resulado es 1000, tenemos mil customers distintos, luego podemos empezar a filtrar de la siguiente manera
+SELECT COUNT(DISTINCT LEFT(last_name, 1)) FROM customers;
+Esto nos devolverá 25, que son la cantidad de customers únicos si solo tomamos una sola letra del apellido. La idea es modificar la cantidad de CHARS que queremos indexar para maximizar la cantidad de resultados únicos de la QUERY anterior, pero achicando a su vez lo más posible la cantidad de CHARS para tener un index más pequeño. Si por ejemplo ejecutamos la misma linea con 5 o 10 characteres el resultado es 956 y 996 sobre 1000 rows. La mejora es mínima y ya que duplicamos la cantidad de characters en el index y solamente mejoramos en 40 el resultado, por lo que 5 es mucho mejor que 10 lenght para indexar last_name y podemos inditificar casi la mayoría de los customers de la tabla.
+
+	FULL TEXT INDEX:
+Son utilizados para motores de búsquedas, estos indexes ignroan las palabras comunes como "in", "on", "the", etc y guardan una lista de palabras y para cada palabra guarda una lista de rows o documentos en donde estas palabras aparecen y también guarda un "relevance score" que varía de 0 a 1 y define que tan relevante es el resultado con lo buscado. Se puede crear un index como:
+CREAT FULLTEXT INDEX idx_title_body ON posts (title, body); 			// esto sería en una BD de Posts con titulo y cuerpo
+Y luego se puede ejectuar una busqueda de ciertas palabras en ese FULLTEXT:
+SELECT * FROM posts WHERE(title, body) AGAINST('react redux');
+De esta manera buscará las palabras "react" y "redux" en el titulo y cuerpo de la tabla posts y devolverá en orden de "relevance score" cuales son los posts que contienen esas palabras. También se pude buscar AGAINST('react -redux +form' IN BOOLEAN MODE); donde buscará los posts con la palabra "react" pero excluirá la palabra "redux" y mostrará solo los resultados que tengan si o si "form" en el titulo o body. También podemos buscar por fases exactas como AGAINST('"texto a buscar"') y de vuelve posts con esa combinación exacta de palabras en el titulo o cuerpo.
+
+	INDEXES COMPUESTOS o COMPOSITE INDEXES:
+Si queremos usar más de un INDEX, por ejemplo si hacemos:
+EXPLAIN SELECT customer_id FROM custoemrs WHERE state = 'CA' AND points > 1000; vemos que por más de que la tabla tenga 2 indexes, uno por state y otro por points, solo usará un index, por lo que si usa el index state y por ejemplo tenemos un millón de customers en CA, la QUERY seguirá siendo muy lenta (mucho más rápida que antes pero igualmente lenta).
+Para esto podemos usar indexes compuestos donde indexamos por multiples de la siguiente manera:
+CREATE INDEX idx_state_points ON customers (state, points);
+Ahora tendremos 3 indexes y en este último caso se usará el idx recién creado que será mejor que cualquiera de los anteriores.
+El orden de las columnas en un index compuesto es importante y tenemos 2 reglas:
+	- Debemos poner la columna que se usa más frecuentemente primero.
+	- Debemos poner la columna con mayor cardinalidad primero (Cardinalidad reperesent el número de valores únicos en un index).
+Por ejemplo si queremos hacer un index sobre gender y state, en gender tenemos solo cardinalidad = 2 (M o F) pero en state card = 48 (EEUU tiene 48 estados). Si asumimos una distribucion pareja de datos y filtramos por gender, tendremos la tabla/2, y por state la tabla/48.
+Aunque es recomendable, no siempre la mayor cardinalidad debe ir primero, por ejemplo, si tenemos una QUERY como la siguiente:
+SELECT client_id FROM customers WHERE state = 'CA' AND last_name LIKE '%A'; será mejor hacer un index idx_state_lastname aunque lastname tenga mayor cardinalidad. Esto es porque el primer filtro es de igualdad y mucho más estricto que el LIKE del segundo filtro. Podemos crear ambos indexes y con EXPLAIN ver la cantidad de rows que tiene que escanear cada uno. Estas reglas son importantes pero no siempre son la forma correcta.
+Si cambiamos el "state = 'CA'" por "state LIKE 'C%'" veremos que ahora si será mejor un idx_lastname_state, aunque esta QUERY no es realista, es mucho más común ver el primer tipo de QUERY. Por eso tenemos que analizar bien cómo serán nuestras QUERYs y cual idx será más efectivo.
+
+	INDEXES IGNORADOS:
+A veces tenemos un index cread y aún así tenemos problemas de performance, esto puede ser porque el index es ignorado. Cuando hacemos ciertas QUERYS como por ej:
+EXPLAIN SELECT customer_id FROM customers WHERE state = 'CA' OR points > 1000; al ejecutar esta linea vemos el "type" de scan como "index", que quiere decir que usa el idx para buscar, pero en cantidad de rows escaneadas 1000 (100% de rows), por lo que hace un escaneo completo de la tabla pero por index. Esto sigue siendo mejor que un escaneo type "ALL" ya que no lee todas las columnas, sino solo las indexadas, pero aun así podemos reescribir la QUERY para usar los idx de forma más eficiente. En este caso podemos hacer 2 QUERIES separadas y unirlas:
+EXPLAIN SELECT customer_id FROM customers
+		WHERE state = 'CA'
+		UNION
+		SELECT customer_id FROM customers
+		WHERE points > 1000;
+De esta manera veremos que en el primer SELECT se usa el idx_state_lastname y se escanean 112 rows y en el segundo SELECT se usa idx_points escaneandose 528 rows. En total son 640 rows casi la mitad de las 1000 que teníamos al principio. De esta manera usamos idx que ya existían para un resultado mucho más eficiente.
+Otro ejemplo claro es cuando hacemos un EXPLAIN SELECT customer_id FROM customers WHERE points + 10 > 2000; nuevamente veremos que el type es "index" y las cantidades de row escaneadas son 1000, esto es porque al usar la expresión "points + 10" (columna + expresión) SQL no puede usar el index de la forma más eficiente. En cambio si cambiamos la expresión por "points > 2010" obtenemos el mismo resultado y la cantidad de rows escaneada disminuye a 3, un aumento ENORME de performance, por eso es MUY IMPORTANTE aislar las columnas en las QUERIES.
+
+	INDEXES FOR SORTING:
+Cuando agregamos un INDEX en una columna, MySQL agarra todo los valores de esa columna, los ordena y los guarda en el INDEX, por lo que el idx_state_points ya tiene ordenada la tabla por state, entonces al ejecutar EXPLAIN SELECT customer_id FROM customers ORDER BY state; vemos que hace un scan "type: index" y al final veremos que hace el ORDER BY "using index". Si por ejemplo cambiamos el ORDER BY fisrt_name; al no tener ningún idx_lastname, el scan será "type: ALL" y "using filesort" que es una operación mucho más cara e ineficiente.
+Podemos ver el costo de una QUERY escribiendo "SHOW STATUS LIKE 'last_query_cost;". En el caso de ORDER BY state es 100 y BY lastname el costo es 1100, diez veces más costoso. 
+Pero no solo en el caso de ordenar por columnas que no estén indexadas es costoso, sino también por el orden de columnas en el ORDER BY, si es DESC o no, o si metemos otras columnas en el medio de dos columnas indexadas, se dejará de usar el index para hacer un scan typer ALL.
+
+Para tener en cuenta: Si tenemos un index sobre dos columnas (a, b), podemos ordenar usando el idx por:
+	ORDER BY a
+	ORDER BY a, b
+	ORDER BY a DESC, b DESC (hace un backwards index scan)
+Pero NO podemos ordenar por:
+	ORDER BY b
+	ORDER BY a, c, b
+	ORDER BY b, a
+sin perder el type index y perdiendo así su mejor performance y menor costo de query haciendo un scan type ALL. La única forma de usar el ORDER BY b y seguir usando el idx es filtrar antes por "a" con un WHERE de la manera:
+	SELECT customer_id FROM customer WHERE state = 'CA' ORDER BY points. De esta manera SI se utiliza el idx_state_points. Esto se explica porque la tabla indexada está
+ordenada por state y dentro de cada estate está ordenada por points, por lo que si cambiamos el orden, o introducimos algo en el medio, o solo ordenamos por points, la tabla deberá ordenarse por completo nuevamente. En cambio si hacemos ORDER BY state, points, la tabla YA ESTÁ ordenada por esas columnas, y si filtramos por state = 'XX' y ORDER BY points, de nuevo, seleccionamos solo la parte de la tabla donde state = 'XX', donde la tabla también ya está ordenada por points.
+
+	COVERING INDEXES:
+En todas las queries que escribimos siempre hacemos un SELECT customer_id, en vez de un SELECT *, ya que si hacemos un SELECT * perdemos el scan de tipo index. Esto es porque todos los index que hacemos tienen además de la columna por la cual se indexea, la PK de la tabla como información guardada en el index. En el caso por ej de idx_state_points, el idx contiene 3 pedazo de información, el client_id (PK), state y points (columnas indexadas), por lo que si hacemos un SELECT de cualquiera de las columnas que están indexadas (index primario o secundario, osea PK o index creados por nosotros) se utilizará el index para la QUERY. Si agregamos alguna columna que no esté indexada SQL hará un scan type ALL siendo muy ineficiente. Por eso hay que tener en cuenta la cobertura del index (COVERING INDEX) y hay que indexar las tablas por lo que nuestras QUERIES necesiten. Haciendo la siguiente QUERY:
+	SELECT customer_id, state FROM customers ORDER BY state; SQL nunca toca la tabla customers, solo toca el index, y por eso es tan eficiente, por eso al diseñar nuestros 
+indexes siempre hay que mirar las columnas más frecuentes en nuestras cláusulas WHERE, después debemos ver las cláusulas ORDER BY y ver si podemos incluir estas columnas en los indexes y por último mirar las columnas en la cláusula SELECT e intentar usar las columnas indexadas o incluir las columnas necesarias en el index también. 
+Si todas las columnas en todas las claúsulas están en en index tendremos un COVERING INDEX y SQL puede usar nuestros indexes para satisfacer nuestra QUERY haciéndola MUY rápida y eficiente.
+
+	INDEX MAINTENANCE:
+Abusar de los indexes puede ser malo también, por eso hay que tener en cuenta si tenemos:
+	Indexes duplicados: SQL no nos prohibe hacer indexes idénticos.
+	Indexes redundantes: index(a,b) e index(a) son redundantes. Ambos están ordenados por a principalmente, pero index(b) o index(b,a) junto con index(a,b) no es
+redundante ya que satisfacen QUERIES diferentes.
+	Por eso siempre hay que mirar los indexes existentes y ver si es necesario crear uno nuevo o tal vez puede extenderse uno existente.
+
+-----------------
+
+	CUENTAS Y PRIVILEGIOS:
+	
+	Hay que tener en cuenta que en un marco profesional siempre se van a tener cuentas y las mismas tienen distintos privilegios. Para crear una nueva cuenta se usa el
+CREATE USER nomrbre@127.0.0.1 IDENTIFIED BY 'password'; Esto hace que el usuario solo pueda loguearse con una contraseña y desde cierta computadora. También puede usarse un host como nombre@localhost; o un dominio como nombre@codewithmosh.com; también se puede agregar una wildcard antes del dominio para que el usuario pueda entrar desde cualquier subdominio, aunque en este caso hay que agregar quotes (nombre@'%.dominio.com').
+
+	Para ver los usuarios de un server podemos hacer un SELECT * FROM mysql.user; y nos devolverá todos los usuarios con cierta información como "host" que indica desde
+donde puede conectarse cada usuario; "user" que indica el nombre; y luego tenemos las columnas que determinan los permisos de cada usuario.
+	Para borrar un usario simplemente se hace un DROP USER nombre@dominio.com; sin necesidad de poner la contraseña.
+	Para cambiar la password de un user hacemos un SET PASSWORD FOR nombre = 'nueva_password'; si no especificamos 'FOR nombre', SQL cambia nuestra propia password.
+También desde el panel -> Administration -> Users and Privileges, podemos visualizar todos los users, cambiar la password o incluso expirar una password de un usuario para forzarlo a actualizarla por una nueva.
+
+	PRIVILEGIOS:
+Usualmente hay 2 escenarios, usuarios que usan una web/app que pueden agregar, modificar y borrar data; y admins que además pueden crear tablas, cambiar relaciones, views, funciones, idx, etc.
+
+Para el primer caso se hace de la siguiente manera:
+	CREATE USER moon_app IDENTIFIED BY 'password'; 				//nombre_app deja en claro que es un usuario de una app y no un admin o developer
+	GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE				//EXECUTE hace referencia a los procedures
+	ON sql_store.*												//.* significa todas las tablas en la bd, o definimos solo tablas especificas como sql_store.customer
+	TO moon_app;
+
+Para el segundo caso típicamente se les da todo los privilegios y quedaría 
+	GRANT ALL 													// ALL = todos los privilegios. Se pueden especificar los privis (buscar en  google cada uno)
+	ON *.*														// *.* = todas las tablas en todas las bd
+	TO nombre;													
+
+Para ver los privilegios de todos los usuarios podemos ejecutar SHOW GRANT FOR usuario; nos muestra todos los privilegios del usuario en cuestión. También se pueden ver desde el panel.
+Para REVOCAR privilegios es muy similar a dar privilegios, solo cambiamos GRANT por REVOKE y el TO por FROM en la última línea.
+	REVOKE DELETE ON sql_store.* FROM moon_app;

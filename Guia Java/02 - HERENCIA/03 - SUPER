@@ -1,0 +1,47 @@
+SUPER
+
+Cuando definimos HERENCIA dijimos que como regla de oro "LOS CONSTRUCTORES NO SE HEREDAN" bajo ninguna circunstancia. Cuando hay herencia de por medio debemos saber que SIEMPRE el constructor de cualquier CLASE invocará primero al constructor de su SUPERCLASE, haciendo una especie de cascada ascendente. Para invocar al constructor de una SUPERCLASE en el constructor de una SUBCLASE hay que utilizar la palabra "super". La palabra super indica que queremos hacer referencia a la superclase, y como en este caso queremos invocar al constructor debemos llamarlo con paréntesis "super()".
+Al llamar a "super()" tendremos que pasar los argumentos que admita el constructor de la SUPERCLASE.
+
+Volviendo al ejemplo que vimos antes tendremos el siguiente modelo (que para simplificarlo solo ponemos los constructores):
+
+  ┌─────────────────┐
+  │ Vehículo        │
+  ├─────────────────┤        ┌────────────────────┐
+  │ marca: String   │<───────┤ Auto               │
+  │ modelo: String  │        ├────────────────────┤
+  │ patente: String │        │ tieneAire: boolean │
+  └─────────────────┘        └────────────────────┘
+
+En este caso vamos a tener un constructor en la superclase vehículo de la siguiente manera:
+
+public class Vehículo {
+	marca: String;
+	modelo: String;
+	patente: String;
+
+	public Vehículo() {
+		this.marca = marca;
+		this.modelo = modelo;
+		this.patente = patente;
+	}
+}
+
+Por lo que al definir el constructor de Auto, primero tendremos que llamar al constructor de Vehículo con la palabra "super":
+
+public class Auto extends Vehículo {
+	tieneAire: boolean
+
+	public Auto(boolean tieneAire, String marca, String modelo, String patente){
+		super(marca, modelo, patente);
+		this.tieneAire = tieneAire;
+	}
+}
+
+El orden es crítico, el llamado a super tiene que ser la primera sentencia en el constructor de una subclase.
+Entonces cuando creamos una nueva instancia de Auto en el main o cualquier otra parte del código, tendremos que pasarle todos estos parámetros, si no lo hacemos (y no está sobrecargado el constructor con uno sin parámetros) nos tirará error:
+
+Auto a = new Auto(ture, "MarcaFalsa", "ModeloFalso", "ABC123");
+
+Como dato de color, toda clase es una subclase de la superclase OBJECT, por lo que JAVA implicitamente agrega super() a TODOS los constructores haciendo referencia al constructor de OBJECT no parametrizado.
+Lo que tenemos que tener en cuenta es que cuando construimos un Auto, no estamos construyendo 3 objetos, el OBJECT, el VEHÍCULO y el AUTO, estamos construyendo solo un objeto de tipo Auto, aunque las partes que componen a un tipo auto estén desperdigadas. Luego veremos con UPCASTING que un Auto puede verse como un vehículo, y como un objeto, pero no deja de ser un Auto.

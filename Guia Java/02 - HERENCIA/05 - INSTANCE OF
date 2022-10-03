@@ -1,0 +1,26 @@
+INSTANCE OF
+
+Al haber aprendido ahora UPCASTING, podemos ver que en una variable no solo cabe la identidad de un objeto del tipo de esa variable -en un int siempre hay un int, en una varibale tipo Auto siempre hay un objeto Auto- sino que también podemos tener identidades de objetos derivados gracias a una relación de herencia - en una variable del tipo Vehículo hay un objeto Auto.
+Para poder trabajar sobre una variable necesitamos saber saber que tipo de objeto contiene esa variable o parámetro, y para esto ahora tenemos un nuevo operador, "instanceof", que nos va a permitir saber si justamente en una variable o parámetro contamos un objeto de determinado tipo, nos servirá para más adelante hacer el proceso inverso al UPCASTING, el DOWNCASTING o especialización.
+
+Entonces, como vimos en capítulos anteriores, supongamos que tenemos la superclase Vehículo y las subclases Auto y Moto. Como dijimos, una concecionaria puede tener un arraylist o colección de vehículos donde pasamos autos y motos, casteados como vehículos, a la colección. Ahora, una vez guardado una lista de autos y motos, como sabremos cómo trabajar sobre estas instancias ? Supongamos que tenemo
+
+instanceof es un operador como cualquier otro (>, <, !=, ==, etc), que compara dos variables y devuelve verdadero o falso. 
+Básicamente instaceof es operador de igualdad, que evalúa el tipo de datos, no valores.
+Supongamos el siguiente ejemplo:
+
+		c.agregarVehículo(new Auto(true, "Toyota", "Corolla", "ABC123"));
+		c.agregarVehículo(new Moto(20, "Honda", "Tronado", "QWE789"));
+
+Ahora tenemos un auto y una moto casteados como vehículos dentro de una colección. Si agregamos un print en el método de "agregarVehículos" podemos ver en consola si lo que agregamos a la colección es instanceof de distintos tipos:
+
+	public void agregarVehículo(Vehículo v){
+		System.out.println(v instanceof Vehículo)
+		this.vehículos.add(v)
+	}
+
+Es obvio que nos tirará 2 veces true en la consola. Si probamos con "v instanceof Auto", nos tirará primero true y despues false ya que el primer Vehículo es un auto casteado como Vehículo, y por lo contrario, si probamos "v instanceof Moto" nos tirará false y luego true como corresponde. También podemos ir más para arriba en la generalización y probar "v instanceof Object" que, como TODO es un object en JAVA, obviamente dirá true ambas veces.
+El instanceof solo puede ser usado para comparar objetos dentro de una jerarquía, más abajo o más arriba, pero una jerarquía en fin, no podemos preguntarle por ejemplo si "v instanceof String", ya que los vehículos y los Strings no tienen nada que ver, por lo que en este caso ni compila.
+Obviamente estos casos que vimos son solo un print, pero suele usarse mucho dentro de un if para meter lógica dentro de tipos específicos de instanceof. 
+
+Tener en cuenta que cada vez que usamos el instanceof estamos generando una relación de dependencia con otra clase. Esto nos puede generar un código muy acoplado. 

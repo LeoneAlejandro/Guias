@@ -1,0 +1,51 @@
+THROW
+
+Para poder capturar excepciones significa que alguien o algo las tuvo que haber arrojado primero. Ahora veremos como nosotros manualmente podremos lanzar excepciones de acuerdo a una lógica que no está preestablecida por el lenguaje, sino que esté relacionada con lo que estemos desarrollando.
+Esto nos sirve para realizar una validación de datos, por ejemplo si tenemos un ciclo for como el siguiente
+
+public class Calculadora {
+	public int factorial (int num){
+		int fact = 1;
+		for(int i = 2; i <= num; i++){
+			fact = fact * i;
+		}
+	return fact
+	}
+}
+
+Ahora, si a este método le pasamos un número negativo, el for nunca se va a ejecutar ya que i ya será menor que num, por lo que el factorial de cualquier número negativo nos devolverá siempre 1, y como sabemos, por definición matemática no existe el factorial de números negativos. Para esto haremos nuestra propia excepción de la siguiente manera:
+
+public class Calculadora {
+	public int factorial (int num){
+		if (num < 0){
+			throw new ArithmeticException("No se puede calcular el factorial de un número negativo")
+		}
+		int fact = 1;
+		for(int i = 2; i <= num; i++){
+			fact = fact * i;
+		}
+	return fact
+	}
+}
+
+De esta manera tenemos una validación de datos que nos devolverá una excepción del tipo ArithmeticException con nuestro mensaje al ingresar un número negativo. Tenemos que tener en cuenta que los métodos publicos siempre deben tener algún tipo de validación de datos ya que dependemos de un input externo. En los métodos privados podemos suponer que la data ya fue validada en otro lugar el código.
+Estas excepciones son instanciadas en el momento en el que van a ser lanzadas, excepto alguna excepción que esté guardada en una variable. También vale aclarar que un throw corta el flujo tradicional del programa al igual que un break o un return por lo cual no hace falta agregar un else si queremos agregar otra nueva excepción abajo de la siguiente manera:
+
+public class Calculadora {
+	public int factorial (int num){
+		if (num < 0){
+			throw new ArithmeticException("No se puede calcular el factorial de un número negativo")
+		}
+		if(num > 12){
+			throw new IllegalArgumentException("Por limitaciones técnicas, no se puede calcular para numeros mayores a 12")
+		}
+
+		int fact = 1;
+		for(int i = 2; i <= num; i++){
+			fact = fact * i;
+		}
+	return fact
+	}
+}
+
+Muchas veces no sabemos qué tipo de excepción devolver. Lo más facil en estos casos es devolver una RuntimeException, la sueprclases de las otras excepciones que vimos, devolviendo algo más genérico. No es recomendable, pero es una práctica para salir del paso.w

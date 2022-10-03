@@ -1,0 +1,40 @@
+UPCASTING
+
+El UPCASTING o generalización nos va a permitir tener objetos de determinado tipo pero tratarlos como si fueran de otro para tener algunas ventajas.
+Para empezar con un ejemplo seguiremos con el modelo de la superclase Vehículo y las subclases Auto y Moto. Con este modelo crear las siguientes instancias como venimos viendo:
+
+		Vehículo v = new Vehículo("MarcaFalsa", "RTY", "QWE456");
+		Auto a = new Auto(ture, "MarcaFalsa", "COM2", "ABC123");
+		Moto m = new Moto(20, "FalsaMarca", "Mod32", "ZXC098");
+
+Pero lo que nos deja hacer el upcasting es la siguiente instancia también:
+
+		Vehículo a2 = new Auto(true, "MarcaFalsa", "ROM2", "QWE666");
+
+Sin que nos de ningún error. Esto es porque un Vehículo ES un auto, no así podríamos hacer un "Moto a2 = new Auto", ya que una moto NO es un auto. Este proceso se llama generalización o UPCASTING donde tomamos un auto y lo estamos tratando de ver como si fuese un Vehículo y trabajarlo de tal manera. Hacer esto es lo mismo que tener un tipo Auto a como definimos arriba y castearlo como vehículo, o en código:
+
+		Vehículo a2 = (Vehículo) a;
+
+Este casting puede hacerlo JAVA implicitamente definiendo solamente:
+		
+		Vehículo a2 = a;
+
+donde definimos un Vehículo a2 y hacemos referencia al Auto definido previamente "a" mediante la generalización y tratarlo como un vehículo. 
+
+Que ventaja tiene esta generalziación ? 
+Como vimos en el caso de HERENCIA, cuando tenemos una concesionaria, teníamos 2 métodos, un "agregarAuto" y un "agregarMoto" y 2 arraylists distintas de "Autos" y "Motos". Con esta generalización podemos tener solo un método "agregarVehículo" y solo una arraylist "Vehículos" donde mediante el upcasting podemos guardar autos y motos en la misma colección, y lo mismo podemos hacer si queremos analizar estadísiticas, saber cuantos vehículos se vendieron, o simplemente mostrar un listado de todos los vehículos. Sin la generalización deberíamos duplicar todo el código y tener 2 listas de autos y de motos, y el análisis de ventas debería recorrer estas dos listas de tipos distintos, y mucho peor aún, si el día de mañana la concecionaria amplia su flota y agrega un nuevo tipo "cuatricilos" o "camionetas" deberá agregar una nueva lista nuevos métodos "agregarCuatri" y "agregarCamion", y modificar todo el código de análisis de ventas, o cualquier otro método de la concecionaria para tener en cuenta estos nuevos vehículos. Por en cambio agregar otro tipo de vehículo en el nuevo modelo solo consta de crear una nueva clase que sea subclase de vehículo y listo, se puede tratar de la misma manera que Autos y Motos, como vehículos, y compartir la misma colección.
+Es obvio que SIN HERENCIA NO PODEMOS TENER UPCASTING.
+
+
+Cuales son las DESVENTAJAS de la generalización ?
+
+Cuando generalizamos perdemos las propiedades intrínsecas de las sublcases, por ejemplo, como dijimos antes, al tener la clase auto como al siguiente:
+
+		Auto a = new Auto(ture, "MarcaFalsa", "COM2", "ABC123");
+
+Podremos llamar al método "a.prenderAire()" así también como el "a.acelerar" que pertenecen a la clase Auto (por herencia o no). Por en cambio si casteamos este auto y lo tratamos como vehículo de la siguiente manera:
+
+		Vehículo v = a
+
+ahora, usando la generalización, podremos llamar al método "v.acelerar" pero no así al método "v.prenderAire()" que lo perdimos por lo cual nos tirará error ya que estamos viendo el mismo auto (v = a, es el mismo auto que antes) pero como si fuese un vehículo, y como sabemos, los vehículos no tienen el método "prenderAire".
+Como podemos recuperar estas propiedades perdidas u ocultas al generalizar ? ver "DOWNCASTING" e "INSTANCEOF"

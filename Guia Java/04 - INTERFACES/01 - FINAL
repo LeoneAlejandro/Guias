@@ -1,0 +1,25 @@
+FINAL
+
+El primero contexto en el que vemos final es cuando declaramos variables locales -variables válidas solo para la clase en la que fueron declaradas-, donde el modificador final convierte a esa variable en una CONSTANTE local. Estas constantes no permiten modificar sus valores, y deben ser iniciadass.
+
+	final int MAX_HORAS_EN_DIA = 24;
+
+El segundo contexto es cuando declaramos atributos como final, donde también lo volveremos en una constante, pero el valor incial lo podemos definir en el constructor de la clase. Es claro que tampoco podríamos definir un setter ya que la transformamos en una constante, una vez instanciado no puede cambiar de valor.
+
+	public class Clase {
+		private final int atributo;
+
+		public constructor(){
+			this.atributo = atributo;
+		}
+	}
+
+El tercer contexto en el que aparece final es a nivel de clases, donde podemos definir una clase como final para prohibir ser una superclase de otras clases "hijas", ya que al definirla como final la misma no puede tener subclases.
+
+	public final class ClaseFinal {}
+	public class Clase extendes ClaseFinal {} <------ Error de compilación.
+
+Tener en cuenta que está prohibido definir como final a una clase abstacta, ya que una clase abstacta no se puede instanciar y su único uso es plantear una generalización y servir como superclase de otras clases derivadas. Al definirla como final le prohibimos a esa clase tener subclases derivadas, por lo que estamos en una insconsitencia lógica donde los modificadores se contradicen entre si.
+
+La cuarta y última implementación de la palabra final es en los métodos, donde final -similar al caso de clases-, prohibe tener métodos en subclases derivadas que sobreescriban al método final definido en el principio. Al definir como final un método, el mismo nunca puede ser sobreescrito.
+Al igual que al nivel de clases, un método abstracto no puede ser final por la misma dicotomía de lógica. Un método abstacto no tiene lógica ya que su uso depende de la sobreescritura en las subclases, pero final prohibe esa sobreescritura, por lo que se contradicen nuevamente.

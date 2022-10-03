@@ -1,0 +1,92 @@
+HISTORIAL
+
+Podemos ver el historial de todos los commits que hicimos con:
+
+		git log
+
+Donde nos devuelve todos los commits con el nombre de quien hizo commit, la fecha y el mensaje, junto con una linea con un ID único:
+
+		commit e7fad229fb250afd9dbf78a7bdbb2ade061ff827 (HEAD -> master)
+		Author: Ale Leone <ale.leone09@gmail.com>
+		Date:   Tue Sep 20 17:12:49 2022 -0300
+			Primer commit
+
+Si son muchas páginas podemos ir pasando con espacio, y salir con 'q'. Podemos también ver lo mismo pero de una forma resumida haciendo el comando:
+
+		git log -oneline
+
+También podemos agregar '--reverse' para ver del último commit al más reciente, al revés de la vista default.
+
+Podemos también ejecutar:
+
+		git log --online --stat
+
+para ver de una forma resumida todos los cambios del cada commit en un historial. Ejemplo
+
+		a642e12 (HEAD -> master) Add header to all pages.
+			 audience.txt                                    | 4 +++-
+			 objectives.txt                                  | 1 +
+			 sections/creating-snapshots/init.txt            | 2 +-
+			 sections/creating-snapshots/staging-changes.txt | 2 +-
+			 toc.txt                                         | 2 +-
+			 5 files changed, 7 insertions(+), 4 deletions(-)
+
+vemos que en el último commmit hay 5 cambios, los nombres de los archivos cambiados y cuantas lineas se agregaron o removieron en cada archivo.
+También podemos ver cada linea cambiada del commit anterior por ej haciendo un
+
+			git log --oneline --patch
+	
+Para ver un commit en especial podemos tirar por ejemplo
+
+		git log --oneline
+
+Nos devuelve el siguiente resultado
+
+		37035e6 (HEAD -> master) Agrego nueva carpeta y nuevo txt
+		32f8672 Mensaje
+		e7fad22 Primer commit
+
+Para ver uno en especial ejecutamos
+
+		git show e7fad
+
+No tenemos que poner todo el ID del commit (incluso esos 7 dígitos son los primeros de 20+, ver el primer caso) solo cierta cantidad necesaria para identificar un solo commit. También podemos usar una referencia única que no sea el ID, como por ejemplo si ponemos
+
+		git show HEAD 			
+
+nos devuelve el primer commit ya que es el único que es el master o HEAD
+También podemos usar la '~' para elegir otro commit desde la linea HEAD, por ejemplo la siguiente linea indica "de la linea que dice HEAD, 2 para abajo"	
+
+		git show HEAD~2 		//nos devuelve la misma linea que show e7fad22
+
+El show nos muestra un resultado muy similar al "get diff" que vimos arriba, osea nos muestra los cambios.
+Para ver la versión exacta de un archivo del commit elegido (en vez de la diff como el caso anterior) ejecutamos:
+
+		git show HEAD~2:file1.txt
+
+Después de elegir de cual commit queremos ver un archivo, seguido de ':', elegimos el path del archivo que queremos ver de esa versión o commit. La linea anterior nos muestra el file1.txt del commit e7fad. En este caso el file está tirado en la carpeta main, pero pero podríamos tener un path como por ej:
+
+		git show HEAD~2:fist-app/middleware/validate.js
+
+Nos devuelve el archivo validate de esa versión.
+
+Podemos ver también todos los archivos y carpetas de un commit. Para eso ejecutamos
+
+		git ls-tree HEAD 			//hay que aclarar el ls-tree de cual commit, en este caso el HEAD o master
+
+nos devuelve:
+
+		040000 tree e7ff41abdbdca4433e7b2b80a05cae2668032cc8    Nueva carpeta
+		100644 blob eff305bd307c559e0b46b987f3c71bdabbc91c98    file1.txt
+		100644 blob ce013625030ba8dba906f756967f9e9ca394464a    file2.txt
+		100644 blob ce013625030ba8dba906f756967f9e9ca394464a    file3.txt
+
+Que serían todos los archivos y carpetas del SNAPSHOT guardado en ese commit. Los archivos se representan con la palabra "blob" y las carpetas con "tree". También tendremos un identificador único que depende del contenido deese archivo. 
+Podemos después ver el contenido de un archivo ejecutando
+
+		git show eff305 			//el id único de ese archivo, no tiene que estar entero
+
+Y nos devuelve:
+
+		hello
+		ocean

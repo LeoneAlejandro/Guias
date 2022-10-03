@@ -1,0 +1,23 @@
+PRIMEROS SETEOS
+
+Primer seteo de Git: Usando Git Bash recomendadamente, se setea 
+
+		git config --global user.name "Ale Leone" 
+		git config --global user.email ale.leone09@gmail.com 
+		git config --global core.editor "code --wait"
+
+Podemos ver todos estas sets en:
+
+		git config --global -e
+
+Luego hay que definir el manejo de "end of lines". En Windows EOLs están marcadas con dos caracteres especiales.
+\n : Line Feed
+\r : Carrige Return
+Y en Mac/Linux solo con Line Feed, por lo tanto si estamos en Windows debemos setear:
+
+		git config --global core.autocrlf true			// Si fuese Mac/Linux se setea como 'input' en vez de 'true'
+
+Para ver todos los comandos podemos escribir
+
+		git config --help 	// nos devolverá toda la infomación relacionada con "config" en git
+		git congi -h 		// nos devuelve una lista más resumida de lo mismo

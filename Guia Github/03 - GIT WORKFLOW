@@ -1,0 +1,69 @@
+GIT WORKFLOW
+
+Supongamos que tenemos un repo vacío, agregamos un par de archivos file1, file2 en nuestro repo local, luego con el comando 
+
+		git add file1 file2; 
+
+agregamos estos archivos al "staging area" que es una antesala del repo, y luego cuando estamos seguros que queremos hacer un commit de los
+archivos que estan en el staging area, ejecutamos el comando: 
+
+		git commit -m 'initial commit'; 
+
+lo que hará un commit de los archivos con el mensaje (-m) "initial commit". El mensaje es muy importante, debe ser representativo de 
+los cambios para poder tener un historial más facil de leer y llevar.
+Una vez que hacemos el commit, la "staging area" no queda vacía, todavía tiene el snapshot o files que agregamos al principo. Luego supongamos que cambiamos file1, por lo que tendremos que volver a ejecutar la siguiente linea para actualizar el file1 en nuestro staging area:
+
+		git add file1; 
+
+ahora nuestra staging cambió nuestro viejo file1 con el nuevo modificado, pero no solo tiene este file, sino también el file2 que teníamos antes ya que el mismo también estaba en el staging area. Luego al volver a hacer un commit,
+
+		git commit -m "file1 bug fix"
+
+volvemos a guardar en el repo el nuevo file1 y el viejo file2. Basicamente una foto de TODOS nuestros archivos, no solo las modificaciones.
+Que sucede cuando por ejemplo queremos eliminar el file2? Si lo eliminamos de nuestra pc, el file2 todavía estará en el "staging area" por lo que tenemos que hacer un
+
+		git add file2
+
+para que se elimine. Si, se usa "add" por más que querramos eliminarlo, ya que al hacer un "add file2" Git actualiza file2 de nuestra pc (eliminado) por el file2 del staging area (file2 viejo que queremos borrar) y de nuevo tenemos que hacer un commit 
+
+		git commit -m "deleted file2"
+
+Lo importante para darse cuenta es que cuando hacemos un add y un commit no estamos agregando un nuevo archivo a la staging area y commitiendolo al repo solo ese archivo, sino que el add actualiza los archivos cambiados al a staging area (suponiendo que ya estaban en la SA) y cuando commitimos subimos una SNAPSHOT de nuestra "staging area" guardando así TODOS los archivos que están en ese momento en la SA. Por eso GIT no guarda los cambios realizados, sino el contenido completo, y luego lo puede comparar con otros contenidos para ver cuales fueron los cambios. Esto hace también que sea muy fácil volver a una versión anterior para deshacer cambios indeseados. Se pude pensar que se desperdicia mucho lugar guardando todo el proyecto pero no es así, git es muy eficiente con el uso de espacio y no guarda nunca duplicados.
+Entonces CADA commit contiene una imagen COMPLETA de nuestro proyecto.
+Cada commit que hacemos tiene un identificador único y contiene un mensaje, cuando se hizo el commit, quien lo hizo y la SNAPSHOT completa del proyecto.
+
+Cuando queremos consultar el estado de nuestro repo podemos ejecutar:
+
+		git status
+
+que nos devolverá una respuesta similar a esta:
+
+		$ git status
+		On branch master
+
+		No commits yet
+
+		Untracked files:
+		  (use "git add <file>..." to include in what will be committed)
+		        file1.txt
+		        file2.txt
+
+		nothing added to commit but untracked files present (use "git add" to track)
+
+Esto nos muestra file1 y file2 en rojo ya que no están en la staging area. Para agregar los archivos a la Staging Area podemos hacerlo de las siguientes maneras:
+	
+	git add file1.txt file2.txt 		// podemos agregar con espacios todos los archivos que querramos
+	git add *.txt						// agregamos todos los archivos txt que tenemos
+	git add .							// agrega todo el directorio entero recursivamente
+
+Si luego de hacer un add tiramos de nuevo git status veremos en verde las lineas "new file: fileX.txt". Y si modificamos algún archivo y tiramos status de nuevo, nos mostrará en verde las mismas lineas que antes (ambos archivos) pero en rojo abajo también, el archivo que modificamos y que no está en la SA.
+Luego podemos hacer el commit, y al mismo le tenemos que agregar un mensaje. Hay casos donde solo una linea no alcanza para describir el cambio que hicimos, en este caso hacemo uns "git commit" sin mensaje, y nos abrirá VSCODE (porque lo seteamos así al principio) donde podremos escribir un mensaje más largo con un título (no más de 80 caracteres) y luego abajo de una line break (renglón en blanco) un mensaje más explicativo o descripción larga.
+
+	Mejores prácticas o recomendaciones:
+No es recomendable ni hacer commits muy pequeños (cada actualización de un archivo) o commits muy largos (trabajar durante una semana en algo y hacer un super commit). 
+La idea de los commits es hacer checkpoints a lo largo del trabajo. Cada commit debe representar una cadena lógica única, y no mezclar las cosas. Por ejemplo si fixeamos un bug y luego encontramos un typo en otro lado, no es recomendable hacer ambos commits juntos, ya que la lógica de ambos cambios no se relacionan para nada. Y es MUY MUY importante que los mensajes de los commits sean descriptivos y útiles para el uso futuro y para otras personas, por eso mismo, si las tareas son simples y no se mezclan, el mensaje va a ser más facil de escribir también. Ver también las convenciones temporales, y elegir solo una (presente: Arreglé un bug; o pasado: Se arregló un bug) y no mezclarlas.
+
+Es necesario siempre usar la staging area antes de commitir algo ? No, pero hay que estar seguro de lo que hacemos ya que se pierde una area importante de revisión.
+Usualmente si el código es revisado por alguien más ni siquiera podemos saltar la SA. Para saltear la SA ejecutamos:
+		git commit -a -m "mensaje" 		
+al hacer un -a estamos commitiendo TODO nuestro repo local, salteando la SA. También se puede escribir como '-am' en vez de '-a -m'.

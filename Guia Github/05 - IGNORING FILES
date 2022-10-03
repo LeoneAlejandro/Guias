@@ -1,0 +1,17 @@
+IGNORING FILES
+
+En todos los proyectos siempre tenemos algunos archivos que queremos omitir o ignorar, por ejemplo nunca queremos guardar los logfiles o files binarios en el repo ya que no proveen ningún valor y aumenta el tamaño de nuestro repo, cada developer va a tener su propio logfile. Para ignorar un archivo o directamente una carpeta o subdirectorio entero tenemos que tener siempre en el root del proyecto un archivo .gitignore, y de esta manera podemos agregar el file o subdir a este archivo:
+		echo logs/ > .gitignore
+Agregará el path del la carpeta logs para que git lo ignore. Podemos abrir .gitignore con vscode también (code .) y veremos todas las entrys o lineas de paths que queremos ignorar. Este .gitignore también debe ser actualizado en la SA y commitido para guardar los cambios.
+Tener en cuenta que si queremos ignorar una carpeta que ya fue commitida hay que remover esa carpeta de la SA y commitir el cambio, de lo contrario siempre se seguriá commitiendo la carpeta que queremos igrnoar porque la misma SIEMPRE ESTÁ en la SA. Por ej agregamos un path bin/ a .gitignore pero la carpeta esa está commitida, lo podemos ver ejecutando:
+
+		git ls-files
+
+Nos devolverá bin/, por más de que hayamos agregado bin/ en .gitignore DESPUÉS de que hayamos alguna vez commitido bin/. Pero por ejemplo si queremos remover un archivo SOLAMENTE de la SA (supongamos que bin/app.bin está dentro de la carpeta y obviamente no queremos eliminarlo de nuestro dir local). Podemos ejecutar:
+
+ 		git rm --cached bin/ 			
+
+tal vez pida también un '-r' después de --cached para permitir remover de forma recursiva de esta manera SOLAMENTE lo borramos de la SA (también llamado index area) ya que si hacemos un "git rm bin/" también lo removerá de nuestro dir local.
+Obviamente luego tenemos que commitir el cambio.
+Una vez hecho todo esto, GIT no trackeará más bin/ ya que el path ya lo habíamos agregado en .gitignore, pero como aclaramos antes, si la carpeta ya está en la SA, si lo seguirá trackeando por más de que el path esté en .gitignore.
+Podemos consultar los templates comunes de .gitignore dependiendo el idioma en github.com. Por ejemplo para Java es recomendable ignorar todos los .class ya que las clases se generan automáticamente en la compilación del código.

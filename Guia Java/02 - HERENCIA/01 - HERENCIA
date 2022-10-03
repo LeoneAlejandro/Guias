@@ -1,0 +1,90 @@
+kbHERENCIA
+
+Es uno de los pilares fundamentales del paradigma orientado a objetos. Es báse del cuarto pilar y el más importante de la OOP que es polimorfismo. 
+La herencia es un mecanismo que nos va a permitir reaprovechar miembros (atributos y métodos) de clases que ya existan en nuesto modelo o en el lenguaje que estemos programando. Cuando aprovechamos miembros de una sola clase hablamos de HERENCIA SIMPLE, por en cambio cuando se reaprovechamos de más de una clase hablamos de HERENCIA MÚLTIPLE. Ambos tipos de herencia tienen sus ventajas e inconvenientes, por esto hay programas que soportan ambas tipos de herencia, pero hay otros que solo soportan HERENCIA SIMPLE, como JAVA y utilizan INTERFACES para suplir esta falta.
+
+Supongamos tener una clase testeada y probada, que sabemos que funciona, e incluso que ni siquiera hicimos nosotros, sino otro programador o lote de programadores, y nosotros queremos agregarle funcionalidad sin romper nada de lo que ya está hecho. Lo que podemos hacer es usar esa clase ya armada y hacer uso de la herencia para poder extenderla, colocando allí las nuevos atributos o funcionalidades que desearamos:
+
+┌──────────────┐     ►     ┌────────────┐     ┌──────────────┐      ►   	 Instancia de NuevaClase:
+│ ClaseProbada │           │ NuevaClase │     │ ClaseProbada │	
+├──────────────┤     ►     ├────────────┤     ├──────────────┤      ►   		atributo1
+│ atributo1    │           │ atributoX  ├────►│ atributo1    │           	 	atributo2
+│ atributo2    │     ►     ├────────────┤     │ atributo2    │      ►    	 	atributoX
+├──────────────┤           │ metodoX()  │     ├──────────────┤            		metodo1()
+│ metodo1()    │     ►     └────────────┘     │ metodo1()    │      ►     		metodo2()
+│ metodo2()    │                              │ metodo2()    │            		metodoX()
+└──────────────┘     ►                        └──────────────┘      ►
+
+
+Ahora nuestra NuevaClase va a ser hija de la clase ya probada y por ende va a heredar todos sus atributos y métodos, por lo que una instancia de esta NuevaClase tendrá los atributos y métodos tanto de ClaseProbada como los de NuevaClase como vemos en la figura 3.
+Hay que tener en cuenta que:
+┌──────────────────────────────────────────────────────────┐
+│Los constructores NO se heredan bajo ninguna circunstancia│
+└──────────────────────────────────────────────────────────┘
+Para ver más sobre esto ver "03 - SUPER"
+
+Otro importante uso de la HERENCIA es poder generalizar y evitar por ende la repetición de código. En el ejemplo siguiente tenemos una concesionaria que tiene a la venta autos y motos, como vemos en ambas clases hay atributos y métodos repetidos, por lo que podemos establecer una jerarquía a través de la herencia, y podemos establecer una nueva clase llamada vehículo para que luego las clases auto y moto pueden extenderse de ella:
+
+                                                                                ┌────────────────────┐
+                                                                                │ Vehiculo           │
+ ┌─────────────────────┐      ┌──────────────────────┐     ►                    ├────────────────────┤		SUPERCLASE
+ │ Auto                │      │ Moto                 │                          │ marca: String      │		CLASE PADRE
+ ├─────────────────────┤      ├──────────────────────┤     ►                    │ modelo: String     │		CLASE BASE
+ │ marca: String       │      │ marca: String        │                          │ patente: String    │
+ │ modelo: String      │      │ modelo: String       │     ►                    ├────────────────────┤
+ │ patente: String     │      │ patente: String      │                          │ acelerar(): void   │
+ │ tieneAire: boolean  │      │ anchoDeManubrio: int │     ►                    │ frenar(): void     │
+ ├─────────────────────┤      ├──────────────────────┤                     ┌───>│ encender(): void   │<───┐ 
+ │ acelerar(): void    │      │ acelerar(): void     │     ►               │    └────────────────────┘    │
+ │ frenar(): void      │      │ frenar(): void       │                     │                              │
+ │ encender(): void    │      │ encender(): void     │     ►               │                              │
+ │ prenderAire(): void │      │ hacerWheelie(): void │             ┌───────┴─────────────┐   ┌────────────┴────────┐
+ └─────────────────────┘      └──────────────────────┘     ►       │  Auto               │   │  Moto               │	SUBCLASES
+                                                                   ├─────────────────────┤   ├─────────────────────┤ 	CLASES HIJAS
+                                                           ►       │ tieneAire: boolean  │   │anchoDeManubrio: int │	CLASES DERIVADAS
+                                                                   ├─────────────────────┤   ├─────────────────────┤
+                                                                   │ prenderAire(): void │   │hacerWheelie(): void │
+                                                                   └─────────────────────┘   └─────────────────────┘
+
+Ahora tenemos una nueva clase vehículo que nos va a permitir generalizar el comprotamiento de un vehículo, y contener los atributos y métodos que son comunes a autos y motos, y luego estas últimas se extenderán de la superclase vehículo, con atributos y métodos particulares y que definen únicamente a estas clases. Esto es también muy útil para reutilizar código más adelante también ya que el día de mañana la concesionaria puede decidir agregar cuatriciclos a su flota, y solo habrá que crear una nueva clase extendiendo a vehículo con propiedades únicas de los cuatriciclos sin tener que repetir código, y usando una superclase con propiedades que sabemos que están probados.
+ 
+                        ┌──────────────────────┐                                                                    ┌────────────────────┐
+       ┌───────────────►│ Concesionaria        │◄────────────┐                ┌────────────────────────┐            │ Vehiculo           │
+       │   -autos     * ├──────────────────────┤ *    -motos │                │ Concesionaria          │            ├────────────────────┤
+       │                │ nombre: String       │             │                ├────────────────────────┤ -vehículos │ marca: String      │
+       │                ├──────────────────────┤             │                │ nombre: String         ├───────────►│ modelo: String     │
+┌──────┴──────────────┐ │ agregarAuto(): void  │ ┌───────────┴──────────┐     ├────────────────────────┤          * │ patente: String    │
+│ Auto                │ │ agregarMoto(): void  │ │ Moto                 │  ►  │ agregarVehículo(): void│            ├────────────────────┤
+├─────────────────────┤ └──────────────────────┘ ├──────────────────────┤     └────────────────────────┘            │ acelerar(): void   │
+│ marca: String       │                          │ marca: String        │  ►                                        │ frenar(): void     │
+│ modelo: String      │                          │ modelo: String       │                                    ┌─────>│ encender(): void   │<────┐
+│ patente: String     │                          │ patente: String      │  ►                                 │      └────────────────────┘     │
+│ tieneAire: boolean  │                          │ anchoDeManubrio: int │                                    │                                 │
+├─────────────────────┤                          ├──────────────────────┤  ►                                 │                                 │
+│ acelerar(): void    │                          │ acelerar(): void     │                              ┌─────┴───────────────┐   ┌─────────────┴───────┐
+│ frenar(): void      │                          │ frenar(): void       │  ►                           │  Auto               │   │  Moto               │
+│ encender(): void    │                          │ encender(): void     │                              ├─────────────────────┤   ├─────────────────────┤
+│ prenderAire(): void │                          │ hacerWheelie(): void │                              │ tieneAire: boolean  │   │anchoDeManubrio: int │
+└─────────────────────┘                          └──────────────────────┘                              ├─────────────────────┤   ├─────────────────────┤
+                                                                                                       │ prenderAire(): void │   │hacerWheelie(): void │
+                                                                                                       └─────────────────────┘   └─────────────────────┘
+
+Ahora vemos que con el nuevo modelo la concesionaria tiene una sola colección de vehículos y un solo método "agregarVehículo", y como los autos y motos son vehículos, tranquilamente podrán caber en la misma colleción (dispersos, no tienen que estar ordenados ni tener nada distinto en la colleción). Este proceso se llama generalización.
+
+Cada vez que una clase extiende a la otra se está cumpliendo conceptualmente la relación "es un", "un auto ES UN vehículo, una moto ES UN vehículo" y tenemos que saber diferenciarla bien con la asociación donde una clase "tiene" a otra, como por ejemplo "concecionara TIENE vehículos", esto es vital para saber a que aplicar la herencia. Un error de principiante es querer aplicarle herencia a TODO cuando en realidad no se está aplicando bien conceptualmente. También vemos las diferencias en las flechas, las flechas sólidas "──►" hacen referencia a "tiene una" y las huecas "──>" a herencia o "es una", y también, cuando una clase "tiene" a otra, hay que especificar la cardinalidad (uno a muchos, muchos a muchos, etc) y no así cuando hablamos de herencia.
+Para extender una clase en código simplemente se tiene que agregar "extends" a que clase extiende.
+
+Cuando usamos herencia también usamos encapsulamiento, al igual que siempre, por lo que los atributos realmente no se heredan, porque como vimos en encapsulamiento, no es buena práctica poder acceder a atributos de una clase desde otra. Por lo cual, para acceder a la patente del auto o de la moto, deberíamos tener getters y setters para garantizar el encapsulamiento como ya hemos visto. Lo mismo sucede con los métodos. Supongamos que tenemos los siguientes métodos en la clase vehículo:
+
+	public void encender(){
+		chequearMotor()
+		System.out.println("Encendiendo...")
+	}
+
+	private void chequearMotor() {}
+
+Podremos llamar al método "encender" desde la clase Auto o Moto, ya que la misma está pública y usa otro método de la misma vehículo, pero no así la clase "chequearMotor" ya que está privada, por más de que si se puede acceder a "cheaquearMotor" desde el método "encender". Chequear motor puede ser llamado por otro método dentro de la clase vehículo únicamente, y si ese otro método es público, ese método podrá ser llamado desde cualquier lugar del código.
+┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Por lo tanto como regla general en JAVA van a heredarse de una SUPERCLASE, todos los miembros NO privados de esa superclase│
+└───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+Por que decimos los NO privados y no solo "publicos"? Verlo en "02 - Modificadores y visibilidad". 
