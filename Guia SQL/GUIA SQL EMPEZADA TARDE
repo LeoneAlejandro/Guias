@@ -39,10 +39,12 @@ Al cumplirse la primera condición se escapa del CASE sin leer las siguientes.
 VIEWS
 
 CREATE VIEW nombre_del_view AS antes del SELECT genera una VIEW. Luego se puede usar ese VIEW para hacaer cualquier operación al igual que una tabla. La VIEW no guarda datos, solo los muestra. Una VIEW puede ser modificada si la misma no contiene alguna de las siguientes operaciones:
+
 	DISTINCT
 	Aggregate functions (SUM, MIN, MAX, AVG...)
 	GROUP BY/HAVING
 	UNION
+	
 Al final de la VIEW se puede agregar la cláusula WITH CHECK OPTION, ésta hace que al modificar una ROW que hace que la misma sea excluída, nos tira ERROR y no realzia la modificación (EJ: mi view no muestra balances = 0, y modifico una row para que sea 0)
 Normalmente se guardan las VIEWS en un archivo SQL con el mismo nombre de la tabla. 
 
