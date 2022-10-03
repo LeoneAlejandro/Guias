@@ -1,0 +1,64 @@
+REESCRIBIENDO HISTORIA
+
+Un recurso importante pero peligroso de GIT es que podemos reescribir la historia, podemos borrar o modificar commits, combinar o dividros, etc.
+Cuando es conveniente hacer esto ? Cuando la historia es mala, por ej:
+
+	- Mensajes de commits pobres
+	- Commits muy grandes con temas que no se relacionan entre si
+	- Commits muy pequeños dispersos por todos lados
+
+por alguno de estos motivos tal vez no podamos extraer información importante del historial. Queremos un historial limpio, legible y facil de seguir, que explique la historia de nuestro proyecto, como evolucionó desde el día 1. Para esto podemos:
+
+	- Reescribir los mensajes de commits para que tengan un significado y descripción importante
+	- Dividir commits grandes en pequeños que representen cadenas lógicas separadas
+	- Si tenemos muchos commits pequeños podemos hacer un squash de un grupo de commits que estén relacionados
+	- Podemos borrar commits enviados por accidente
+	- Modificar commits, por ej, nos olvidamos de agregar un archivo
+
+Pero reescribir la historia es peligroso y hay que estar seguros.
+
+	REGLA DE ORO:  -- "NO REESCRIBIR HISTORIA PÚBLICA"
+
+Esto quiere decir que si en algún momento hicimos pública nuestra historia, nunca modificarlos. En realidad, los commits en el repo remoto son inmutables, no se pueden modificar, entonces cuando "modificamos" un commit, lo que realmente estamos haciendo es crear una copia EXACTA (*) y asignando a ese commit como el último, pero el commit original no se borra, siempre queda de backup. Para ver un flow, supongamos que nuestro repo local y remoto están en el mismo estado:
+
+Local:    MASTER     │  Remoto:       MASTER
+            ▼        │                  ▼
+ ┌───┐    ┌───┐      │       ┌───┐    ┌───┐
+ │ A │◄───┤ B │      │       │ A │◄───┤ B │
+ └───┘    └───┘      │       └───┘    └───┘
+
+Ahora supogamos que modificamos el commit B en nuestro repo local, enrealidad lo que estamos haciendo es crear una copia exacta * y después pushearla para designarla como master en nuestro repo local y remoto:
+
+ REPO LOCAL                                                       REPO REMOTO - OP 1                                       REPO REMOTO - OP 2
+             MASTER                                                                   MASTER
+               ▲            Al intentar pushear git nos                                 ▲      O la otra forma es                    MASTER
+    ┌───┐    ┌───┐          va a rechazar el push                   ┌───┐    ┌───┐    ┌───┐    pushear es con un -f                    ▲
+    │ A │◄───┤ B*│          porque tenemos una divergencia,         │ A │◄───┤ B ├────┤ M │    lo que haría lo siguiente    ┌───┐    ┌───┐
+    └───┘    └───┘          una nueva branch.Por lo que podemos     └───┘    └───┘    └─┬─┘    en el repo remoto            │ A │◄───┤ B*│
+      ▲                     hacer 2 cosas:                            ▲                 │                 >>>>>>>>>>>>>>>   └───┘    └───┘
+      │      ┌───┐          o hacer un merge de la siguiente manera   │      ┌───┐      │      
+      └──────┤ B │                 >>>>>>>>>>>>>>>>>>>>               └──────┤ B*│◄─────┘	   Git sobreescribe B con B*
+             └───┘          que nos dejará una historia sucia,               └───┘
+               ▼            compleja de leer
+          origin/MASTER
+
+Esta opción 2 parece muy sencilla y deja el remoto como queremos, pero sobreescribir está extremadamente mal porque como ya dijimos, en algún momento hicimos B público, por lo que si en algún momento otra persona hizo un pull antes de hacer la modificación, esa persona está trabajando con la versión anterior de B, por lo que cuando haga un push de su nuevo commit "C" git va a rechazar el push ya que pertenece a otra branch.
+Para solucionar esto, la otra persona tendrá que hacer un pull para obtener B* y hacer un merge, dejando una historia sucia y compleja sin motivo.
+
+   REPO LOCAL DE TERCEROS                  REPO LOCAL & REMOTO DESPUES DEL PUSH
+ 
+                       MASTER          │                        origin/MASTER & MASTER
+                         ▲             │                                  ▲
+      ┌───┐    ┌───┐   ┌───┐   ┌───┐   │       ┌───┐    ┌───┐           ┌───┐
+      │ A │◄───┤ B │◄──┤ C │◄──┤ M │   │       │ A │◄───┤ B*│◄──────────┤ M │
+      └───┘    └───┘   └───┘   └─┬─┘   │       └───┘    └───┘           └─┬─┘
+        ▲                        │     │         ▲                        │
+        │      ┌───┐             │     │         │      ┌───┐   ┌───┐     │
+        └──────┤ B*│◄────────────┘     │         └──────┤ B │◄──┤ C │◄────┘
+               └───┘                   │                └───┘   └───┘
+                 ▼                     │
+            origin/MASTER              │
+
+Como vemos, el origin/MASTER va a estar en B*, pero esta persona tendrá su master en el B que luego modificamos, por lo que su commit C está basado en B, y tendrá que hacer un merge para combinar B* y C, y luego también contaminar el repo remoto una vez que pushee estos cambios, contaminando el remoto de una manera desprolija.
+
+Por esto recordar, modificar la historia en nuestro repo privado y local antes de hacerlo público está perfecto, es hasta una buena práctica para pushear después una historia limpia, pero una vez que pusheamos algo al repo remoto, nunca modificarlo !!!

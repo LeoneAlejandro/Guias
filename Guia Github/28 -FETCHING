@@ -1,0 +1,66 @@
+FETCHING
+
+Supongamos que el repo que copiamos es un repo donde trabajan varias personas. Tenemos que tener en cuenta que si alguien modifica el repo remoto, no sotros no veremos el cambio en nuestro repo clonado; tenemos que hacer un fetch, esto agregará los commits del repo local y moverá el origin/MASTER sin modificar nuestro MASTER o nuestro HEAD.
+
+		git fetch
+
+Podemos agregar 'origin branch branch/nombredebanch' en el caso de solo querer bajar una branc especial. Luego de hacer esto veremos los siguientes cambios:
+
+        LOCAL           │       REMOTE
+                        │
+   MASTER               │             MASTER
+     ▼                  │                ▼
+   ┌───┐    ┌───┐       │    ┌───┐     ┌───┐
+   │   │◄───┤   │       │    │   │◄────┤   │
+   └───┘    └───┘       │    └───┘     └───┘
+              ▲         │
+         origin/MASTER  │
+                        
+Así se verán el repo local nuestro y el repo remoto después de clonar los cammits que se hicieron en el repo remoto. Aunque hayamos bajado el nuevo commit del repo remoto, no tendremos los cambios en nuestro directorio local. En nuestro directorio local tendremos la versión que apunta a MASTER. Commo podemos hacer para actualizar los cambios ? Hacemos un merge de la siguiente manera:
+
+		git merge origin/master
+
+Ahora nuestro repo local queda así:
+
+		    MASTER
+     		  ▼
+   ┌───┐    ┌───┐
+   │   │◄───┤   │
+   └───┘    └───┘
+              ▲
+         origin/MASTER
+
+En el caso de que MASTER y origin/MASTER tengan una divergencia, podemos tener conflictos a resolver.
+Para ver un ejemplo, supongamos que editamos el README desde la web de git modificando el repo local. En el repo local tendremos 2 commits, el incial + el edit, pero en el dir local solo tendremos el readme original. Para eso hacemos un fetch
+
+		git fetch
+		git log --oneline --all --graph
+
+Ahora en el log veremos los siguiente:
+
+		* 3478252 (origin/main, origin/HEAD) Update README.md
+		* eb163fb (HEAD -> main) Initial commit
+
+Veremos  nuestro head en el commit viejo, el nuevo commit de origin, y los nuevos HEAD y main de origin. Podemos también ver como el branch local y el branch remoto divergen con el comando
+
+		git branch -vv
+
+Nos devuelve:
+		
+		* main eb163fb [origin/main: behind 1] Initial commit
+
+Nuestra master o main branch está linkeada a origin, y está 1 commit atrás. Ahora tendremos que hacer un merge, en este caso un FFM
+
+		git merge origin/main
+
+Nos devuelve:
+
+		Updating eb163fb..3478252
+		Fast-forward
+				 README.md | 3 ++-
+				 1 file changed, 2 insertions(+), 1 deletion(-)
+
+Y si vemos el log, finalmente tenemos todo actualizado:
+	
+		* 3478252 (HEAD -> main, origin/main, origin/HEAD) Update README.md
+		* eb163fb Initial commit

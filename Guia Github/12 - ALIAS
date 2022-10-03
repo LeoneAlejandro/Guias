@@ -1,0 +1,15 @@
+ALIAS
+
+En git podemos usar aliases para comandos que usamos muy seguido de las siguiente manera:
+		git --global alias.lg "log --pretty=format:'%an committed %h'"
+
+--global significa que es global, alias.nombre define el nombre del alias (en el caso anterior es lg) y lo que está entre comillas define que queremos que haga el alias "lg". Si abrimos:
+		git --global -e
+veremos una nueva sección:
+		[alias]
+			lg: log --pretty=format:'%an committed %h'
+
+Y si ahora hacemos un "git lg" veremos lo mismo que si ejectuamos toda la línea guardad entre comillas. Un ejemplo práctico es:
+		git config --global alias.unstage "restore --staged ."
+
+Ahora cuando hagamos un "git unstage" vamos a hacer un restore de todos los archivos de la SA.

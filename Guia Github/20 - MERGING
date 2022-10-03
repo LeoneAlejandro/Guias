@@ -1,0 +1,92 @@
+MERGING
+
+En GIT hay 2 tipos de merges:
+
+-		Fast foward merges: Un FFM es cuando creamos una branch nueva, pero no nos desviamos a otras ramas por lo que lo único que tenemos que hacer para mergear es mover el MASTE hacia el último commit de nuestro branch.
+
+	                 MASTER
+	                   ▼
+	 ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐
+	 │   │◄──┤   │◄──┤   │◄──┤   │◄──┤   │
+	 └───┘   └───┘   └───┘   └───┘   └───┘
+	                                   ▲
+	                                 bugfix
+	                                 (HEAD) 
+
+Esto es lo que venimos haceidno en los ejemplos anteriores, tenemos por ej una versión MASTER v1.0, luego hacemos un branch bugfix, hacemos ciertos cambios y tenemos una nueva versión v1.2. Si queremos mergear lo único que tenemos que hacer es asignarle MASTER a esta branch y listo, solo cambiamos el pointer MASTER al último commit v1.2. Después borramos el pointer "bugfix" y listo.
+
+-		3 way merges: Es el mismo caso anterior pero después de que creamos una nueva branch y nos pusimos a trabajar en branch, nosotros o alguien más hizo un nuevo commit en master, por lo que nuestra branch bugfix tiene su primer pointer a un commit viejo de master.
+
+
+                                 MASTER          │                                                 MASTER
+                                   ▼             │                                                   ▼
+  ┌───┐   ┌───┐   ┌───┐   ┌───┐  ┌───┐           │   ┌───┐   ┌───┐   ┌───┐   ┌───┐  ┌───┐          ┌───┐
+  │   │◄──┤   │◄──┤   │◄──┤   │◄─┤   │           │   │   │◄──┤   │◄──┤   │◄──┤ A │◄─┤ B │◄─────────┤   │(MERGE COMMIT)
+  └───┘   └───┘   └───┘   └───┘  └───┘           │   └───┘   └───┘   └───┘   └───┘  └───┘          └─┬─┘
+                            ▲                    │                             ▲                     │
+                            │    ┌───┐   ┌───┐   │                             │    ┌───┐   ┌───┐    │
+                            └────┤   │◄──┤   │   │                             └────┤   │◄──┤ C │◄───┘
+                                 └───┘   └───┘   │                                  └───┘   └───┘
+                                           ▲     │                                            ▲
+                                         bugfix  │                                          bugfix
+
+
+Entonces tenemos cambios en MASTER que no están en la branch bugfix. En este caso cuando hacemos un merge, se crea un nuevo commit que combina estas 2 branches. Se llama 3 way merge porque este nuevo commit hace referencia a 3 commtis, el commiy 'A' que es el último commit en común, y los commits 'B' y 'C' que son los últimos commits de cada branch.
+
+Para visualizar mejor las branches podemos agregar un --graph en nuestro típico log:
+		git log --oneline --all --graph
+
+Para cambiar y crear una branch al mismo tiempo podemos ejecutar:
+		git switch -C bugfix/login-form			//bugfix/login-form es el nombre
+
+
+	EJEMPLO 3 WAY MERGE:
+
+Hagamos un nuevo branch, modifiquemos algo, hagamos un commit de ese branch y luego agregemos otra modificación a MASTER para hacer una divergencia de los paths:
+	
+		git switch -C feature/change-pass					//Creo una nueva branch
+		echo hello > change-password.txt					//hacemos un cambio en la branch
+		git add .											//lo agregamos a la SA
+		git commit -m "Se modifico el pass form"			//hacemos un commit del cambio en el branch
+		git log --online --all --graph
+
+Con todos estos cambios veremos lo siguiente; HEAD está en la nueva branch que está un paso adelante de MASTER, pero siguen sin diverger:
+
+		* 92fe8b2 (HEAD -> feature/change-pass) Se modifico el pass form
+		* f9212c2 (master) Fix the bug that prevented the users from signin up
+
+Ahora volvemos a MASTER y hacemos un nuevo commit:
+
+		git switch master									//Vuelvo a MASTER
+		code objectives.txt									//abro txt con VSCODE y lo modifico
+		git add .											//agregamos los cambios al SA
+		git commit -m "Cambio objectives.txt"				//hacemos el commit de master
+		git log --oneline --all --graph
+
+Ahora vemos como los caminos divergen:
+
+		* fb5ebf3 (HEAD -> master) Cambio objetivos.txt
+		| * 92fe8b2 (feature/change-pass) Se modifico el pass form
+		|/
+		* f9212c2 Fix the bug that prevented the users from signin up
+
+Ahora hacemos un 3 way merge en donde git compara los últimos 2 commits con el commit f9212 que es el último commit en común. Basándose en las diferencias hará una combinación en un nuevo 'merge commit'. Parados en master escribimos:
+
+		git merge feature/change-pass
+
+Nos abrirá VSCODE para agregarle el mensaje a ese nuevo commit y con un nuevo log veremos lo siguiente:
+
+		*   45b1c74 (HEAD -> master) Merge branch 'feature/change-pass'
+		|\
+		| * 92fe8b2 (feature/change-pass) Se modifico el pass form
+		* | fb5ebf3 Cambio objetivos.txt
+		|/
+		* f9212c2 Fix the bug that prevented the users from signin up
+
+Todavía tenemos el feature/change-pass con pointer en el branch, y MASTER ahora está en el nuevo merge commit.
+Si borramos la branch, solo se borra el pointer (feature/change-pass) del graph de arriba, pero las divergencias siguen mostrándose y tenemos todavía todos los commits para verlos.
+Podemos consultar todas las branches mergeadas y no mergeadas con los comandos:
+
+		git branch --merged				//podemos borrarlas todas si ya dejamos de trabajar en esa branch
+		
+		git branch --no-merged

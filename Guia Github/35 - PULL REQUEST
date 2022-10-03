@@ -1,0 +1,111 @@
+PULL REQUEST
+
+Sirve para compartir nuestros cambios con otras personas antes de mergear nuestros cambios master. Veamos un workflow:
+Supongamos que un compañero hace una nueva feature, la persona hace una nueva branch local, hace un commit, y después pushea los cambios a GitHub:
+
+		git switch -C feature/login
+		echo hello > file3.txt
+		git add .
+		git commit -m "Write hello con file3"
+		git push -u origin feature/login
+
+Ahora esa persona desde la web podemos ver esta nueva branch, y haciedo click en el botón "pull request" elegir la branch base (master) y la branch a comparar (feature/login) y podrá ver un resumen de quien hizo el push, que cámbios hay comparados con master. Ahora esa persona puede crear un pull request y agregarnos a nosotros o a cualquier otro compañero para discutir los cambios. Cuando nos agregan, nos llega un mail avisando que alguien quiere que hagamos un review de ciertos cambios a mergear en master. Ahora nosotros podemos hacer un review de los cambios, aprobarlos, agregar comentarios a cada linea y hacer un request de más cambios antes de aprobar. Git muestra de forma muy intuitiva un flow de todos los cambios, el back and forth, y por último nos permite hacer un merge y borrar la branch mergeada del repo remoto con un solo botón.
+Ahora supongamos que nosotros aprobamos los cambios, mergeamos y borramos la branch, ahora la persona que hizo un pull request no tiene la última snapshot o commit del repo remoto, por lo que deberá hacer un:
+
+		git switch master
+		git pull
+
+Y en su log verá lo siguiente:
+
+		* 26610c2 (HEAD -> master, origin/master, origin/HEAD) Merge pull request #1 from codewithmosh/feature/login
+		|\
+		| * a9bd6cb_(origin/feature/login, feature/login) Capitalize Hello. 
+		| * ae2f039 Write hello to file3
+		|/
+		* 73bbc5f Update file1 
+		* 012ff85 Update README.md 
+		* fb3b343 Initial commit
+
+Ahora solo le resta remover el branch local y el tracking de la branch remota que ya no existe:
+		
+		git branch -d feature/login
+		git remote prune origin
+
+
+
+		WORKFLOW REAL:
+
+Para hacer un ejemplo agregé una branch local:
+
+		git switch -C addon/guias
+
+Después fui a mi directorio local y pegué mi guia SQL de sublime text. Tiré un status y me tiró:
+	
+		?? "GUIA SQL EMPEZADA TARDE"
+
+Tire un add, commit y push para agregar los cambios a mi SA, commitir los cambios y subirlos a mi repo remoto:
+
+		git add .
+		git commit -m "Agrego GUIA SQL"
+		git push -u origin addon/guias
+
+Ahora cuando voy a la web veo el mensaje diciendo "addons/guias had a recent push" con la opción "Compare & pull request".
+Cuando entro al pull request puedo ver los cambios, y abajo tengo la opción de "merge" y luego de mergear la branch 'addons/guias' a la branch 'main', me tira el botón 'delete branch'. Al borrar la branch el repo remoto me queda terminado, solo la branch main, con la guia de SQL en ella.
+Vuelvo al cmd y tiro un pull, desde la branch addon/guias veo lo siguiente:
+
+		git pull
+		git log --oneline --all --graph
+
+Deuvelve:
+
+		*   732afae (origin/main, origin/HEAD) Merge pull request #1 from LeoneAlejandro/addon/guias
+		|\
+		| * 6ff90c1 (HEAD -> addon/guias, origin/addon/guias) Agrego GUIA SQL
+		|/
+		* d16cb1b (main) Agrego el ST GUIA GITHUB
+		* 60c27c4 Add file1.txt
+		* eab1893 Update README.md
+		* 3478252 Update README.md
+		* eb163fb Initial commit
+
+Si ahora me muevo a main, tiro un nuevo pull:
+
+		git switch main
+		git pull
+
+Me tira el mensaje:
+
+		Updating d16cb1b..732afae
+		Fast-forward
+		 GUIA SQL EMPEZADA TARDE | 557 ++++++++++++++++++++++++++++++++++++++++++++++++
+		 1 file changed, 557 insertions(+)
+		 create mode 100644 GUIA SQL EMPEZADA TARDE
+
+El último log me devuelve:
+
+		*   732afae (HEAD -> main, origin/main, origin/HEAD) Merge pull request #1 from LeoneAlejandro/addon/guias
+		|\
+		| * 6ff90c1 (origin/addon/guias, addon/guias) Agrego GUIA SQL
+		|/
+		* d16cb1b Agrego el ST GUIA GITHUB
+		* 60c27c4 Add file1.txt
+		* eab1893 Update README.md
+		* 3478252 Update README.md
+		* eb163fb Initial commit
+
+Ahora solo queda borrar las branches de mi repo local con:
+
+		git branch -d addon/guias				//remueve el addon/guias pointer de la linea 6ff90c1
+		git remote prune origin					//remueve el origin/addon/guias pointer de la linea 6ff90c1
+
+Por último veo:
+
+		*   732afae (HEAD -> main, origin/main, origin/HEAD) Merge pull request #1 from LeoneAlejandro/addon/guias
+		|\
+		| * 6ff90c1 Agrego GUIA SQL
+		|/
+		* d16cb1b Agrego el ST GUIA GITHUB
+		* 60c27c4 Add file1.txt
+		* eab1893 Update README.md
+		* 3478252 Update README.md
+		* eb163fb Initial commit

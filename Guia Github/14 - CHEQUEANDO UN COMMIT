@@ -1,0 +1,30 @@
+CHEQUEANDO UN COMMIT
+
+Podemos también revisar el snapshot de viejas versiones con el comando checkout, y debemos darle una versión mediante el ID
+		git checkout 555b62e
+
+Nos va a tirar un warning porque sacamos al HEAD del MASTER, esto es porque hasta ahora siempre HEAD y MASTER se movían juntos, pero al chequear por ej el primer commit, movemos el HEAD y lo separamos del MASTER:
+
+                          HEAD      
+                            ▼       │
+                         MASTER     │    HEAD                    MASTER
+                            ▼       │      ▼                       ▼
+  ┌───┐   ┌───┐   ┌───┐   ┌───┐     │    ┌───┐   ┌───┐   ┌───┐   ┌───┐
+  │   │◄──┤   │◄──┤   │◄──┤   │     │    │   │◄──┤   │◄──┤   │◄──┤   │
+  └───┘   └───┘   └───┘   └───┘     │    └───┘   └───┘   └───┘   └───┘
+
+
+Cuando separamos HEAD y MASTER hay que tener cuidado con hacer nuevos commits, ya que si hacemos un nuevo commit y después volvemos a colocar a HEAD en MASTER, ese commit (C en la fig) no se podrá alcanzar nunca, ya que no hay pointer que nos lleve, es un commit "muerto":
+
+   HEAD
+     ▼                             │
+   ┌───┐                           │    ┌───┐                   HEAD 				ES MUY IMPORTANTE NUNCA HACER COMMITS NUEVOS CUANDO
+   │   │                           │    │ C │                     ▼					NO ESTAMOS EN MASTER
+   └─┬─┘                  MASTER   │    └─┬─┘                  MASTER
+     ▼                       ▼     │      ▼                       ▼
+   ┌───┐   ┌───┐   ┌───┐   ┌───┐   │    ┌───┐   ┌───┐   ┌───┐   ┌───┐
+   │   │◄──┤   │◄──┤   │◄──┤   │   │    │   │◄──┤   │◄──┤   │◄──┤   │
+   └───┘   └───┘   └───┘   └───┘   │    └───┘   └───┘   └───┘   └───┘
+
+Es una buena práctica buscar estos commits muertos y eliminarlos para guardar espacio y mantener un flow limpio. Para volver al master hacemos simplemente un:
+		git checkout master

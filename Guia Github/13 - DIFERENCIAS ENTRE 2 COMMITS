@@ -1,0 +1,17 @@
+DIFERENCIAS ENTRE 2 COMMITS
+
+Como hacemos para ver todos los cambios entre 2 commits ? Supongamos que tiramos un log:
+		git log --oneline
+
+Y nos revuelve:
+		a642e12 (HEAD -> master) Add header to all pages.
+		50db987 Include the first section in TOC.
+		555b62e Include the note about committing after staging the changes.
+		ca49180 Initial commit.
+
+Y queremos ver todos los cambios entre las últimas 2 lineas por ejemplo, tiramos un
+		git diff HEAD~2 HEAD
+
+Se puede agregar un --name-only para ver solo el nombre de los archivos que sufrieron cambios entre esos commits
+Se puede aregar el nombre de algun archivo ("file1.txt" xej) despues del último HEAD para ver solo los cambios de un archivo
+Se puede agregar --name-status para ver la lista de archivos al momento del cambio (M, A, D para modif, add o deletes)

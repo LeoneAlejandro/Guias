@@ -1,0 +1,54 @@
+CHERRY PICKING
+
+Esto se hace cuando por ejemplo tenemos una divergencia de la siguiente forma:
+
+                  MASTER       │                          MASTER
+                    ▼          │                            ▼
+ ┌───┐   ┌───┐    ┌───┐        │ ┌───┐   ┌───┐    ┌───┐   ┌───┐
+ │   │◄──┤   │◄───┤   │        │ │   │◄──┤   │◄───┤   │◄──┤ a │
+ └───┘   └───┘    └───┘        │ └───┘   └───┘    └───┘   └───┘
+           ▲                   │           ▲
+           │    ┌───┐   ┌───┐  │           │    ┌───┐   ┌───┐
+           └────┤ a │◄──┤ b │  │           └────┤ a │◄──┤ b │
+                └───┘   └───┘  │                └───┘   └───┘
+                          ▲    │                          ▲
+                       feature │                       feature
+
+Y decidimos por ejemplo que hay cambios interesantes en el commit 'a' que queremos llevar a MASTER pero sin hacer un full branch merge, o sin aplicar todos los cambios de la branch feature todavía. Supongamos que tenemos el siguiente log:
+
+		
+		* 5ebcd38 (HEAD -> master) Update toc.txt
+		| * 7q8sq8e (feature/shopping-cart) Add colour to cart
+		| * 8ba3d31 Add cart.txt
+		|/
+		* 400df74 Último commit antes de bifurcación
+
+Supongamos que queremos llevar los cambios del commit 8ba3d31 a MASTER sin hacer el cambio entero, desde master hacemos un
+
+	git cherry-pick 8ba3d31
+
+Normalmente van a saltar conflictos que hay que resolver. Una vez que resolvemos los problemas hacemos un commit, git nos trae por defecto un mensaje relacionado al cherry pick. Ahora tendremos un nuevo commit en MASTER con este cherry pick:
+
+		* q528a6e (HEAD -> master) Add cart.txt
+		* 5ebcd38  Update toc.txt
+		| * 7q8sq8e (feature/shopping-cart) Add colour to cart
+		| * 8ba3d31 Add cart.txt
+		|/
+		* 400df74 Último commit antes de bifurcación
+
+
+		SINGLE FILE CHERRY PICK:
+
+Este cherry pick se puede hacer para un simple archivo en vez de un commit entero. Supongamos que tenemos el mismo log que antes, y en vez de copiar todo el commit 8ba3d31 solo queremos el cart.txt de este commit (supongamos que el commit tiene muchos cambios)
+
+		* 5ebcd38 (HEAD -> master) Update toc.txt
+		| * 7q8sq8e (feature/shopping-cart) Add colour to cart
+		| * 8ba3d31 Add cart.txt
+		|/
+		* 400df74 Último commit antes de bifurcación
+
+Para esto tenemos que estar parados en master y hacer un:
+
+		git restore --source=feature/shopping-cart --cart.txt		//hay veces que nos pide el -- antes del archivos, hay veces que no
+
+Ahroa git nos va a copiar 'cart.txt' del último commit del branch feature/shopping-cart en nuestro directorio local. Si tiramos un status veremos 'M cart.txt' con M en rojo ya que en nuestro directorio local tenemos el cart.txt de la branch que es distinto al de MASTER. Ahora tenemos que hacer un add y un commit para agregar el cambio a master.

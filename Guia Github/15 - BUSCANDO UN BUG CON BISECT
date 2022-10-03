@@ -1,0 +1,85 @@
+BUSCANDO UN BUG CON BISECT
+
+Es una herramienta muy poderosa. Supongamos que tenemos los siguientes commits tirando un:
+		$ git log --oneline
+		a642e12 (HEAD -> master) Add header to all pages.
+		50db987 Include the first section in TOC.
+		555b62e Include the note about committing after staging the changes.
+		91f7d40 Explain various ways to stage changes.
+		edb3594 First draft of staging changes.
+		24e86ee Add command line and GUI tools to the objectives.
+		36cd6db Include the command prompt in code sample.
+		9b6ebfd Add a header to the page about initializing a repo.
+		fa1b75e Include the warning about removing .git directory.
+		dad47ed Write the first draft of initializing a repo.
+		fb0d184 Define the audience.
+		1ebb7a7 Define the objectives.
+		ca49180 Initial commit.
+
+Supongamos que en la version master tenemos un bug en nuestra aplicación. No sabemos cuando este bug se introdujo, y no vamos a chequear cada uno de los commits y cada una de las versiones para ver cuando se introdujo ese bug. Podemos entonces usar el comando bisect para encontrar el commit que introdujo el problema, para eso tenemos que darle a git un commit que sea malo, o donde el bug exista, y uno donde todavía el bug no existía (el bug se introdujo en el medio). Supongamos que en el commit inicial ca49180 no existía el bug, corremos:
+		git bisect start
+
+Entramos en modo bisect, ahora le decimos que la versión actual es mala, osea tiene el bug y luego la buena, sin bug:
+		git bisect bad 
+		git bisect good ca49180
+
+Nos devuelve:
+		Bisecting: 5 revisions left to test after this (roughly 3 steps)
+		[36cd6db402cfd897810d4cb33d97ac1e9d1ce2d8] Include the command prompt in code sample.
+
+En este caso nos tira que hay 5 revisiones y requiere 3 steps, y también nos notificará que no estamos más en MASTER, en nuestro caso estamos en "36cd6db".
+Si ahora tiramos un:
+		git log --online --all
+
+Nos devuelve lo siguiente, indicando que el HEAD no está atachado a MASTER:	
+		a642e12 (master, refs/bisect/bad) Add header to all pages.								//MATER arriba de todo //MAL COMMIT
+		50db987 Include the first section in TOC.
+		555b62e Include the note about committing after staging the changes.
+		91f7d40 Explain various ways to stage changes.
+		edb3594 First draft of staging changes.
+		24e86ee Add command line and GUI tools to the objectives.
+		36cd6db (HEAD) Include the command prompt in code sample.								//HEAD en el commit 36cd6db
+		9b6ebfd Add a header to the page about initializing a repo.
+		fa1b75e Include the warning about removing .git directory.
+		dad47ed Write the first draft of initializing a repo.
+		fb0d184 Define the audience.
+		1ebb7a7 Define the objectives.
+		ca49180 (refs/bisect/good-ca4918083ec471878d58612142572f3367faf5fd) Initial commit.		//BUEN COMMIT
+
+Esto significa que estamos haciendo un checkout de la versión 36cd6db, por lo que podemos correr nuestra aplicación y ver si el bug todavía sigue, si el bug está todavía presente sabemos que el bug se introdujo en la segunda mitad, si el bug no existe, sabemos que se introdujo en la mitad de arriba (committs más recientes).
+Supongamos que el bug no está presente todavía, volvemos a decirle a git que este commit es bueno:
+		git bisect good
+
+Ahora nos devuelve:
+		Bisecting: 2 revisions left to test after this (roughly 2 steps)
+		[91f7d40d6d5bbc336a271607a0488216aaf50cd7] Explain various ways to stage changes.
+
+Que nos indica que quedan 2 revisiones para terminar, y que estamos parados en 91f7d40. Y volvemos a repertir todos los pasos. Un nuevo log tira:
+		a642e12 (master, refs/bisect/bad) Add header to all pages.								//MASTER //MAL COMMIT
+		50db987 Include the first section in TOC.
+		555b62e Include the note about committing after staging the changes.					
+		91f7d40 (HEAD) Explain various ways to stage changes.									//HEAD
+		edb3594 First draft of staging changes.
+		24e86ee Add command line and GUI tools to the objectives.
+		36cd6db (refs/bisect/good-36cd6db402c) Include the command prompt in code sample.		//BUEN COMMIT
+		(y abajotodos los commits que ya no nos interesa)
+
+Supongamos que volvemos ac orrer la app y el bug no está todavía, de nuevo le decimos que es un buen commit, el log nos devuelve:
+		a642e12 (master, refs/bisect/bad) Add header to all pages.								//MASTER //MAL COMMIT
+		50db987 (HEAD) Include the first section in TOC.										//HEAD
+		555b62e Include the note about committing after staging the changes.
+		91f7d40 (refs/bisect/good-91f7d40d6d5bb) Explain various ways to stage changes.			//BUEN COMMIT
+
+Entonces ya sabemos que el bug fue introducido o en el commit 50db987 o en el 555b62e, por lo que debemos testear nuevamente nuestra app y probar por última vez. Si tiramos un bad por ejemplo nos devolverá un resumen del commit malo:
+		555b62e1ebb92c97fc69910ad0981a7d6dbbf8c6 is the first bad commit
+		commit 555b62e1ebb92c97fc69910ad0981a7d6dbbf8c6
+		Author: Moshfegh Hamedani <moshfegh@live.com.au>
+		Date:   Mon Aug 17 14:26:49 2020 -0700
+
+		    Include the note about committing after staging the changes.
+
+		 sections/creating-snapshots/staging-changes.txt | 2 ++
+		 1 file changed, 2 insertions(+)
+
+Una vez que terminamos para volver a master y terminar el proceso de bisect ejecutamos:
+		git bisect reset

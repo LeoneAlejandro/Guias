@@ -1,0 +1,50 @@
+PUSHING
+
+En el caso anterior terminamos con nuestro repo local con un commit arriba de origin. Ahora queremos agregar ese commit al repo remoto; esto lo hacemos mediante un push. En los siguientes gráficos podemos ver a la izquierda el repo local y remoto previo al push, y a la derecha después del push:
+
+         LOCAL                        REMOTE                                       LOCAL                           REMOTE
+                           │                                                                            │
+                   MASTER  │             MASTER                                          MASTER         │                    MASTER
+                     ▼     │                ▼                                               ▼           │                       ▼
+ ┌───┐    ┌───┐    ┌───┐   │    ┌───┐     ┌───┐                        ┌───┐     ┌───┐    ┌───┐         │  ┌───┐     ┌───┐    ┌───┐
+ │ A │◄───┤ B │◄───┤ C │   │    │ A │◄────┤ B │                        │ A │◄────┤ B │◄───┤ C │         │  │ A │◄────┤ B │◄───┤ C │
+ └───┘    └───┘    └───┘   │    └───┘     └───┘                        └───┘     └───┘    └───┘         │  └───┘     └───┘    └───┘
+            ▲              │                                                                ▲           │
+       origin/MASTER       │                                                           origin/MASTER
+                           │
+
+A la izq vemos el cambio en local, a la drecha vemos como se agrega ese commit en el repo remoto, y se actualiza el origin/MASTER del repo local tal como está en el remoto.
+Para hacer esto tenemos que ejectuar:
+	
+		git push origin master
+
+Como en este caso estamos parados en master, y git asume que pusheamos origin, podemos ejecutar solo 'git push'. Para hacer el push nos va a pedir las credenciales (email y pass). Luego vemos en la web el nuevo commit y el nuevo archivo agregado. 
+A veces los push son rechazados, esto puede suceder porque justo antes de hacer el push alguien más hace un push agregando un nuevo commit al final de nuestro repo remoto (un nuevo commit D) de la siguiente manera:
+
+         LOCAL                         REMOTE
+                          │
+                  MASTER  │                     MASTER
+                    ▲     │                        ▲
+┌───┐    ┌───┐    ┌───┐   │    ┌───┐    ┌───┐    ┌───┐
+│ A │◄───┤ B │◄───┤ C │   │    │ A │◄───┤ B │◄───┤ D │
+└───┘    └───┘    └───┘   │    └───┘    └───┘    └───┘
+           ▼              │
+      origin/MASTER       │
+                          
+Si hacemos un 'git push -f' estamos borrando el commit D (que es de otra persona) y reemplazandolo por el nuestro, es algo no recomendable obviamente. Lo que hay que hacer es un nuevo pull para traer el commid D a nuestro repo local, y luego un merge 3 way con un nuevo merge commit (M) o un rebase:
+
+             Merge 									Rebase                    
+                            MASTER  │      
+                              ▼     │
+ ┌───┐    ┌───┐    ┌───┐    ┌───┐   │    ┌───┐    ┌───┐
+ │ A │◄───┤ B │◄───┤ C │◄───┤ M │   │    │ A │◄───┤ B │
+ └───┘    └───┘    └───┘    └─┬─┘   │    └───┘    └───┘             MASTER
+            ▲                 │     │               ▲                 ▼
+            │      ┌───┐      │     │               │      ┌───┐    ┌───┐
+            └──────┤ D │◄─────┘     │               └──────┤ D │◄───┤ C │
+                   └───┘            │                      └───┘    └───┘
+                     ▲              │                        ▲
+                origin/MASTER       │                   origin/MASTER
+                                    
+
+Y después hacer un nuevo push, en el caso de un merge, estaríamos subiendo C y M al repo remoto. En el caso de Rebase solamente C, y moveríamos el origin/MASTER al commit M, en el primer caso, o C en el segundo.

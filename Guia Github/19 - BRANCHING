@@ -1,0 +1,58 @@
+BRANCHING
+
+Branching nos permite desviarnos de la lina principal de trabajo y trabajar en algo de forma aislada. Conceptualmente se puede pensar como un espacio de trabajo seprado. Una vez que trabajamos por ejemplo en una nueva feature y queremos agreagar esta feature a MASTER, volvemos a la main line haciendo un merge. Esto es también para no tocar tanto el MASTER y hacerlo lo más estable posible. Las branches son bastante lentas normalmente, pero GIT es super efciente al respecto y por eso se usa tanto. 
+Supongamos que tenemos un bug, para arreglar este bug primero deberíamos crear una nueva branch, y lo hacemos con:
+		git branch bugfix
+
+Para ver la lista de las diferentes branches podemos ejectura solo "git branch". Nos devolverá algo similar a esto:
+		bugfix
+		*master
+
+El asterisco indica que nuestro HEAD está en MASTER (nuestro head reperesenta donde estamos parados nosotros). Para cambiar a la branch bugfix hacemos:
+		git switch bugfix
+
+No es recomendable nombrar de esta manera las  braches, los nombres deben ser descriptivos, para cambiar el nombre de una branch ejecutamos:
+		git branch -m bufix bugfix/signup-form			//-m viejonombre nuevonombre
+
+En nuestro ej modificamos 3 lineas de audience.txt (un add, un modif y un del). Si tiramos un status nos mostrará en rojo el archivo audience.txt ya que fue modificado y no está en la SA. Depsués hacemos un add y un commit:
+		git add .
+		git commit -m "Fix the bug that prevented the users from signin up
+
+Ahora si tiramos un 'git log --oneline' veremos:
+
+		f9212c2 (HEAD -> bugfix/signup-form) Fix the bug that prevented the users from signin up
+		8f23583 (master) Restauro toc.txt
+		a1adece Remuevo toc
+		a642e12 Add header to all pages.
+		50db987 Include the first section in TOC.
+
+Vemos que HEAD está en la branch bugfix y hace referencia al commit f922 pero MASTER quedó un commit atrasado. 
+
+                          MASTER
+                            ▼
+  ┌───┐   ┌───┐   ┌───┐   ┌───┐   ┌───┐
+  │   │◄──┤   │◄──┤   │◄──┤   │◄──┤   │
+  └───┘   └───┘   └───┘   └───┘   └───┘
+                          			▲
+                                  bugfix
+
+Entonces si ahora hacemos un
+		git switch 
+		code audience.txt
+
+Veremos la versión anterior del archivo, sin los 3 cambios que hicimos ya que MASTER todavía está en ese snapshot, y si tiramos un log, veremos lo mismo que antes pero sin el último commit, para ver los commits posteriores a donde estamos parados tenemos que agregarle '--all'.
+Una vez que terminamos de usar una branch la eliminamos de la siguiente manera:
+		git branch -d bugfix/signup-form
+
+Si la branch no está mergeada nos tirará un error ya que hay cambios en la branch bugfix que no están en la MASTER. Si estamos seguros que queremos deshacer esos cambios y no mergearlos con MASTER podemos forzar la eliminación usando una -D en vez de -d. 
+
+
+	COMPARANDO BRANCHES:
+
+Podemos ver todos los commits que están en la branch bugfix y no en MASTER usando el comando:
+		git log --oneline master...bugfix/singup-form
+
+Nos devolverá lo mismo que log, pero solo desde MASTER hasta bugfix. Podemos sacarle el --oneline o agregarle --patch para ver más detalles de los commits realizados. Si queremos ver la diferencia entre todos los commits podemos verlo con 'git diff' en vez de log. Como en este caso estamos parados en MASTER no hace falta aclararlo al principio, podemos hacer directamente:
+		git diff bugfix/singup-form
+
+Para ver CUALES ARCHIVOS fueron modificados, agregamos '--name-only' o '--name-status' después del diff.

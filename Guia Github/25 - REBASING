@@ -1,0 +1,66 @@
+REBASING
+
+Rebasing es cambiar el pointer de la bifurcación de una feature, para que nos quede una historia lineal y poder hacer por ejemplo un FFM, y también ver una historia mucho más simple. En este caso no es muy compleja, pero en casos reales puede solucionar mucho la historia de un proyecto. Acá también hay que tener cuidado ya que rebasing reescribe historia. REBASING es recomendado solo para archivos locales en nuestro repositorio. Si compartimos commits no deberíamos usar REBASING ya que estamos haciendo mucho bardo, cambiandole la historia a todo el mundo y no van a entender nada.
+
+                    HEAD         │                  HEAD                  │                   HEAD
+                      ▼          │                    ▼                   │                     ▼
+                    MASTE        │                  MASTER                │                   MASTER
+                      ▼          │                    ▼                   │                     ▼
+   ┌───┐   ┌───┐    ┌───┐        │ ┌───┐   ┌───┐    ┌───┐                 │  ┌───┐   ┌───┐    ┌───┐     ┌───┐   ┌───┐
+   │   │◄──┤   │◄───┤   │        │ │   │◄──┤   │◄───┤   │                 │  │   │◄──┤   │◄───┤   │◄────┤ a │◄──┤ b │
+   └───┘   └───┘    └───┘        │ └───┘   └───┘    └───┘                 │  └───┘   └───┘    └───┘     └───┘   └───┘
+             ▲                   │                    ▲                   │                                       ▲
+             │    ┌───┐   ┌───┐  │                    │    ┌───┐   ┌───┐  │                                    feature
+             └────┤ a │◄──┤ b │  │                    └────┤ a │◄──┤ b │  │
+                  └───┘   └───┘  │                         └───┘   └───┘  │
+                            ▲    │                                   ▲    │
+                         feature │                                feature │
+
+Como vemos en el gráfico, al hacer un rebasing de la branch feature del 2do commit al 3ro, tenemos una historia lineal, por lo que podemos hacer un FFM para llevar a MASTER hasta el pointer feature.
+Como dijimos, hay que tener cuidado con esto ya que cuando hacemos un rebasing, en realidad GIT crea nuevos commits a* y b* de forma lineal después del último commit, y mueve el pointer feature al último commit copiado:
+
+                   HEAD                  │                  HEAD                    │                  HEAD
+                     ▼                   │                    ▼                     │                    ▼
+                   MASTER                │                  MASTER         feature  │                  MASTER         feature
+                     ▼                   │                    ▼               ▼     │                    ▼               ▼
+  ┌───┐   ┌───┐    ┌───┐                 │ ┌───┐   ┌───┐    ┌───┐   ┌───┐   ┌───┐   │ ┌───┐   ┌───┐    ┌───┐   ┌───┐   ┌───┐
+  │   │◄──┤   │◄───┤   │                 │ │   │◄──┤   │◄───┤   │◄──┤ a*│◄──┤ b*│   │ │   │◄──┤   │◄───┤   │◄──┤ a │◄──┤ b │
+  └───┘   └───┘    └───┘                 │ └───┘   └───┘    └───┘   └───┘   └───┘   │ └───┘   └───┘    └───┘   └───┘   └───┘
+                     ▲                   │                    ▲                     │
+                     │    ┌───┐   ┌───┐  │                    │    ┌───┐   ┌───┐    │
+                     └────┤ a │◄──┤ b │  │                    └────┤ a │◄──┤ b │    │
+                          └───┘   └───┘  │                         └───┘   └───┘    │
+                                    ▲    │                                          │
+                                 feature │                                          │
+
+
+si miramos a nuestro viejo commit b, no tenemos ningún pointer o branch, por lo que en algún momento, git automáticamente borrará es te commit. También, si compartimos los commits a o b originales, y otras personas hicieron nuevos commits sobre estos commits compartidos, vamos a tener muchos problemas para aplicarlos sobre el proyecto con rebasing. Para hacer un rebasing supongamos que tenemos la siguiente bifurcación:
+
+		* 5ebcd38 (HEAD -> master) Update toc.txt
+		| * 8ba3d31 (feature/shopping-cart) Add cart.txt
+		|/
+		* 400df74 Último commit de MASTER
+
+Ahora queremos cambiar la base del commit 8ba3d al último commit de master. Nos aseguramos que estamos en la branch master y hacemos un rebase
+
+		git switch feature/shoppig-cart
+		git rebase master
+
+Ahora veremos un log sin divergencia y con camino lineal:
+
+		* 8ba3d31 (HEAD -> feature/shopping-cart) Add cart.txt
+		* 5ebcd38 (master) Update toc.txt
+		* 400df74 Último commit de MASTER
+
+Esto nos permitirá poder hacer un FFM en el futuro por ejemplo:
+
+		git switch master
+		git merge feature/shopping-cart
+		git log --oneline --graph
+
+Veremos:
+		* 8ba3d31 (HEAD -> master, feature/shopping-cart) Add cart.txt
+		* 5ebcd38 Update toc.txt
+		* 400df74 Último commit de MASTER
+
+Esto siempre trae conflictos, los rebasings nunca son tan sencillos. Vamos a tener que resolverlos con una mergetool más facilmente.

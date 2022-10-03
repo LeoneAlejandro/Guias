@@ -1,0 +1,12 @@
+COLLAB
+
+Creamos una cuenta en GIT. Ahí manejamos los repos. Para clonar un repo de GIT elegimos donde queremos pegarlo y abrimos git bash, y ejecutamos:
+
+		git clone https://github.com/LeoneAlejandro/GitHubCourse.git 				//url en github.com
+
+Esto nos crea una carpeta GitHubCourse en la carpeta donde abrimos bash. Si tiramos un log vemos:
+
+		* eb163fb (HEAD -> main, origin/main, origin/HEAD) Initial commit
+
+Vemos el único commit en este caso, pero tmb vemos origin/main y origin/head que nos da referencias de donde estaba el main y el haead orignales cuando clonamos el repo. Estos pointers no se pueden usar, son solo labels. Si tiramos 'git branch' vemos que solo tenemos una branch, la master.
+Si tiramos 'git remote' vemos la lista de los repos remotos, osea repos que no estan en el dir local, que nos devolverá 'origin'.

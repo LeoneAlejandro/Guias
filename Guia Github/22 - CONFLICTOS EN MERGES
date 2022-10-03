@@ -1,0 +1,41 @@
+CONFLICTOS EN MERGES
+
+Los conflictos ocurren cuando una misma linea fue cambiada de formas diferentes en branches diferentes, o cuando un archivo es modificado en una branch y borrado en otra, o cuando un archivo es agregado en 2 branches pero el contenido es diferente. En estos casos git no puede decidir como mergearlos.
+Veamos un ejemplo:
+
+		git branch -C bugfix/change-pass 				//creamos una nueva branch y la elegimos
+		code change-password.txt						//abrimos el txt en VSCODE y lo editamos (agrego una linea)
+		git add .
+		git commit -m "Modifico change-pass.txt"
+		git switch master
+		code change-password.txt						//modifico el mismo archivo desde master de forma diferente
+		git add .
+		git commit -m "Cambio change-pass.txt"
+		git merge bugfix/change-password				//intento mergear los branches desde MASTER
+
+Nos devuelve:
+		Auto-merging change-password.txt
+		CONFLICT (content): Merge conflict in change-password.txt
+
+Ahora quedamos en el medio de un proceso de MERGE, y tenemos que modificar nosotros los cambios que queremos. Para ver los archivos con conflictos más detalladamente podemos correr un git status.
+En este caso abrimos change-password.txt, y como estamos en el medio del proceso de merge nos mostrará lo siguiente:
+
+	<<<<<<< HEAD
+	Cambio realizado desde MASTER
+	=======
+	Cambio realizado desde branch
+	>>>>>>> bugfix/change-pass
+
+VSCODE nos provee más información si nos paramos en cada linea, y arriba nos da opciones para aceptar el cambio actual (MASTER), el incoming (BRANCH) o ambos (agrega ambas lineas). También podemos modificarlo manualmente a gusto y guardar el archivo, aunque idealmente es recomendable no agregar código nuevo ya que las nuevas lineas no fueron introducidas por ninguna branch (se le llama evil commit o maligno).
+Una vez modificado el txt, hay que agregarlo con un
+		git add change-password.txt
+		git commits 						//si no ponemos -m nos abre VSCODE para ponerlo
+
+Y si luego tiramos un status veremos el archivo en verde ya que no tenemos ningún conflicto. Al tirar un log veremos:
+
+		*   aa15c34 (HEAD -> master) Merge branch 'bugfix/change-pass'
+		|\
+		| * c3a7c91 (bugfix/change-pass) Modifico change-pass.txt
+		* | 90dac1a Cambio change-pass.txt
+		|/
+		*   45b1c74 Merge branch 'feature/change-pass'

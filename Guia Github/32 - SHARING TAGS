@@ -1,0 +1,17 @@
+SHARING TAGS
+
+Por defcto, push no transfiere nuestras tags al repo remoto, tenemos que pushearlas explícitamente. Suponemos que creamos una tag
+	
+		git tag v1.0
+
+Ahora nuestro último commit tiene esa tag, podemos pushearla haciendo un:
+
+		git push origin v1.0
+
+Y podemos borrarla con un
+
+		git push origin --delete v1.0
+
+Ahora se eliminó del repo remoto pero sigue estando en nuestro repo local, para elimnarla hacemos un
+
+		git tag -d v1.0 

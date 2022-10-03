@@ -1,0 +1,7 @@
+GUARDAR CREDENCIALES
+
+Podemos guardar las credenciales para no ingresarlas cada vez que hacemos un push. Podemos guardar nuestras credenciales en cache, que duran 15 minutos en memoria, con el comando:
+	
+		git congi --global credential.helper cache
+
+O podemos guardarlas permanentemente instalando un programa 'Git credential manager for Windows' que las guarda de forma encriptada.

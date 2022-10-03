@@ -1,0 +1,11 @@
+BLAME
+
+Blame sirve para ver quien escribió alguna linea, supongamos que hay algo raro en las primeras 3 lineas del archivo audience.txt, podemos correr:
+		git blame -L 1,3 audience.txt		(si agregamos -e después del blame, nos tira el email en vez del nombre)
+
+Y nos devuelve:
+		a642e122 (Moshfegh Hamedani 2020-08-18 09:23:19 -0700 1) AUDIENCE
+		a642e122 (Moshfegh Hamedani 2020-08-18 09:23:19 -0700 2)
+		fb0d184c (Moshfegh Hamedani 2020-08-17 14:18:09 -0700 3) This course is for anyone who wants to learn Git.
+
+vendiendo a quien escribó cada linea y cuando, y en que commit se agregó

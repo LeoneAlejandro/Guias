@@ -1,0 +1,21 @@
+FILTRAR HISTORIAL:
+
+Podemos filtrar las búsquedas de muchas maneras, algunos ejemplos: (se les puede agregar --oneline o --patch a TODOS, puse solo en algunos, oneline tira menos detalles de cada commit, y --patch tira los cambios de cada commit)
+
+											MUESTRA LOS COMMITS:
+		git log --oneline -3 				//de los últimos 3 días
+		git log --author "Ale"				//de un autor en especial
+		git log --after="2022-05-01"		//por fecha YYYY-MM-DD
+		git log --after="yesterday"
+		git log --after="two weeks ago"
+		git log --grep="GUI"				//que tengan GUI en el mensaje (ES CS)
+		git log -S"OBEJCTIVES"				//que hayan agregado o eliminado una linea con "OBJECTIVES"
+		git log -S"OBEJCTIVES" --patch		//lo mismo que el anterior pero con los cambios
+		git log fb54d..d1e5q				//desde un commit con ID fd54d hasta otro con ID d1e5q
+		git log toc.txt						//que modificaron toc.txt
+	Si este último caso tira error por ambiguedad se puede agregar -- antes del archivo que queremos consultar -- toc.txt
+
+Si queremos consultar toda la gente que trabajó en un proyecto podemos correr:
+		git shortlog
+
+Y nos devolverá el nombre de cada persona que hizo un commit, la cantidad de commits que hizo y todos los mensajes de los commits que hizo. Podemos agregarle -n para ver solo los nombres de la gente que trabajó ordenado por mayor cantidad de commits. Podemos agregar -e para agregarle el correo también de cada persona.

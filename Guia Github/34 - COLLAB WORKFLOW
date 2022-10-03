@@ -1,0 +1,42 @@
+COLLAB WORKFLOW
+
+Si por ejemplo alguien más crea una nueva branch (feature/change-pass), ya sea desde su repo local y lo pushea, o desde la web, y nosotros nos bajamos la nueva versión con un fech, vamos a ver esa nueva branch desde 'git branch -r', ya que nos muestra las branchs del repo remoto, pero no vamos a poder verla desde nuestro repo local, ya que en nuestro repo no existe. Si tiramos un 'git branch' solo vamos a ver MASTER. Para poder trabajar sobre esa branch tenemos que hacer nosotros una nueva branch con el mismo nombre con un:
+
+		git swich -C feature/change-pass origin/feature/change-pass
+
+agregamos el path de origin/featuer/change-pass, así en nuestro repo local lo tenemos en la misma carpeta que en el repo remoto. Al ejecutar este código nos devolverá un mensaje diciendo que esta nueva branch va a trackear la branch remota feature/change-pass, por lo que ahora si podemos hacer nuevos commits en esta branch y pushearlos al repo remoto.
+
+Para ver esto en un ejemplo, supongamos que ahora que tenemos la branch remota, alguien más sube un commit al repo remoto. Nosotros ya tenemos la branch pero nos falta este último commit, por lo que tenemos que hacer un pull. Al hacer un pull y tirar un log veremos lo siguiente:
+
+		* 73bbc5f (HEAD -> feature/change-password, origin/feature/change-password) Update file1 
+		* 478ac2a (origin/master, origin/HEAD, master) Add file1 
+		* f11b0do Update README.md  
+		* fb3b343 Initial commit
+
+Ahora vemos varias cosas: nuestro HEAD está en la nueva branch feature/password, que es la misma branch remota origin/feature/change-password, ya que nuestra branch local trackea esa branch. También vemos que origin/HEAD y origin/MASTER están un commit atrás ya que nunca se hizo un merge, y tambén vemos que NUESTRO MASTER está en ese mismo commit ya que tampoco nunca hicimos un merge. Si hacemos un merge desde MASTER:
+
+		git switch master
+		git merge feature/change-password
+
+En un nuevo log veremos:
+
+		* 73bbc5f (HEAD -> master, origin/feature/change-password, feature/change-password) Update file1 
+		* 478ac2a (origin/master, origin/HEAD) Add file1 
+		* f11b0do Update README.md  
+		* fb3b343 Initial commit
+
+Ahora si vemos que nuestro MASTER mergeado, en el último commit, el mismo commit de la branch feature/change-pass. Ahora solo faltaría mover el origin/master, por lo que tenemos que hacer un 'git push', y por último, nuestro log muestra:
+
+		* 73bbc5f (HEAD -> master, origin/master, origin/feature/change-password, origin/HEAD, feature/change-password) Update file1 
+		* 478ac2a Add file1 
+		* f11b0do Update README.md  
+		* fb3b343 Initial commit
+
+Ahora hay que eliminar las branches del repo remoto y del repo local con un:
+
+		git push -d origin feature/change-pass
+		git branch -d feature/change-pass
+
+Por último, cuando la otra persona que estaba trabajando en esta branch haga un pull, se bajará la última snapshot del repo remoto, donde ya no existe la branch feature/change-pass, por lo que deberá eliminarla de su repo local. Pero por último, la otra persona todavía verá la branch feature/change-pass al tirar un 'git branch -r', por más de que la branch ya no exista, porque nunca se elimino el trackeo. Para actualizar los tracking hay que hacer un:
+
+		git remote prune origin

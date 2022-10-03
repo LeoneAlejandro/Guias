@@ -1,0 +1,6 @@
+FORMATTING LOG OUTPUT:
+
+Para cambiar el formato en que se muestran los outputs podemos setear:
+		git log --pretty=format:""
+
+Y entre los "" podemos poner por ej "%an committed %H", y veremos el nombre del autor (an) la palabra "committed" seguido por el hash completo (o ID) del commit. Para usar el short hash usamos %h (7 dígitos). Hay 10 millones de cosas para poner como '%cd' que es fecha del commit, y otras que se puden buscar en google. Hasta se puede colorear cada palabra poniendo por ej "%Cgreen%an%Creset" para que el autor del nombre salga de otro color.

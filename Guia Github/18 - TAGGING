@@ -1,0 +1,55 @@
+TAGGING
+
+A veces es útil tener ciertos bookmarks, o algunos commits que representan un punto importante, como una versión nueva por ej. Para eso se usan las tags. Supongamos que el commit actual representa la primera versión de nuestro software:
+		git log --oneline
+		8f23583 (HEAD -> master) Restauro toc.txt
+		a1adece Remuevo toc
+		a642e12 Add header to all pages.
+Aplicamos el tag:
+		git tag v1.0 a1adece
+
+Ahora al tirar un log veremos el nuevo tag:
+		8f23583 (HEAD -> master) Restauro toc.txt
+		a1adece (tag: v1.0) Remuevo toc
+		a642e12 Add header to all pages
+
+También podemos referenciar el commit con el nuevo tag, por ejemplo tirando un "git checkout v1.0". Para ver todas las tags que tenemos podemos ejecutar:
+		git tag
+
+También existe otro tipo de tag llamado "annotated" tag, donde éste tag es un objeto con muchas propiedades como nombre del tagger, email y/o mensaje. Para hacerlo agregamos un -a y un mensaje al final (en este caso no pongo el ID del commit porque estoy tageando HEAD>MASTER que es donde estoy parado, solo hay que poner el ID para hacer referencia a commits viejos)
+		git tag -a v1.1 -m "Mensaje para versión 1.1"
+
+Ahora si tiramos "git tag" solo vemos una lista de las versiones, y si tiramos "git tag -m" veremos los mensajes, y en el caso de tags sin mensajes, el mensaje del commit de ese tag. En este caso:
+		v1.0 	Remuevo toc
+		v1.1    Mensaje para versión 1.1
+
+Y podemos ver el detalle del tag "annotated" con un show:
+		git show v1.1
+
+Y nos mostrará todos los detalles del tag:
+			tag v1.1
+			Tagger: Ale Leone <ale.leone09@gmail.com>
+			Date:   Wed Sep 21 19:19:31 2022 -0300
+			Mensaje para versión 1.1
+			
+			commit 8f235830d2550aaca873e882d31149cdd34a7ee2 (HEAD -> master, tag: v1.1)
+			Author: Ale Leone <ale.leone09@gmail.com>
+			Date:   Wed Sep 21 19:03:31 2022 -0300
+
+			    Restauro toc.txt
+
+			diff --git a/toc.txt b/toc.txt
+			new file mode 100644
+			index 0000000..cc0798f
+			--- /dev/null
+			+++ b/toc.txt
+			@@ -0,0 +1,5 @@
+			+TABLE OF CONTENT
+			+
+			+Creating Snapshots
+			+  - Initializing a repository
+			+  - Staging changes
+
+Para eliminar un tag lo hacemos con:
+		
+		git tag -d v1.1

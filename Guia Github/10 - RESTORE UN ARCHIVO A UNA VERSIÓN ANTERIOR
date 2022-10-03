@@ -1,0 +1,24 @@
+RESTORE UN ARCHIVO A UNA VERSIÓN ANTERIOR
+
+Supongamos que ejecutamos las siguientes lineas:
+		git rm file1.txt
+		git status -s
+
+Nos devuelve "D file1.txt" con D en verde ya que hay un archivo borrado en el dir local, también borrado en la SA pero no commitido el cambio. Luego hacemos un:
+		git commit -m "Archivo borrado"
+
+Ahora subimos una snapshot de nuestro proyecto, sin ese archivo que ya fue borrado. Que pasa si nos arrepentimos y queremos ese archivo de nuevo ? Si tiramos un:
+		git log --oneline
+veremos:
+		96290c7 (HEAD -> master) Borre file1
+		37035e6 Agrego nueva carpeta y nuevo txt
+		32f8672 Mensaje
+		e7fad22 Primer commit
+
+Ahora queremos restarurar el file1.txt del último commit donde existiese (37035e6) podemos hacer un restore de la siguiente manera:
+		git restore --source=HEAD~1 file1.txt
+
+Este hace un restore desde la source tomando el commit de 1 linea anterior a la HEAD. Si ahora tiramos un status -s veremos:
+		?? file1.txt
+
+Luego tendremos que hacer un add y un commit para volver a agregarlo en todos los niveles.

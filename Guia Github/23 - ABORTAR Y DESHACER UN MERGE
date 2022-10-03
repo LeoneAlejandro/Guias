@@ -1,0 +1,81 @@
+ABORTAR Y DESHACER UN MERGE
+
+Si al momento de un merge tenemos muchos conflictos y no los podemos resolver en este momento ejecutamos:
+		
+		git merge --abort
+
+Y volvemos al momento previo al decidir el merge.
+En el caso de que hicimos un merge y nuestra app se rompió por ejemplo, o no compila, podemos deshacer un merge. Supongamos que tenemos las branches anteriores:
+
+		*   aa15c34 (HEAD -> master) Merge branch 'bugfix/change-pass'
+		|\
+		| * c3a7c91 (bugfix/change-pass) Modifico change-pass.txt
+		* | 90dac1a Cambio change-pass.txt
+		|/
+		*   45b1c74 Merge branch 'feature/change-pass'
+
+Y en este caso supongamos que el merge aa15c34 es un merge defecuoso y queremos deshacerlo, podemos hacerlo de 2 opciones:
+
+1)	La primera es deshacer el commit y borrarlo, como si nunca lo hubiesemos hecho. Ojo con hacer esto en un repo donde trabaja mucha gente ya que es muy confuso para la gente que trabaja con estas branches, estamos re escribiendo la historia de estas branches. Al hacer esto nos quedará un commit "M" muerto, o basura, cada tanto GIT busca estos commits y los elimina ya que no tienen ningún pointer que nos pueda volver a llevar a ese commit.
+
+                                 HEAD    │           HEAD
+                                   ▼     │             ▼
+                                 MASTER  │           MASTER
+                                   ▼     │             ▼
+   ┌───┐   ┌───┐                 ┌───┐   │   ┌───┐   ┌───┐                 ┌───┐
+   │   │◄──┤   │◄────────────────┤ M │   │   │   │◄──┤   │◄────────────────┤ M │
+   └───┘   └───┘                 └─┬─┘   │   └───┘   └───┘                 └─┬─┘
+             ▲                     │     │             ▲                     │
+             │    ┌───┐   ┌───┐    │     │             │    ┌───┐   ┌───┐    │
+             └────┤   │◄──┤   │◄───┘     │             └────┤   │◄──┤   │◄───┘
+                  └───┘   └───┘          │                  └───┘   └───┘
+                            ▲            │                            ▲
+                         feature         │                         feature
+
+Básicamente vuelve el MASTER y HEAD un commit para atrás, antes del MERGE. Para hacer esto ejecutamos:
+		
+		git reset --hard HEAD~1
+
+Se pueden usar diferentes opciones:
+		 --soft: donde cambiamos la SNAPSHOT al último commit anterior al merge (M), pero sin cambiar el dir local ni el SA.
+		 --medium: cambiamos la SNAPSHOT y la SA al último commit anterior al merge (anterior al M).
+		 --hard: cambiamos el dir local, el SA y la snapshot al commit anterior al M. Este es el estado en el que estábamos antes de iniciar el merge.
+Si hacemos esto y tiramos un log veremos que nos borra el merge que teníamos antes:
+		
+		| * c3a7c91 (bugfix/change-pass) Modifico change-pass.txt
+		* | 90dac1a Cambio change-pass.txt
+		|/
+		*   45b1c74 Merge branch 'feature/change-pass'		
+
+Aunque nos haya borrado el merge, todavía está en nuestro repo, por lo que podemos hacer un
+		git reset --hard aa15c34
+para volver a como estaba todo después del revert (hay que referenciar el commit por ID)
+
+
+2) 	La otra opción y más recomendable para un ámbito que no sea local, es revertir el commit, osea crear un nuevo commit que cancela el merge indeseado. En este caso hay que aclarar a cual de los brances queremos revertir nuestro commit, a la branch 1 o a la 2:
+
+                               MASTER
+                                 ▼
+ ┌───┐   ┌───┐                 ┌───┐
+ │   │◄──┤ 1 │◄────────────────┤ M │
+ └───┘   └───┘                 └─┬─┘
+           ▲                     │
+           │    ┌───┐   ┌───┐    │
+           └────┤   │◄──┤ 2 │◄───┘
+                └───┘   └───┘
+                          ▲
+                       feature
+
+Siempre se revierte a la branch master, o sea a la 1. Esto lo hacemos con el comando:
+
+		git revert -m 1 HEAD
+
+Git nos abre el VSCODE porque al hacer un commit nuevo tendremos que agregar un msj y trae un mensaje por defecto bastante explicativo. Ahora con un log veremos:
+
+		* 400df74 (HEAD -> master) Revert "Merge branch 'bugfix/change-pass'"		//COMMIT MASTER CON MERGE REVERTIDO
+		*   aa15c34 Merge branch 'bugfix/change-pass'
+		|\
+		| * c3a7c91 (bugfix/change-pass) Modifico change-pass.txt
+		* | 90dac1a Cambio change-pass.txt
+		|/
+		*   45b1c74 Merge branch 'feature/change-pass'

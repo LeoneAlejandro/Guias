@@ -1,0 +1,28 @@
+MERGE LINEAL SIN FAST FOWARD MERGE
+
+Es posible también hacer un merge sin fast foward en estos casos. Al aplicar las flags:
+		git merge --no-ff bugfix
+
+No solamente asignará a MASTER al último commit, sino que (parecido al 3 way) creará un nuevo commit (merge commit) que combina todos los cambios en el target branch y lo lleva a master. Al ejecutar la linea anterior se nos abrirá VSCODE porque tendremos que agregarle un mensaje a este nuevo commit "merge" (nos trae un mensaje por defecto "Merge branch 'bugfix' into master").
+En este caso si tiramos un log con graph veremos algo así:
+
+		* f4f1q34 (MASTER -> head) Merge branch 'bugfix' into master
+		|\
+		| * b46qs7d (bugfix/login-form) Update toc.txt
+		|/
+		* 5e7w8q9 Fix a bug...
+
+Por lo que vemos algo parecido al 3 way merge. Hay una divergencia y luego se unen las branches. Esto tiene ciertas pros y contras 
+                                                
+    Cons                                        │      Pros
+                                                │
+  - Contamina la historia                       │    - Representa verdaderamente la historia
+    (sobre todo si tenemos muchas branches)     │    - Nos permite reveritr cambios más facil
+  - Se hace más dificil de leer                 │
+                                                │
+
+A que nos referimos cuando "Nos permite revertir cambios más facil". Esto es porque al crear una branch para un nuevo feature por ejemplo, y luego un nuevo commit (merge commit) al mergearlos, solo tenemos que revertir un solo commit para eliminar esa feature. En cambio si tenemos una branch lineal y el feature consta de 20 commmits, y luego movemos el pointer MASTER al último commit de la branch feature, para deshacer los cambios tenemos que volver 20 commits para atrás.
+Si por ejemplo estás en un ámbito de trabajo donde no se aceptan ff merges, podemos setearlo derectamente en vez de tipiear '--no-ff' en cada commit. Para setear no ff en un repositorio solamente ejecutamos:
+		git config ff no
+
+Esto deshabilita el ff en el repositorio actual. Si agregamos --global antes de ff, lo hace para todos nuestros repos.

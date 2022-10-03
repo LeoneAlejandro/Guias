@@ -1,0 +1,644 @@
+EJEMPLO REAL REPOSITORIO MERCURY
+
+Ahora vamos a trabajar con un nuevo repositorio para hacer todos los cambios que mencionamos hace un toque, en el repositorio "Mercury" tenemos el siguiente log:
+
+		* 088455d (HEAD -> master) .											//El mensaje es "." no tenemos idea que es
+		* f666091 WIP															//Msj: work in progress ?
+		* 111bd75 Update terms of service and Google Map SDK version.			//Junta 2 cosas en un commit, separar
+		* 72856ea WIP															//Msj: work in progress ?
+		* 8441b05 Add a reference to Google Map SDK.							//Debería ir antes de "render"
+		* 8527033 Change the color of restaurant icons.							//Mismo unit of work que "restaurant"
+		* af26a96 Fix a typo.													//Commit sin sentido, solo es ruido en la historia
+		* 6fb2ba7 Render restaurants the map.									//Falta la palabra "on" the map
+		* 70ef834 Initial commit
+
+En este log vemos varias cosas a arreglar: mensajes que no tienen sentido, commits de WIP que no deberían estar (supongamos que seguimos el proyecto y dentro de 3 meses volvemos a ver estos commits, que significa WIP ?), commits desordenados, o el "fix a typo" porej, es un commit que no debería existir.
+Ahora vamos a solucionar la historia de este repo.
+
+
+--- DESHACER LOS ULTIMOS COMMITS:
+
+Decidimos que el último commit "." es innecesario y lo queremos deshacer, para este caso tenemos 2 opciones: si ya compartimos este commit al repo remoto, hay chances de que alguien haya trabajado sobre este commi, por lo que no deberíamos removerlo, deberíamos hacer un "revert" que crea un nuevo commit que deshace los cambios del commit que queremos deshacer. Para este caso deberíamos hacer un 
+	
+		git revert HEAD
+
+Pero para este caso supongamos que todavía no compartimos este commit, por lo que solamente está en nuesto repo local, para eso podemos hacer la segunda opción: para esto hacemos un reset.
+
+		git reset --hard HEAD~1
+
+Como ya sabemos, si usamos la opción hard, no solo revertirá el commit sino también los cambios en nuestra SA y directorio local, mientras que --mixed también revertirá los cambios de la SA, y --soft solo moverá el HEAD al commit anterior, sin modificar nuestro directorio local, ni la staging area (este sería el momento exacto antes de hacer el commit anterior).
+Antes de hacer el revert hay que ver que cambios hizo ese commit, esto lo podemos ver con el comando:
+		
+		git show HEAD
+
+Vemos que en ese commit se agregó la linea "TEST en terms.txt, ahora si hacemos el revert:
+
+		git reset --soft HEAD~1
+
+Como elegimos la opción soft, ahora se revertieron los cambios solo en el repo local, por lo que si tiramos status veremos
+
+		M terms.txt  						//M en verde porque los cambios están en el dir local y en la SA
+
+Podemos ver la diferencia de nuestra SA con el último commit tirando el comando "git diff --cached", que nos mostrará, al igual que "git show head" que la única diferencia es la linea "TEST" en terms.txt.
+Ahora para ver la diferencia vamos a cambiar el tipo de reset:
+
+		git reset --mixed HEAD
+
+Notar que hacemos HEAD y no HEAD~1, sino volveríamos otro commit más para atrás, aca estamos cambiando el tipo de reset del commit 088455d. Básicamente lo que está haceiendo este comando es tomar los cambios del commit en HEAD (f666091) y ponerlos en la SA.
+Ahora si tiramos status veremos que la M cambió a color rojo porque los cambios SOLO están en nuestro directorio local, y no en la SA. De nuevo podemos ver la diferencia entre nuestro dir local y la SA tirando el comando "git diff" sin ningún argumento, y otra vez veremos la linea "TEST" agergados a terms.txt
+Por último vamos a volver a cambiar el tipo de rest con:
+		
+		git reset --hard HEAD
+
+Ahora los cambios del commit 088455d (TERST en terms.txt) también fueron revetidos de nuestro directorio local.
+
+
+--- REVIRITIENDO COMMITS:
+
+Siguiendo desde el último ejemplo, ahora nuestor log queda así:
+
+		* f666091 WIP
+		* 111bd75 Update terms of service and Google Map SDK version.
+		* 72856ea WIP									
+		* 8441b05 Add a reference to Google Map SDK.	
+		* 8527033 Change the color of restaurant icons.
+		* af26a96 Fix a typo.				
+		* 6fb2ba7 Render restaurants the map.
+		* 70ef834 Initial commit
+
+
+Supongamos que ahora queremos reverit el commit f666091, pero esta vez supongamos que SI compartimos este commit, por lo que 'reset' ya no es una opción, ya que alguien pudo haber trabajado con el commit f666091, por lo que cuando esa persona suba su nuevo commit, tendrá conflictos y divergencias. Ahora si usamos la opción revert:
+
+	 git revert HEAD 				//revierte el último commit
+	 git revert HEAD~2 				//revierte el commit 72856ea solamente
+	 git revert HEAD~3..HEAD 		//revierte desde HEAD hasta HEAD~3, sin incluir HEAD~3, osea desde f666091 hasta 72856ea
+
+Si ejecutamos este último comando, git revierte UNO POR UNO los commits elegidos, haciendo, en este caso, 3 revert commits, agregando mucho ruido en la historia, y nuestro log quedarí así:
+		
+		* 207a873 (HEAD -> master) Revert "WIP"												//REVERT 1
+		* 40a1fd0 Revert "Update terms of service and Google Map SDK version."				//REVERT 2
+		* 5d8812e Revert "WIP"																//REVERT 3
+		* f666091 WIP
+		* 111bd75 Update terms of service and Google Map SDK version.
+		* 72856ea WIP
+		* 8441b05 Add a reference to Google Map SDK.
+		* 8527033 Change the color of restaurant icons.
+		* af26a96 Fix a typo.
+		* 6fb2ba7 Render restaurants the map.
+		* 70ef834 Initial commit
+
+
+esto queda muy mal, sería mucho mejor si podemos revertir todos los cambios en UN SOLO commit. Para eso primero volvemos al estado anterior al revert con un:
+
+		git reset --hard HEAD~3
+
+Ahora vamos a hacere un reset pero sin hacer ningún commit con la opción "--no-commit", con este comando git hace todos los cambios para revertir los últimos 3 commits pero solo los agrega en la SA, entonces para cada commit que vamos a revertir git se fija que cambios hay que hacer y agrega esos cambios en la SA. Ejectuamos este cambios:
+
+		git revert --no-commit HEAD~3..HEAD
+o 		git revert --no-commit HEAD~3..
+
+Una vez ejectuado vemos el log siguiente:
+
+		* f666091 (HEAD -> master) WIP
+		* 111bd75 Update terms of service and Google Map SDK version.
+		* 72856ea WIP
+		* 8441b05 Add a reference to Google Map SDK.
+		* 8527033 Change the color of restaurant icons.
+		* af26a96 Fix a typo.
+		* 6fb2ba7 Render restaurants the map.
+		* 70ef834 Initial commit
+
+Y si tiramos un status -s veremos los siguientes cambios:
+		M  map.txt
+		M  package.txt
+		D  terms.txt
+
+Todo en verde ya que los cambios están en la SA. Pero todavía estamos en el proceso de reverting, por lo que podemos tirar un:
+
+		git revert --abort
+		git revert --continue
+
+Abort obvio es para volver para atrás, continue para aceptar los cambios. En este caso ponemos continuar, guardamos el mensaje del commit que salta en VS code y terminamos.
+
+--- AMENDING O ARREGLANDO EL ULTIMO COMMIT:
+
+Hay casos donde hicimos un commit, pero después nos dimos cuenta que nos equivcamos en algo, un typo o por accidente incluimos un archivo en nuestro commit, en estos casos no tenemos que hacer un nuevo commit, podemos arreglar o modificar el último commit.
+Supongamos que agregamos "cafes" a map.txt, lo agregamos a la SA, y hacemos un commit:
+ 
+		echo caffes >> map.txt
+		git commit -am "Render caffes on the map"
+
+Ahora nos dimos cuenta que cometimos un error y queremos cambiar la linea. Para eso abrimos map.txt y lo modificamos a gusto.
+
+		code map.txt 			//lo modificamos y guardamos
+		git add .
+
+Ahora para arreglar el último commit hacmeos un:
+
+		git commit --amend
+
+Hay que tener en cuenta que en realidad no arreglamos el último commit, los commits son inmutables, git en realidad creó un nuevo commit con el arreglo.
+
+
+--- RECUPERANDO COMMITS PERDIDOS:
+
+A veces nos equivocamos cuando reseteamos el HEAD, por ejemplo supoganmos que tenemos el siguiente log:
+
+		* bf8df59 (HEAD -> master) Render caffes on the map
+		* de12847 Revert bad code.
+		* f666091 WIP
+		* 111bd75 Update terms of service and Google Map SDK version.
+		* 72856ea WIP
+		* 8441b05 Add a reference to Google Map SDK.
+		* 8527033 Change the color of restaurant icons.
+		* af26a96 Fix a typo.
+		* 6fb2ba7 Render restaurants
+
+y por error ejecutamos:
+
+		git reset --hard HEAD~6
+
+Luego tiramos un log --all y vemos lo siguiente:
+
+		* 8527033 Change the color of restaurant icons.
+		* af26a96 Fix a typo.
+		* 6fb2ba7 Render restaurants the map.
+		* 70ef834 Initial commit
+
+Podríamos pensar que perdimos todos los commits borrados, pero con git nunca se pierde nada, todos estos commits borrados todavía estan en el repositorio por un tiempo, hasta que git decida que ya no se usan más y los borra definitavmente. Como podemos hacer para recuperar los commits perdidos ? Para este caso tenemos que usar el comando "reflgo" que es un log de como nuestra referencia ha cambiado en nuestra historia:
+
+		git reflog
+
+En nuestro caso nos devuelve:
+
+		8527033 (HEAD -> master) HEAD@{0}: reset: moving to HEAD~6
+		bf8df59 HEAD@{1}: commit (amend): Render caffes on the map
+		022a6ed HEAD@{2}: commit: Render caffes on the map
+		de12847 HEAD@{3}: commit: Revert bad code.
+		...
+
+Aca vemos como el último movimiento de nuestro HEAD fue "reset: moving to HEAD~6" y ahora HEAD está apuntando al commit 8527033, pero en el paso anterior el cambio fue hecho por un commit con el mensaje "Render caffes on the map", y el HEAD estaba en el commit bf8df59, por lo que para recuperar los commits tenemos que resetear HEAD a ese commit, podemos referenciarlo por ID del commit (bf8df59), o ID del entry (HEAD@{1})
+
+		git reset --hard HEAD@{1}
+
+Y ahora tenemos todo igual que antes de hacer el cambio. También podemos ver la historia de otros pointers con reflog: supongamos que tenemos una branch "feature", podemos ver el historial de esta branch con el comando
+	
+		git reflog show feature
+
+
+
+--- AMMENDAR o ARREGALR COMMITS VEIJOS:
+
+Supongamos que tenemos de nuevo el siguiente log:
+
+		* bf8df59 (HEAD -> master) Render caffes on the map
+		* de12847 Revert bad code.
+		* f666091 WIP
+		* 111bd75 Update terms of service and Google Map SDK version.
+		* 72856ea WIP
+		* 8441b05 Add a reference to Google Map SDK.
+		* 8527033 Change the color of restaurant icons.
+		* af26a96 Fix a typo.
+		* 6fb2ba7 Render restaurants
+
+Y queremos arreglar el commit 8441b05 "Add a reference to Google Map SDK", primero vemos el contenido del commit con
+
+		git show 8441b05
+
+Y nos muestra lo siguiente:
+
+			Author: Moshfegh Hamedani <moshfegh@live.com.au>
+			Date:   Wed Sep 9 17:41:49 2020 -0700
+
+			    Add a reference to Google Map SDK.
+
+			diff --git a/package.txt b/package.txt
+			new file mode 100644
+			index 0000000..7324ece
+			--- /dev/null
+			+++ b/package.txt
+			@@ -0,0 +1 @@
+			+Google Map 1.0.0
+
+En este caso vemos que se agregó una linea "+Google Map 1.0.0" a "package.txt", supongamos que nos olvidamos de agregar la licencia de google map, entonces queremos volver en la historia y arreglar este commit. Para hacer esto vamos a usar un rebasing; en este caso vamos a poner todos los commits posteriores al 8441b y los vamos a poner encima del commit padre de 8841b, o sea de 8527033. Esto lo hacemos de la siguiente manera:
+
+		git rebase -i 8527033
+
+Esto nos abrirá VSCODE con un script:
+
+		pick 8441b05 Add a reference to Google Map SDK.
+		pick 72856ea WIP
+		pick 111bd75 Update terms of service and Google Map SDK version.
+		pick f666091 WIP
+		pick de12847 Revert bad code.
+		pick bf8df59 Render caffes on the map
+
+Esto contiene una serie de instrucciones sobre la operación rebase, en este script tenemos todos los commits que vamos a reproducir desde el más viejo al más nuevo, primero de todo vemos el commit que queremos editar, y abajo de todo el último commit que hicimos. Ahora vamos a cambiar la instrucción "pick" del commit 8441b05 por la instrucción "edit". Podríamos también cambiar tantos commits como queramos para editar. Ahora solo vamos a cambiar por "edit" el commit mencionado, pero como ya dijimos antes, cuando editamos un commit, en realidad estamos creando una copia nueva, y en este caso, no solo estamos recerando el commit 8441b05, sino que estamos recreando TODOS los commits listados en el rebase, y esto es porque supongamos que tenemos el siguiente chart, y queremos modificar de B a B*:
+
+			 ┌───┐    ┌───┐   ┌───┐   ┌───┐
+			 │ A │◄───┤ B │◄──┤ C │◄──┤ D │
+			 └───┘    └───┘   └───┘   └───┘
+			   ▲
+			   │      ┌───┐
+			   └──────┤ B*│
+			          └───┘
+
+Ahora no podemos cambiar la referencia de C a B*, por lo que tenemos que crear otra copia exacta de C (C*) que haga referencia a B*, y así con TODOS los commits después de B.
+Por esto "REBASING" es una operación destructiva que cambia la historia, por lo tanto tener en cuenta de nunca hacer un rebase si compartimos estos commits.
+Volviendo a nuestro caso, cerramos el VSCODE habiendo modificado "pick" por "edit" y la operación de rebase empieza y nos muestra este mensaje:
+
+			Stopped at 8441b05...  Add a reference to Google Map SDK.
+			You can amend the commit now, with
+
+			  git commit --amend
+
+			Once you are satisfied with your changes, run
+
+			  git rebase --continue
+
+Nos indica que paramos en el commit que queríamos (vemos que estamso en REBASING 1/6 en el título del cmd), y podemos arreglar lo que querramos y luego continuar, vamos entonces a agregar la licencia y hacer el commti:
+
+		echo license >> license.txt 			//un status tira '?? license' en rojo porque agregamos el txt license
+		git add .
+		git commit --amend
+
+Ahora un log nos devuelve lo siguiente:
+		
+		* d92b5a7 (HEAD) Add a reference to Google Map SDK.
+		| * bf8df59 (master) Render caffes on the map
+		| * de12847 Revert bad code.
+		| * f666091 WIP
+		| * 111bd75 Update terms of service and Google Map SDK version.
+		| * 72856ea WIP
+		| * 8441b05 Add a reference to Google Map SDK.
+		|/
+		* 8527033 Change the color of restaurant icons.
+		* af26a96 Fix a typo.
+		* 6fb2ba7 Render restaurants the map.
+		* 70ef834 Initial commit
+
+Ahora tenemos 2 branches, la original a la derecha, y la nueva con un solo commit, el arreglado, a la izquierda. Ahora al seguir con el rebase, se agregarán todos los commits posteriores al viejo 8441b05 y los pondrá después del nuevo d92b5a7. Veamos:
+	
+		git rebase --continue 				//si nos equivocamos podemos hacer un --abort para volver al estado anterior del rebase
+
+Y ahora vemos el nuevo log:
+
+		* 1c563eb (HEAD -> master) Render caffes on the map
+		* d9b311c Revert bad code.
+		* 53656c1 WIP
+		* 886f866 Update terms of service and Google Map SDK version.
+		* 250a31b WIP
+		* d92b5a7 Add a reference to Google Map SDK.
+		* 8527033 Change the color of restaurant icons.
+		* af26a96 Fix a typo.
+		* 6fb2ba7 Render restaurants the map.
+		* 70ef834 Initial commit
+
+Donde todos los commits tienen el mismo mensaje, pero todos después del 8527033 cambiaron de ID ya que en realidad son una copia de los originales + el cambio que hicimos. La diferencia entre el "d9b311c Revert bad code" nuevo y el "* de12847 Revert bad code" viejo es que el nuevo contiene license.txt en el, que es el cambio que hicimos. 
+
+
+
+--- ELIMINAR UN COMMIT / DROPPING A COMMIT:
+
+Digamos que queremos eliminar el commit 250a31b de nuestra historia:
+
+		* 1c563eb (HEAD -> master) Render caffes on the map
+		* d9b311c Revert bad code.
+		* 53656c1 WIP
+		* 886f866 Update terms of service and Google Map SDK version.
+		* 250a31b WIP
+		* d92b5a7 Add a reference to Google Map SDK.
+		* 8527033 Change the color of restaurant icons.
+		* af26a96 Fix a typo.
+		* 6fb2ba7 Render restaurants the map.
+		* 70ef834 Initial commit
+
+Antes de eliminarlo veamos el contenido:
+
+			Author: Moshfegh Hamedani <moshfegh@live.com.au>
+			Date:   Wed Sep 9 17:42:00 2020 -0700
+
+			    WIP
+
+			diff --git a/terms.txt b/terms.txt
+			new file mode 100644
+			index 0000000..f3d4377
+			--- /dev/null
+			+++ b/terms.txt
+			@@ -0,0 +1 @@
+			+draft
+
+Vemos que se agregó un nuevo file llamado terms.txt con una sola linea "draft", ahora vemoas el siguiente commit con un "git show 886f866"
+
+1			diff --git a/package.txt b/package.txt
+2			index 7324ece..5111c93 100644
+3			--- a/package.txt
+4			+++ b/package.txt
+5			@@ -1 +1 @@
+6			-Google Map 1.0.0
+7			+Google Map 2.0.0
+8			diff --git a/terms.txt b/terms.txt
+9			index f3d4377..6ab9fed 100644
+10			--- a/terms.txt
+11			+++ b/terms.txt
+12			@@ -1 +1 @@
+13			-draft
+14			+completed
+
+Vemos que hay un update en package.txt, cambiamos la lina 6 por la 7, también vemos un cambio en terms.txt, cambiamos "draft" por "completed". Si intentamos ahora borrar el commit 250a31b vamos a tener un conflicto, ya que nunca se habría creado el file terms.txt, que el commit siguiente modifica. Veámoslo entonces, haremos un rebase desd el commit padre del 250a31b, lo podemos referenciar por número (d92b5a7), por 250a31b~1 o podemos usar el siguiente símbolo que significa "el padre" del commit que estamos eligiendo
+
+		git rebase -i 250a31b^
+
+Nos devolverá lo siguiente:
+
+		pick 250a31b WIP
+		pick 886f866 Update terms of service and Google Map SDK version.
+		pick 53656c1 WIP
+		pick d9b311c Revert bad code.
+		pick 1c563eb Render caffes on the map
+
+Donde tendremos que cambiar "pick" por "drop" o eliminar la linea del commit a dropear y luego resolver el conflicto que nos devuelve:
+
+		CONFLICT (modify/delete): terms.txt deleted in HEAD and modified in 886f866 (Update terms of service and Google Map SDK version.).  Version 886f866 (Update terms of service and Google Map SDK version.) of terms.txt left in tree.
+		error: could not apply 886f866... Update terms of service and Google Map SDK version.
+		hint: Resolve all conflicts manually, mark them as resolved with
+		hint: "git add/rm <conflicted_files>", then run "git rebase --continue".
+		hint: You can instead skip this commit: run "git rebase --skip".
+		hint: To abort and get back to the state before "git rebase", run "git rebase --abort".
+		Could not apply 886f866... Update terms of service and Google Map SDK version.
+
+Ahora para ver un poco mejor esto podemos tirar un status que nos devuelve lo siguiente:
+
+		M  package.txt
+		DU terms.txt
+
+Donde M está en verde (todo OK), pero el DU está en ROJO. DU significa que el conflicto se da porque primero, en el dropeo del commit 250a31b, lo intenta eliminar (D=DELETE) y por otro lado, en el siguiente commit 886f866 lo está intentando actualizar (U=UPDATE). Si tiramos un log vemos lo siguiente:
+
+		* 1c563eb (master) Render caffes on the map
+		* d9b311c Revert bad code.
+		* 53656c1 WIP
+		* 886f866 Update terms of service and Google Map SDK version.
+		* 250a31b WIP
+		* d92b5a7 (HEAD) Add a reference to Google Map SDK.
+		* 8527033 Change the color of restaurant icons.
+		* af26a96 Fix a typo.
+		* 6fb2ba7 Render restaurants the map.
+		* 70ef834 Initial commit
+
+Le dijimos a git que queremos dropear el commit 250a31b, por lo que está intentando deshacer los cambios que hicimos en ese commit, en este caso está intentando deshacerse del archivo añiadido en este commit. Ahora los cambios que tengamos en la SA (eliminar el file) van a ir al siguiente commi, donde  teníamos un UPDATE del archivo a eliminar por el commit anterior y la modificación de package.txt. Ahora necesitamos resolver el conflicto, podemos hacerlo mediante:
+
+		git mergtool
+
+que nos devuelve:
+
+		Deleted merge conflict for 'terms.txt':
+		  {local}: deleted
+		  {remote}: modified file
+		Use (m)odified or (d)eleted file, or (a)bort?
+
+En este caso vamos a elegir la modificación, porque queremos tener el terms.txt, y luego continuamos con el rebasing.
+Por último nos queda el siguiente log:
+
+		* d37c81d (HEAD -> master) Render caffes on the map
+		* 8226a1f Revert bad code.
+		* 9de62ac WIP
+		* 23fbfa3 Update terms of service and Google Map SDK version.
+		* d92b5a7 Add a reference to Google Map SDK.
+		* 8527033 Change the color of restaurant icons.
+		* af26a96 Fix a typo.
+		* 6fb2ba7 Render restaurants the map.
+		* 70ef834 Initial commit
+
+Ya no tenemos el commit 250a31b WIP, y también vemos que todos los commits posteriores cambiaron de ID nuevamente ya que hicimos un rebasing. Ahora como último ejemplo vamos a eliminar los commits 9de62ac y 8226a1f para dejar más limpia la historia.
+
+		git rebase -i HEAD~3
+
+Nos devuelve:
+
+		pick 9de62ac WIP
+		pick 8226a1f Revert bad code.
+		pick d37c81d Render caffes on the map
+
+Borramos las 2 primeras lineas para dropear esos commits, en este caso no tuvimos ningún conflicto, y si tiramos un nuevo log nos queda:
+
+		* 9d771c1 (HEAD -> master) Render caffes on the map
+		* 23fbfa3 Update terms of service and Google Map SDK version.
+		* d92b5a7 Add a reference to Google Map SDK.
+		* 8527033 Change the color of restaurant icons.
+		* af26a96 Fix a typo.
+		* 6fb2ba7 Render restaurants the map.
+		* 70ef834 Initial commit
+
+Una historia mucho más limpia y facil de leer con todos los mismos cambios desde el principio.
+
+
+
+
+--- CAMBIAR MENSAJE DE COMMIT / REWORDING COMMIT MESSAGES:
+
+Supongamos que queremos arreglar el mensaje del commit 6fb2ba7 y agregarle "on" antes "the map". Ahora hacemos de nuevo un rebasing desde el commit padre del que queremos modificar:
+
+		git rebase -i 6fb2ba7^
+
+Nos abre VSCODE con:
+
+		pick 6fb2ba7 Render restaurants the map.
+		pick af26a96 Fix a typo.
+		pick 8527033 Change the color of restaurant icons.
+		pick d92b5a7 Add a reference to Google Map SDK.
+		pick 23fbfa3 Update terms of service and Google Map SDK version.
+		pick 9d771c1 Render caffes on the map
+
+Y vamos a cambiar "pick" por "reword" en los commits que querramos renombrar. En este caso queremos también renombrar el commit d92b5a7, por lo que también cambiamos pick por reword. Ahora cuando guardamos y cerramos el VSCODE, git va a hacer el rebase y va a frenar en los que cambiamos "pick" por "reword" y nos va a pedir el nuevo mensaje del commit en una nueva ventana de VSCODE, al igual que cuando hacemos un -commit sin el mensaje en cmd.
+Luego nos tira que el rebasing fue exitoso, y si tiramos el último log veremos:
+
+		* c0f6b12 (HEAD -> master) Render caffes on the map
+		* 29dbf95 Update terms of service and Google Map SDK version.
+		* b193450 Add a reference to Google Map SDK v1.0.					//Agregamos v1.0 al final
+		* 53819ff Change the color of restaurant icons.
+		* 6956c6e Fix a typo.
+		* b9b5e6f Render restaurants on the map.							//Arreglado ON THE MAP
+		* 70ef834 Initial commit
+
+Y vemos de nuevo que todos los ID cambiaron otra vez, ya que son todas copias nuevas de commits anteriores, por lo que esto no se debería hacer si ya compartimos estos commits. Solo hacerlo con archivos de nuestro repo local.
+
+
+REORDENANDO COMMITS / REORDERING COMMITS:
+
+Volviendo a ver nuestro log:
+
+		* c0f6b12 (HEAD -> master) Render caffes on the map
+		* 29dbf95 Update terms of service and Google Map SDK version.
+		* b193450 Add a reference to Google Map SDK v1.0.		
+		* 53819ff Change the color of restaurant icons.
+		* 6956c6e Fix a typo.
+		* b9b5e6f Render restaurants on the map.	
+		* 70ef834 Initial commit
+
+Vemos que tenemos un commit desordenado, que está en una mala posición. En el commit b193450 dice que añade una referencia en Google Map después de que el commit b9b5e6f implemente una feature que depende de google map, por lo que si hacemos un checkout al commit b9b5e6f y ejecutamos la app, no va a funcionar, ya que le falta la referencia a google map para hacer el render, por lo que ahora vamos a mover el commit b193450 y vamos a bajarlo, de nuevo con un rebase desde el commit anterior al "Render restaurants on the map"
+
+		git rebase -i 70ef834
+
+Nos abre VSCODE con todos los commits desde el más viejo hasta el más nuevo:
+
+		pick b9b5e6f Render restaurants on the map.
+		pick 6956c6e Fix a typo.
+		pick 53819ff Change the color of restaurant icons.
+		pick b193450 Add a reference to Google Map SDK v1.0.
+		pick 29dbf95 Update terms of service and Google Map SDK version.
+		pick c0f6b12 Render caffes on the map
+
+Ahora nos paramos sobre la linea del commit b193450 y lo movemos para arriba (se puede con alt + flechitas)
+
+		pick b193450 Add a reference to Google Map SDK v1.0.
+		pick b9b5e6f Render restaurants on the map.
+		pick 6956c6e Fix a typo.
+		pick 53819ff Change the color of restaurant icons.
+		pick 29dbf95 Update terms of service and Google Map SDK version.
+		pick c0f6b12 Render caffes on the map
+
+Ahora nuestro commit está en la posición adecuada. Guardamos, cerramos y vemos el log en el orden que queríamos:
+
+		* c15f071 (HEAD -> master) Render caffes on the map
+		* 6b33dc3 Update terms of service and Google Map SDK version.
+		* 249fa2b Change the color of restaurant icons.
+		* 20894aa Fix a typo.
+		* d8db9c0 Render restaurants on the map.
+		* 93d6a79 Add a reference to Google Map SDK v1.0.
+		* 70ef834 Initial commit
+
+
+--- UNIENDO COMMITS / SQUASHING COMMITS:
+
+Como vimos en el último log:
+
+1		* c15f071 (HEAD -> master) Render caffes on the map
+2		* 6b33dc3 Update terms of service and Google Map SDK version.
+3		* 249fa2b Change the color of restaurant icons.
+4		* 20894aa Fix a typo.
+5		* d8db9c0 Render restaurants on the map.
+6		* 93d6a79 Add a reference to Google Map SDK v1.0.
+7		* 70ef834 Initial commit
+
+Los commits de las lineas 3, 4 y 5, todos los cambios forman parte de la misma unidad de trabajo, por lo que idealmente tendríamos que encapsular todos estos commits en una sola snapshot. Entonces vamos a hacer un squash desde el commit d8db9c0, por lo que arrancamos desde el padre de este commit:
+
+		git rebase -i 93d6a79
+
+Nos abre VSCODE con:
+
+1		pick d8db9c0 Render restaurants on the map.
+2		pick 20894aa Fix a typo.
+3		pick 249fa2b Change the color of restaurant icons.
+4		pick 6b33dc3 Update terms of service and Google Map SDK version.
+5		pick c15f071 Render caffes on the map
+
+Ahora tenemos que cambiar el "pic" de la linea 2 del commit 20894aa por "squash", lo que hará este cambio es unir el commit elegido con el anterior, por lo que si queremos unir 3 seguidos, deberíamos también cambiar por squash la linea siguiente:
+Entonces, el squash de la linea 2, une las lineas 1 y 2, y el segundo squash une las lineas 3 y la linea anterior, que es el resulado de la union de las lineas 1 y 2.
+
+1		pick 	d8db9c0 Render restaurants on the map.
+2		squash 	20894aa Fix a typo.
+3		squash 	249fa2b Change the color of restaurant icons.
+4		pick 	6b33dc3 Update terms of service and Google Map SDK version.
+5		pick 	c15f071 Render caffes on the map
+
+En el caso de que las lineas que querramos unir no son contiguas, deberíamos reordenarlas primero. Le damos guardar y por defecto nos traer para guardar un mensaje que es la union de los 3 mensajes de commits squasheados, en este caso borramos los mensajes de los 2 commits que desaparecen y dejamos solo el mensaje de "render...". Ahora si tiramos un nuevo log veremos:
+
+		* 795a517 (HEAD -> master) Render caffes on the map
+		* 977ad45 Update terms of service and Google Map SDK version.
+		* 918c06a Render restaurants on the map.
+		* 93d6a79 Add a reference to Google Map SDK v1.0.
+		* 70ef834 Initial commit
+
+Tal como queríamos. Un comando similar es "fixup" que hace lo mismo pero no toma el mensaje de la linea con "fixup":
+
+1		pick 	d8db9c0 Render restaurants on the map.
+2		fixup 	20894aa Fix a typo.
+3		fixup 	249fa2b Change the color of restaurant icons.
+4		pick 	6b33dc3 Update terms of service and Google Map SDK version.
+5		pick 	c15f071 Render caffes on the map
+
+por lo que al terminar el rebase git no nos abre el VSCODE para elegir el mensaje del commit, sino que toma el de la primera linea "Render..." e ignora el mensaje de las siguientes dos lineas con "fixup" en vez de "squash".
+
+
+--- DIVIENDO UN COMMIT / SPLITTING A COMMIT:
+
+Viendo el último log tenemos:
+
+		* 795a517 (HEAD -> master) Render caffes on the map
+		* 977ad45 Update terms of service and Google Map SDK version.
+		* 918c06a Render restaurants on the map.
+		* 93d6a79 Add a reference to Google Map SDK v1.0.
+		* 70ef834 Initial commit
+
+Como vemos, el commit 977ad45 tiene 2 unidades de trabajo juntas "Update terms of service" y "Update Google Map SDK version". Esto deberían ser 2 commits separados y auqe no se relacionan entre si. De nuevo hacemos un rebase interactivo desde el padre del commit a modificar:
+
+		git rebase -i 977ad45^
+
+Nos devuelve:
+
+		pick 977ad45 Update terms of service and Google Map SDK version.
+		pick 795a517 Render caffes on the map
+
+Cambiamos el "pick" de la primera linea por "edit", y cuando guardemos git frena en este commit y nos da la chance de editarlo y dividirlo.
+Ahora si vemos el log 
+
+		* 795a517 (master) Render caffes on the map
+		* 977ad45 (HEAD) Update terms of service and Google Map SDK version.
+		* 918c06a Render restaurants on the map.
+		* 93d6a79 Add a reference to Google Map SDK v1.0.
+		* 70ef834 Initial commit
+
+vemos que HEAD está apuntando al commit a editar, podemos usar el comando reset para ir al estado antes de hacer este commit:
+
+		git reset --mixed HEAD^				//mixed es la opción default, no hace falta aclararlo
+
+Con esto vamos un paso antes de hacer este commit a editar, por lo que los cambios van a estar en nuestro directorio local, y podremos agregarlos a la SA y commitirlos separadamente. Si ahora tiramos un status vemos:
+
+		M package.txt
+		?? terms.txt
+
+Ambos en rojo ya que como usamos --mixed los cambios están en el dir local pero no en la SA. Ahora podemos agregar y commitir estos cambios por separados haciendo:
+
+		git add package.txt
+		git commit -m "Update Google Map SDK Version 1.0 -> 2.0"
+
+Ahora nuestro historial es el siguiente:
+
+		* 735723c (HEAD) Update Google Map SDK Version 1.0 -> 2.0
+		| * 795a517 (master) Render caffes on the map
+		| * 977ad45 Update terms of service and Google Map SDK version.
+		|/
+		* 918c06a Render restaurants on the map.
+		* 93d6a79 Add a reference to Google Map SDK v1.0.
+		* 70ef834 Initial commit
+
+Vemos la divergencia en el inciio del rebase. Ahora nos queda un solo cambio si vemos el status -s:
+
+		?? terms.txt
+
+Por lo que podemos agregarlo en otro commit
+
+		git add .
+		git commit -m "Update terms of service"
+
+Luego nuestro log queda así:
+
+		* fc9b63d (HEAD) Add terms of service
+		* 735723c Update Google Map SDK Version 1.0 -> 2.0
+		| * 795a517 (master) Render caffes on the map
+		| * 977ad45 Update terms of service and Google Map SDK version.
+		|/
+		* 918c06a Render restaurants on the map.
+		* 93d6a79 Add a reference to Google Map SDK v1.0.
+		* 70ef834 Initial commit
+
+Ahora tenemos el commit 977ad45 separado en los commits 735723c y fc9b63d en nuestro nuevo historial, y al continuar el rebase, seguirá agregando los commits que faltaba, quedando por último, este log:
+
+		* 903d518 (HEAD -> master) Render caffes on the map
+		* fc9b63d Add terms of service
+		* 735723c Update Google Map SDK Version 1.0 -> 2.0
+		* 918c06a Render restaurants on the map.
+		* 93d6a79 Add a reference to Google Map SDK v1.0.
+		* 70ef834 Initial commit
+
+Y por fin tenemos los commits por separado y un historial mejor.

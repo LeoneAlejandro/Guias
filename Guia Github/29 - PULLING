@@ -1,0 +1,58 @@
+PULLING
+
+Pulling es la acciónde hacer un fetch y un merge al mismo tiempo. Por defecto Pull hace un merge commit en el caso de divergencias, pero podemos agregar la flag -rebase para agregar nuestros cambios locales arriba de la branch bifurcada master del repo remoto para tener una historia lineal.
+Entonces supongamos que tenemos cambios tanto en el repo local como el remoto:
+ 
+
+         LOCAL           │        REMOTE                          - git pull                       │  - git pull -rebase
+                         │                                                              MASTER     │
+             MASTER      │              MASTER                                            ▼        │
+               ▼         │                 ▼                        ┌───┐    ┌───┐      ┌───┐      │     ┌───┐
+    ┌───┐    ┌───┐       │     ┌───┐     ┌───┐                      │ A │◄───┤ B │◄─────┤ M │      │     │ A │
+    │ A │◄───┤ B │       │     │ A │◄────┤ C │                      └───┘    └───┘      └─┬─┘      │     └───┘             MASTER
+    └───┘    └───┘       │     └───┘     └───┘                        ▲                   │        │       ▲                 ▼
+      ▲                  │                                            │      ┌───┐        │        │       │      ┌───┐    ┌───┐
+ origin/MASTER           │                                            └──────┤ C │◄───────┘        │       └──────┤ C │◄───┤ B │
+                         │                                                   └───┘                 │              └───┘    └───┘
+                                                                               ▲                                    ▲
+                                                                          origin/MASTER                        origin/MASTER
+
+
+Acá cuando hagamos un pull vamos a tener una divergencia, por lo que cuando hagamos un pull por defecto hará un merge commit M con todos los cambios como se ve en el 3er gráfico. Si le agregamos un -rebase los cambios de nuesto repo local B se aplican luego del último commit del repo remoto C, y el resultado es un historial mucho más limpio.
+
+Veamos un ejémplo práctico: Modificamos el README en github.com modificando el repo remoto y agregamos un file1 desde cmd para modificar también el repo local creando una bifurcación. Si tiramos un log veremos lo siguiente:
+	
+	* e1cc037 (HEAD -> main) Add file1.txt
+	* 3478252 (origin/main, origin/HEAD) Update README.md
+	* eb163fb Initial commit
+
+Luego podemos hacer los 2 tipos de pulls, el pull normal nos da este resultado:
+
+		*   832b0fa (HEAD -> main) Merge branch 'main' of https://github.com/LeoneAlejandro/GitHubCourse
+		|\
+		| * eab1893 (origin/main, origin/HEAD) Update README.md
+		* | e1cc037 Add file1.txt
+		|/
+		* 3478252 Update README.md
+		* eb163fb Initial commit
+
+Vemos el merge commit, y como origin queda atrás tal como está todavía en el repo remoto. Después podemos ver como sería un pull -reabse haciendo un:
+
+		git reset --hard HEAD~1
+
+Ahora como hicimos el fetch cuando hicimos el pull, vamos a ver la bifurcación con un log:
+
+		* e1cc037 (HEAD -> main) Add file1.txt
+		| * eab1893 (origin/main, origin/HEAD) Update README.md
+		|/
+		* 3478252 Update README.md
+		* eb163fb Initial commit
+
+por último hacemos el 'git pull --rebase' para obtener el último log:
+
+		* 60c27c4 (HEAD -> main) Add file1.txt
+		* eab1893 (origin/main, origin/HEAD) Update README.md
+		* 3478252 Update README.md
+		* eb163fb Initial commit
+
+Ahora aplicamos los cambios linealmente arriba del último commit del repo remoto, dejando un historial lineal y más sencillo. Esto es muy útil cuando son cambios locales que no compartimos con nadie para hacer el rebase.

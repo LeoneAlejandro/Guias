@@ -1,0 +1,15 @@
+HISTORIAL Y RETAURACIÓN DE UN ARCHIVO
+
+Supongamos que elimnamos un archivo toc.txt, podemos buscar el historial como ya vimos:
+		git log --oneline --toc.txt
+
+Nos devuelve todos los commits que tocaron ese archivo:
+		a1adece (HEAD -> master) Remuevo toc
+		a642e12 Add header to all pages.
+		50db987 Include the first section in TOC.
+		ca49180 Initial commit.
+
+Obvio que el último commit es el que lo eliminó así que no lo contiene, por lo que si queremos restaurarlo tendremos que tomarlo del commit a642e12 que es el que contiene la última versión de toc.txt, y hacemos un checkout:
+		git checkout a642e12 toc.txt
+
+Ahora si tiramos un status nos devolverá "A toc.txt" con A en verde ya que habrá un nuevo archivo que está en la SA y en el local dir, pero no en la última versión commiteada, por lo que hay que commitirlo con un "git commit -m 'Restauro toc.txt'""

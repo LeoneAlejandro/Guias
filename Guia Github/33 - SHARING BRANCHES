@@ -1,0 +1,48 @@
+SHARING BRANCHES
+
+Hata ahora siempre trabajamos en master, pero de la misma manera podemos trabajar en distintas branches. Cuando creamos una nueva branch en nuestro repo local, por ej:
+		
+		git swtich -C feature/change-pass
+
+Esta branch no va a estar en el repo remoto. Si tiramos un push nos va a tirar un error ya que nuestra branch no está linkeada con una branch de origin. Si tramos un 'git branch -vv', veremos lo siguiente:
+
+		* feature/change-pass 60c27c4 Add file1.txt
+		  main                60c27c4 [origin/main] Add file1.txt
+
+Como vemos tenemos el main linkeado a origin, pero nuestra nueva branch no. Podemos ver las branches del repo remoto con el comando:
+	
+		git branch -r
+
+Que nos devuelve:
+		
+		  origin/HEAD -> origin/main
+		  origin/main
+
+Solo veremos estos 2 pointers, HEAD y MASTER del repo remoto. Si queremos pushear nuestra branch (es solamente un pointer por ahora) al repo remoto tenemos que ejectuar:
+		 
+		 git push -u origin feature/change-pass
+
+En este caso tenemos -u que significa 'upset upstream', el nombre del remote al que hacemos el push, seguido por el nombre de la branch que pusheamos. Ahora si vemos en GitHub tendremos 2 branches, main y nuestra nueva branch pusheada. Ahora si tramos -vv veremos:
+
+		* feature/change-pass 60c27c4 [origin/feature/change-pass] Add file1.txt
+		  main                60c27c4 [origin/main] Add file1.txt
+
+Ahora vemos nuestra local branch fature, linkeada con la remote branch feature subida por nosotros. También podemos volver a ver todas las branches remotas con 'git branch -r', donde vemos nuestra nueva branch subida.
+
+		  origin/HEAD -> origin/main
+		  origin/feature/change-pass
+		  origin/main
+
+Desde ahora podemos empezar a trabajar de la misma forma que estabamos trabajando con MASTE antes. Hacemos nuevos cambios en nuestro directorio local, los commitimos en nuestro repo local, y los pusheamos al repo remoto. Cuando terminamos de trabajar una branch hay que eliminarla del repo remoto también. Para esto lo hacemos con:
+
+		git push -d origin feature/change-pass
+
+Ahora si tiramos un -vv vemos: 
+
+		* feature/change-pass 60c27c4 [origin/feature/change-pass: gone] Add file1.txt
+		  main                60c27c4 [origin/main] Add file1.txt
+
+Todavía tenemos la branch en nuestro repo local que también podemos eliminar como ya vimos antes, desde master hacemos:
+
+		git switch master
+		git branch -d feature/change-pass

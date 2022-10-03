@@ -1,0 +1,74 @@
+SQUASH MERGING
+
+Supongamos que hacemos una nueva branch como los casos anteriores para agregar alguna feature, pero decidimos que esa bifurcación o branch no es de buena calidad, no aporta algo significativo al proyecto, y solo ensucia el historial de commits y queremos eliminarlos pero no perder los cambios? En este caso lo que hacemos es el "squash merging" que consta en crear un nuevo commit en la linea MASTER con todos los cambios de a + b combinados. Esto no es un "merge commit" ya que no tiene las referencias típicas del mismo (2 padres, 3 way), sino que es un nuevo commit a+b que agregamos arriba de MASTER, entonces después podemos simplemente borrar la branch para que nos quede un historial mucho más limpio.
+
+                                HEAD     │            HEAD                          │                               HEAD
+                                  ▼      │              ▼                           │                                ▼
+                               MASTER    │            MASTER                        │                              MASTER
+                                  ▼      │              ▼                           │                                ▼
+   ┌───┐   ┌───┐                ┌───┐    │    ┌───┐   ┌───┐                ┌───┐    │  ┌───┐   ┌───┐               ┌───┐
+   │   │◄──┤   │◄───────────────┤ M │    │    │   │◄──┤   │◄───────────────┤a+b│    │  │   │◄──┤ A │◄──────────────┤a+b│
+   └───┘   └───┘                └─┬─┘    │    └───┘   └───┘                └─┬─┘    │  └───┘   └───┘               └───┘
+             ▲                    │      │              ▲                    │      │
+             │   ┌───┐   ┌───┐    │      │              │   ┌───┐   ┌───┐    │      │
+             └───┤ a │◄──┤ b │◄───┘      │              └───┤ a │◄──┤ b │◄───┘      │
+                 └───┘   └───┘           │                  └───┘   └───┘           │
+                           ▲             │                            ▲             │
+                        feature          │                         feature          │                   
+
+Como vemos en las figuras, el primer caso sería un 3 way merge donde el 'merge commit' es tiene 2 padres. En el la segunda imagen tenemos entonces un nuevo commit como explicamos, haciendo un squash merging, que básicamente es un nuevo commit con los cambios a+b. Luego solo resta mover el MASTER a este nuevo commit y eliminar la branch.
+
+Veamos un caso real, supongamos que creamos una nueva branch y hacemos 2 commits modificando un archivo:
+
+		git swith -C bugfix/photo-upload
+		echo bugfix >> audience.txt
+		git commit -am "Update audience.txt"
+		echo bugfix >> toc.txt
+		git commit -am "Update toc.txt"
+
+Si ahora tiramos un graph veremos:
+
+		* 8ba3d31 (HEAD -> bugfix/photo-upload) Update toc.txt
+		* 5bec39a Update audience.txt
+		* 400df74 (master) Último commit de MASTER
+
+Nuestra branch bugfix está 2 commits adelante de MASTER, en este caso podríamos hacer un FFM pero supongamos que MATER evolucionó también, por lo que solo podemos hacer un 3wm o un squash merge. Para hacer el squash merge volvemos a la MASTER branch y agregamos --squash en merge:
+
+		git switch master
+		git branch --squash bugfix/photo-upload
+
+Esto nos devuelve:
+
+		Updating 400df74..8ba3d31
+		Fast-forward
+		Squash commit -- not updating HEAD
+				 audience.txt | 2 +-
+				 toc.txt      | 2 +-
+				 2 files changed, 2 insertions(+), 2 deletions(-)
+
+Esto no nos genera el commit, sino solo los cambios en la SA, si tiramos un status -s veremos:
+
+		M  audience.txt
+		M  toc.txt
+
+Con las M en verde, que significa que los cambios están en el dir local (como ya estaban antes) y en la SA pero no fueron commitidos todavía, por lo que tenmos que hacer un nuevo commit. Este commit deberá resumir todos los cambios del branch que vamos a eliminar (commits a+b)
+
+		git commit -m "Fix a bug on the photo upload page"		// si luego tiramos un log veremos
+		git log --oneline --graph --all
+
+Veremos que la branch todavía está, luego podemos borrar la branch, y los commits 8ba3d y 5bec3, y no perderemos ningún dato importante porque esos cambios están en el commit 5ebc. 
+
+		* 5ebcd38 (HEAD -> master) Fix a bug on the photo upload page
+		| * 8ba3d31 (bugfix/photo-upload) Update toc.txt
+		| * 5bec39a Update audience.txt
+		|/
+		* 400df74 Último commit de MASTER
+
+En estos casos es MUY importante borrar el branch después de hacer el squash merge ya que ese branch nunca se mergeó. Si tiramos un "branch --no-merged" vamos a ver esta branch y vamos a pensar que esos cambios no están hechos en MASTER ya que nunca los mergeamos. Cuando tiramos un
+		
+		git branch -d bugfix/photo-upload
+
+Nos va a tirar error ya que no está fully merged según git por lo que hay que forzar el borrado con un -D mayúsucla. Ahora si tiramos un log veremos una linea simple, tenemos un commit que combina todos los cambios par arreglar el bug:
+
+		* 5ebcd38 (HEAD -> master) Fix a bug on the photo upload page
+		* 400df74 Último commit de MASTER
