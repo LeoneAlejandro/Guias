@@ -1,0 +1,27 @@
+INTERFACE SEGREGATION PRINCIPLE
+
+Basado en este principio debemos dividir grandes interfaces en muchas pequeñas para reducir el impacto en los posibles cambios. Es preferible que una clase implemente muchas interfaces pequeñas separadas como unidades de trabajo, que una sola gran interfaz que involucre muchos trabajos distintos.
+
+Por ejemplo, teniendo una interfaz como la siguiente:
+
+public interface UIWidget {
+	void drag();
+	void resize();
+	void render();
+}
+
+Si creamos una nueva clase widget que queremos que se pueda arrastrar, deberá implementar esta interfaz para tener el método "drag()", y, aunque nunca utilice los métodos resize y render, si algunos de ellos cambia en la interfaz, deberemos cambiar el widget que los implementa. 
+Podríamos dividir esta interfaz en capacidades individuales de la siguiente manera:
+
+public interface Draggable {
+	void drag();
+}
+
+De esta manera nuestra nueva widget solo aplicará la interfaz Draggable, sin importar si es resizable o renderable. Ahora tenemos un solo punto de acoplamiento (el método drag) entre la interfaz y la clase widget, por en cambio antes teníamos 3 (los 3 métodos de la interfaz UIWidget).
+Si necesitaramos una interfaz UIWidget que tenga los 3 métodos, podríamos tener una interfaz de la siguiente manera:
+
+public interface UIWidget extends Draggable, Resizable, Renderable {
+}
+
+Y heredará los métodos de las 3 interfaces que hemos separado. La herencia múltiples entre interfaces si se puede hacer en JAVA.
+No confundir esta segregación con división de métodos porque si, y no pasarse de rosca y dividir sin pensar a las interfaces que tengan muchos métodos. Deberíamos dividir solo las capacidades diferentes. Resize y Drag son dos capacidades diferentes que tienen que estar separadas, pero si tenemos 10 métodos relacionados con resize en una interfaz, está bien.

@@ -1,0 +1,47 @@
+CONSTRUCTOR INJECTION
+
+Como vimos en inyección de dependencias, la misma se puede hacer mediante constructores. Veamos un ejémplo práctico:
+
+Supongamos que tenemos el mismo caso anterior de TaxCalculator. Teníamos la calse TaxReport que instanciaba TaxCalculator2018 (una clase que imlementaba la interface TaxCalculator) de la siguiente manera:
+
+public class TaxReport {
+	private TaxCalculator2018 calculator;
+
+	public TaxReport(){
+		calculator = new TaxCalculator2018(10_000);
+	}
+
+	public showReport(){
+		var tax = calculator.calculateTax();
+		System.out.pritnln(tax);
+	}
+}
+
+Queremos cambiar nuestra calse TaxReport dependa de la implementación concreta u objeto "TaxCalculator2018", sino que queremos que dependa de una interface. Para hacer esto debemos cambiar el tipo de nuestro atributo "calculator" a la interfaz "TaxCalculator". Luego tendremos que cambiar la creación de "new TaxCalculator2018" ya que queremos que esta clase no sepa nada de la implementación de TaxCalculator2018. Para esto debemos pasar nuestro argumento de la siguiente manera.
+
+public class TaxReport {
+	private TaxCalculator calculator;
+
+	public TaxReport(TaxCalculator calculator){
+		this.calculator = calculator;
+	}
+
+	public showReport(){
+		var tax = calculator.calculateTax();
+		System.out.pritnln(tax);
+	}
+}
+
+Des esta manera estamos inyectando una dependencia (en este caso TaxCalculator) usando el constructor de nuestra clase, pero, quien inyectará esta dependencia ? Ahora tendremos que volver al main y crear una instancia Calculator
+
+public class Main {
+	
+		public static void main(String[] args){
+			var calculator = new TaxCalculator2018(10_000);
+			var report = new TaxReport(calculator);
+		}
+}
+
+Entonces de esta manera nuestra clase TaxReport ni siquiera sabe de la existencia de la clase TaxCalculator2018 ni su implementación concreta, solo está trabajando con una interfaz (TaxCalculator). Es responsabilidad de otra clase (nuestra clase main en este ejemplo) de pasar o inyectar esta implementación. Hoy estamos usando TaxCalculator2018, pero podremos el año que viene utilizar una nueva clase TaxCalculator2023 que sea mucho más eficiente, y pasarle esta nueva clase a nuestro TaxReport y seguirá funcionando todo de igual manera mientras la interfaz se implemente de la manera correcta. También podríamos cambiar nuestra clase TaxReport2018 (cambiar el income de 0,3 a 0,4) y tampoco le importará a nuestra clase TaxReport ni necesitará ser recompilada.
+A esto nos referimos con disminuir el acplamiento (loose-coupling). Eliminar las dependencias entre clases para hacer un código más flexible y dinámico sin necesidad de modificar una clase al cambiar otra.
+En este ejemplo que vimos solo tenemos 2 clases y las podemos inyectar manualmente, es una inyección pobre, pero en aplicaciones más grandes podremos tener cientos de clases y cada clase podrá tener muchas dependencias, para esto se usa un framework de inyección de dependencias que hacen muy facil éste proceso, siendo Spring uno de los más populares.

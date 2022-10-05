@@ -1,0 +1,40 @@
+SETTER INJECTION
+
+Este es otro tipo de inyección utilizando Setters, aunque la inyección de dependencias por constructores es más común. 
+
+Volviendo al ejemplo de TaxReport, teníamos la siguiente clase:
+
+public class TaxReport {
+	private TaxCalculator calculator;
+
+	public TaxReport(TaxCalculator calculator){
+		this.calculator = calculator;
+	}
+
+	public showReport(){
+		var tax = calculator.calculateTax();
+		System.out.pritnln(tax);
+	}
+}
+
+En este caso podemos declarar un setter para inicializar o instanciar el objeto calculator. Para esto agergamos el siguiente setter a la clase TaxReport:
+
+public void setCalculator(TaxCalculator calculator){
+	this.calculator = calculator
+}
+
+Ahora además de inyectar la dependencia mediante el constructor, también lo podemos hacer mediante el setter de esta clase. Cual es el beneficio ? Que podremos cambiar las dependencias a lo largo de la vida de nuestra aplicación. Podremos, en el main, inyectar una dependencia en el constructor y luego cambiarla en el medio:
+
+public class Main {
+	
+		public static void main(String[] args){
+			var calculator = new TaxCalculator2018(10_000);
+			var report = new TaxReport(calculator);
+			report.showReport();
+
+			report.setCalculator(new TaxCalculator2023(10_000));
+			report.showReport();
+		}
+}
+
+Y tendremos 2 reports distintos.

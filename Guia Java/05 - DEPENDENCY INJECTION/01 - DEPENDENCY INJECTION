@@ -1,0 +1,38 @@
+DEPENDENCY INJECTION
+
+De acuerdo con este concepto, las clases deben ser suministradas de un objeto o instancia para trabajar con ella, sin la necesidad de crear o instanciar el objeto. Esto hace referencia a la "separación de intereses" (separation of concerns), donde cada clase es encargada de hacer una sola cosa. Si una clase debe usar una instancia, la misma debe ser suministrada desde otra clase y no instanciada por ella misma. En otras palabras, se trata de un patrón de diseño que se encarga de extraer la responsabilidad de la creación de instancias de un componente para delegarla en otro. Este otro componente pasara o INYECTARÁ esta DEPENDENCIA.
+Esto también reduce el acplamiento (loose-coupling). Elimina las dependencias entre clases para hacer un código más flexible y dinámico sin necesidad de modificar una clase al cambiar otra. La dependencia o coupling (acoplamiento) entre una clase y una interfaz es mucho menor que entre clases, ya que la interfaz no tiene implementación o código, solo es un contrato o firma. Por eso al crear interfaces tenemos que hacerlas lo más livianas y con menor acoplamiento posible.
+Esta inyección se hará mediante constuctores, setters y métodos, que veremos más adelante.
+
+Veámoslo más sencillamente con un ejemplo.
+Supongamos que tenemos una clase que implementa una interfaz de la siguiente manera:
+
+public interface TaxCalculator {
+	public double calculateTax();
+}
+
+public class TaxCalculator2018 implements TaxCalculator {
+	private double taxableIncome
+
+	@Override
+	private double calculateTax (){
+		return taxableIncome * 0.3;
+	}
+}
+
+Y supongamos que tenemos otra clase TaxReport que usa a la clase TaxCalculator para crear un reporte, usualmente lo haríamos creando una instancia de TaxCalculator y manejarla desde esta nueva clase de la siguiente manera:
+
+public class TaxReport {
+	private TaxCalculator2018 calculator;
+
+	public TaxReport(){
+		calculator = new TaxCalculator2018(10_000);
+	}
+
+	public showReport(){
+		var tax = calculator.calculateTax();
+		System.out.pritnln(tax);
+	}
+}
+
+Según el concepto de inyección de dependencias, nuestra clase TaxReport no debería preocuparse por crear el objeto (instanciar) TaxCalculator2018 y luego usarlo en tax = calculator.calculateTax(), solo debería usarlo simplemente sin la necesidad de instanciarlo. Crear un objeto y usarlo son 2 cosas distintas y deberíamos separarlas. Para esto queremos quitar la responsabilidad de crear esta dependencia de la clase Report y dársela a otra clase, y esa otra clase le dará a nuestra clase Report el objeto Calculator.
