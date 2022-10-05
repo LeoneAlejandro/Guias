@@ -1,0 +1,48 @@
+ENCAPSULAMIENTO
+
+Es el primer principio del paradigma orientado a objetos y se trata de empaquetar atributos y métodos en una sola unidad de trabajo. Esta unidad de trabajo o clase nos permite facilitar la reutilización de estos tipos de datos. Hay que pensar a cada unidad de trabajo independiente de la otra, donde cada una oculta su integridad, sus detalles de implementación y estado interno, para que nadie pueda cambiarlo sin pasar por su voluntad.
+Aqui vemos la implementación de Clases, constructores, getters y setters donde la única forma de trabajar con una instancia de una clase es mediante atributos y métodos públicos solamente, o dentro de la misma clase, pero NUNCA fuera de ella. Esto nos permite una gran robustez en clases con una buena validación de datos.
+
+Veamos un ejemplo con el siguiente modelo de persona y empresa:
+
+ ┌─────────────────────────────────┐       ┌─────────────────────────────────┐
+ │  Persona                        │       │  Empresa                        │
+ ├─────────────────────────────────┤       ├─────────────────────────────────┤
+ │ - DNI: String                   │       │ - razonSocial: String           │
+ │ - nombre: String                │       │ - CUIT: String                  │
+ │ - apellido: String              │       │ - calle: String                 │
+ │ - calle: String                 │       │ - altura: String                │
+ │ - altura: int                   │       │ - barrio: String                │
+ │ - barrio: String                │       ├─────────────────────────────────┤
+ ├─────────────────────────────────┤       │ + contratar(): void             │
+ │ + domicilioComoCadena(): String │       │ + domicilioComoCadena(): String │
+ │ + nombreCompleto(): String      │       │ + pagarSalarios(): void         │
+ └─────────────────────────────────┘       └─────────────────────────────────┘
+
+Podríamos ver que ambas clases tienen en común que ambas están situadas en algún lugar, compartiendo los atributos calle, altura, barrio y el método domicilioComoCadena(). Estos métodos y atributos repetidos, que además no son exclusivos de una Persona o Empresa, podríamos verlos como atributos de una nueva entidad y reutilizar la misma para ambos casos. Podríamos entonces armar una nueva clase Domicilio con estos atributos y métodos de la siguiente manera:
+
+ ┌────────────────────────────┐   ┌──────────────────────────┐
+ │  Persona                   │   │  Empresa                 │
+ ├────────────────────────────┤   ├──────────────────────────┤
+ │ - DNI: String              │   │ - razonSocial: String    │
+ │ - nombre: String           │   │ - CUIT: String           │
+ │ - apellido: String         │   ├──────────────────────────┤
+ ├────────────────────────────┤   │ + contratar(): void      │
+ │ + nombreCompleto(): String │   │ + pagarSalarios(): void  │
+ └───────────────────┬────────┘   └──────┬───────────────────┘
+                     │ -domicilio        │ -domicilio
+                     │                   │
+                     ▼ 1                 ▼ 1
+             ┌─────────────────────────────────┐
+             │  Domicilio                      │
+             ├─────────────────────────────────┤
+             │ - calle: String                 │
+             │ - altura: int                   │
+             │ - barrio: String                │
+             ├─────────────────────────────────┤
+             │ + domicilioComoCadena(): String │
+             └─────────────────────────────────┘
+
+Esto nos facilita el uso, y nos ahorra duplicar lógica y atributos a lo largo de nuestro código. Además también garantiza la integridad de estos datos ya que al ser privados necesitarán getters y setters para acceder a ellos y ahora no podremos manipular desde la clase persona o desde la clase empresa a estos atributos y modificarlos o setearlos a gustos, lo que puede generar que queden en un estado inconsistente.
+La visibilidad de los atributos y métodos son claves para garantizar el encapsulamiento para garantizar que el único que puede manipular sus datos es la propia clase. Si tenemos una clase CuentaBancaria, el saldo debe ser privado y éste saldo no dependerá de getters y setters para modificar su valor, sino que tendremos métodos públicos como "depositarDinero", "retirarDinero", "realizarTransferencia", "obtenerSaldo", etc, que modifiquen y consulten nuestro saldo, pero nunca podremos setearlos mágicamente por otro número sin una razón.
+Cualquier calse que use CuentaBancaria no debería saber siquiera cuales atributos existen dentro de esa clase, solamente necesitará saber con cuales datos los instanciará y cuales son sus métodos públicos. Dentro de la misma clase podrá tenerse también otros métodos como generarCbu o saldoSuficiente que servirán como implementación para inicializar la cuenta y para chequear que se pueda retirar dinero de una cuenta, y estos serán métodos privados que no podremos ver fuera de la clase propia.
