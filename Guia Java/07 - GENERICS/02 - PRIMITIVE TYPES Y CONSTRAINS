@@ -1,0 +1,26 @@
+PRIMITIVE TYPES Y CONSTRAINS
+
+┌────────────────────────────────────────────────────────────────────┐
+│GENERICS TRABAJA SOLAMENTE CON REFERENCIAS COMO TIPOS DE ARGUMENTOS │
+└────────────────────────────────────────────────────────────────────┘
+Esto significa que cuando instanciamos un generic type no podremos trabajar con parámetros primitivos, solamente acepta como tipo de argumentos a parámetros de referencia. Podemos trabajar con Integer, pero no int; tampoco podremos trabajar con boolean, short, float, char. Si queremos guardar estos valores primitivos en una colección GenericList hay que usar una wrapper class.
+Todos los types primitivos en JAVA tienen una wrapper class:
+	int -> Integer
+	float -> Float
+	boolean -> Boolean
+Estas clases trabajan mediante referencias que guardan valores primitivos. Un Boolean es una referencia que guarda un true o un false, pero no es el valor primitivo en si.
+Cuando trabajamos con GenericLists de estos tipos, JAVA automáticamente envuelve a este tipo primitivo con una instancia de su wrapper class, por lo que podemos usar un 'int' en una GenericList<Integer> y JAVA creará una instancia de Integer y guardará en esa referencia el valor del 'int' que le pasemos. Este proceso se llama 'Boxing'. Lo mismo sucede cuando usamos el método get() que nos devuelve un 'Integer', pero al guardarlo en un una 'var int' JAVA extraerá el valor que está guardado dentro del objeto Integer (esto sería 'Unboxing').
+
+También podemos agregar restricciones a la hora de crear una GenericList; supongamos que queremos guardar numeros en una colección, sin importar cual tipo de número (Integer, Byte, Float, Long, etc), ya que la lista trabajará con operaciones matemáticas que solo tienen sentido con números. Para hacer esto podemos definir la clase de la siguiente manera:
+
+public class GenericList<T extends Number> {
+	//Argumentos y méodos
+}
+
+Ahora solo podrá guardarse la clase Number o cualquiera de sus sublcases, por lo que podremos crear una GenericList<Integer>, o <Float>, pero no podremos crear una GenericList<String> sin un error de compilación.
+
+Y no solo podremos extender a una clase, sino también a Interfaces, por ejemplo:
+
+public class GenericList<T extends Comparable>{}
+
+Ahora solo se podrán crear GenericLists de clases que implementen la interfaz Comparable. También puede extender más de una interfaz: GenericList<T extends Comparable & Clonable> (lo veremos con más detalles más adelante).

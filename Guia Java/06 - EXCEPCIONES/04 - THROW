@@ -1,7 +1,8 @@
 THROW
 
-Para poder capturar excepciones significa que alguien o algo las tuvo que haber arrojado primero. Ahora veremos como nosotros manualmente podremos lanzar excepciones de acuerdo a una lógica que no está preestablecida por el lenguaje, sino que esté relacionada con lo que estemos desarrollando.
-Esto nos sirve para realizar una validación de datos, por ejemplo si tenemos un ciclo for como el siguiente
+Para poder capturar excepciones significa que alguien o algo las tuvo que haber arrojado primero. Ahora veremos como nosotros manualmente podremos lanzar excepciones de acuerdo a una lógica que no está preestablecida por el lenguaje, sino que esté relacionada con lo que estemos desarrollando. Esto sirve para programar de una forma más defensiva, ya que podemos validar datos antes de que nuestro código siga corriendo, y si los datos no cumplen con la validación, podemos romper el flujo del programa para proteg	er al resto del código que puede romperse con un dato mal ingresado. Hay que tener cuidado con exagerar el uso de las excepciones como validación de datos, ya que si tenemos métodos con 3 o 4 parámetros, las pimeras 10 o 20 lineas serán todas para validar dato lo que llena de ruido nuestro código. Nuestra app tendrá que, en cierto punto, confiar en los métodos que llama.
+
+Veamos un ejemplo de una validación de datos:
 
 public class Calculadora {
 	public int factorial (int num){

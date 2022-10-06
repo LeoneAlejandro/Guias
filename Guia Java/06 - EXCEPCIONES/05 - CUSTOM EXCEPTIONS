@@ -1,0 +1,47 @@
+CUSTOM EXCEPTIONS
+
+En JAVA también podemos crear nuestras propias excepciones, supongamos que tenemos una clase CuentaBancaria donde la misma tiene un método retirarDinero, donde primero tenemos que validar ciertos datos. Podríamos validar que el monto a retirar sea > 0 mediante una IOException, ya que no se puede aceptar montos negativos a retirar:
+
+public class CuentaBancaria{
+	private float saldo
+
+	public void retirarDinero(float monto) thorws IOException {
+		if(monto < 0) {
+			throw new IOException
+		}
+	}
+}
+
+Ahora, también deberíamos chequear que el monto a retirar sea menor al saldo de la cuenta, pero, que tipo de excepción devolveremos ? IOException no, ya que no es un error de input o output. IllegalArgumentExcepiton tampoco ya que, de nuevo, no es un error de programación el ingresar un número que es mayor que nuestro saldo. 
+Para esto podemos crear nuestra propia expeción, agregándola en nuestro paquete de excepciones. La creamos al igual que una clase y luego deberemos decidir si nuestra excepción será checked o unchequed. Si es 'CHECKED' deberá extender la clase 'Exception', si es 'UNCHECKED' deberá extender la clase 'RunetimeException'. En este caso queremos anticiparnos al error y recuperarnos de él, por lo que tendrá que ser 'CHECKED'. Por lo tanto vamos a definirla y asignarle un par de  constructores (no es obligatorio):
+
+public class InsufficientFundsException extends Exception {
+	public InsufficientFundsException(){
+		super("Fondos insuficientes en la cuenta")
+	}
+
+	public InsufficientFundsException(String message){
+		super(message); 
+	}
+}
+
+Mediante los constructores, cuando creamos una nueva instancia de nuestra excepción custom, si no pasamos ningún mensaje, usará el mensaje custom del primer constructor, de lo contrario, utilizará el mensaje que le pasemos en el segundo constructor, y ya sea el primer mensaje por defecto, o el segundo custom, le pasará ese mensaje a su superclase.
+Ahora si podemos agregar la validación en nuestra clase CuentaBancaria donde chequeamos el saldo y devolvemos nuestra excepción custom en caso de que no cumpla con los requisitos:
+
+public class CuentaBancaria{
+	private float saldo
+
+	public void retirarDinero(float monto) thorws Exception {
+		if(monto < 0) {
+			throw new IOException
+		}
+		if(monto > saldo){
+			throw new InsufficientFundsException
+		} else {
+			//Lógica luego de las validaciones
+		}
+	}
+}
+
+Ahora también tendremos que ampliar nuestro "throws" ya que nuestra custom exception no está siendo manejada por "throws IOException", y habrá que cambiarlo por algo más general como "Exception".
+Luego tendremos que encerrar con bloques try...catch cuando llamemos a éste método para manejar las posibles excepciones.

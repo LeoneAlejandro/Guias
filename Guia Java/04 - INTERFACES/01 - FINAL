@@ -23,3 +23,5 @@ Tener en cuenta que está prohibido definir como final a una clase abstacta, ya 
 
 La cuarta y última implementación de la palabra final es en los métodos, donde final -similar al caso de clases-, prohibe tener métodos en subclases derivadas que sobreescriban al método final definido en el principio. Al definir como final un método, el mismo nunca puede ser sobreescrito.
 Al igual que al nivel de clases, un método abstracto no puede ser final por la misma dicotomía de lógica. Un método abstacto no tiene lógica ya que su uso depende de la sobreescritura en las subclases, pero final prohibe esa sobreescritura, por lo que se contradicen nuevamente.
+
+Final se puede usar en interfaces. Todos los atributos en interfaces deben ser "public static final", por lo que son constantes que hay que inicializar y no podremos cambiar. No es recomendable usar atributos en interfaces, estas constantes están relacionadas con la implementación, y no tienen lugar en interfaces. Además aumenta el coupling y genera que al cambiar alguna de estas constantes, rompa todo el código que las use y rompemos todos los contratos que hicimos en clases que implementan esta interfaz.

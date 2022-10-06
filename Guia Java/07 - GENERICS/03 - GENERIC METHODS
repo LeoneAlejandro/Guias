@@ -1,0 +1,32 @@
+GENERIC METHODS
+
+Vimos que podemos crear clases genéricas, y también creamos métodos genéricos dentro de ella, pero también podemos crear métodos genéricos dentro de clases no genéricas.
+Supongamos que tenemos la siguiente clase Util con el método max():
+
+public class Util {
+	public static int max(int first, int second){
+		return (first > second) ? first : second;
+	}
+}
+
+Ahora queremos hacer este método generico, para que acepte otro tipos de parámetros, no solo int. No necesitamos hacer la clase genérica, solo podemos cambiar el método de la siguiente manera:
+
+public class Util {
+	public static <T> T max(T first, T second){
+		return (first > second) ? first : second;
+	}
+}
+
+Antes del tipo de retorno, agregamos el tipo de retorno genérico, y luego reemplazamos todos los ints por T. Ahora tendremos un error porque solo podemos compara con '>' a ints o tipos primitivos, y esta clase ahora podrá aceptar cualquier tipo de referencia. Para esto agergamos <T extends Comparable> y utilizamos la interfaz comparable cambiando nuestro método @Override compareTo():
+
+public class Util {
+	public static <T extends Comparable<T>> T max(T first, T second){
+		return (first.compareTo(second) < 0) ? second : first;
+	}
+}
+
+Ahora al ser éste método static podremos llamarlo desde cualqueir lado y pasarle los argumentos y de qué tipo son para compararlos:
+
+	Utils.max()
+
+El compilador nos dice que este método acepta parámetros de tipo T (T first, T second), todavía no sabe qué le pasaremos. Una vez que le pasamos el primer parámetro, supongamos un int, nos cambia el mensaje del compilador a (int first, int second), por lo que no podremos pasar un int y un String u otro parámetro, una vez que definirmos el tipo del primer parámetro, nos obliga a ingrear un segundo parámetro del mismo tipo.

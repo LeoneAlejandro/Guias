@@ -2,13 +2,13 @@ EXCEPCIONES
 
 Una Excepción es un evento ocurrido al generarse un error en un programa durante el tiempo de ejecución. Cuando esto ocurre, se bloquea el flujo normal del programa, provocando en la mayoría de los casos que éste finalice prematuramente. Los lenguajes de programación nos ofrecen mecanismos que nos permite manejar las excepciones evitando, en tiempo de ejecución, el crasheo del programa y continuando con el flujo del mismo mostrando un error personalizado, más legible y facil de commprender.
 
-Como hacemos para manejar las excepciones ? Esto lo hacemos mediante los bloques de códgo "try-catch" y, opcionalmente, "finally". Estos bloques de código son usados como una especie de validación de datos donde, adentro de un try, escribimos cierta lógica que al fallar nos llevará al bloque "catch".
+Como hacemos para manejar las excepciones ? Esto lo hacemos mediante los bloques de códgo "try-catch" y, opcionalmente, "finally". El bloque finally sirve usualmente para cerrar scaners, renders, etc. Pero para hacer esto es más recomendable usar the Try-with-resources, donde se inicializa el scanner, render, etc, dentro de la cláusula try y de esta manera, JAVA cierra automáticamente al terminar de usarlo..
 
 public void algunMetodo(){
 
 	// Instrucciones sin posibles excepciones
 
-	try{
+	try(inicializar el resource){ 				//ej: var reader = new FileReader("file.txt");
 		//Instrucciones con posible excepción
 		/* Instrucciones que dependen de la que
 		posiblemente lance excepción*/

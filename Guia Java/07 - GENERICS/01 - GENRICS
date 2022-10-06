@@ -1,0 +1,50 @@
+GENRICS
+
+Sirve para trabajar más facilmente con colecciones y generalizar qué tipo de dato guardaremos dentro de una colección. Podríamos crear una clase List que guarde objetos, y luego hacer upcasting y downcasting cada vez que querramos trabajar con un objeto dentro de la lista, pero es muy engorroso y trae muchos errores; por ejemplo, al guardar un int en un a colección de Objetos, JAVA hace un Integer.valueof(int), porque no puede guardar el valor de un atributo primitvo en la lista. Supongamos que tenemos una lista de Objetos y agregamos un número:
+
+	list.add(1);
+
+Ahora sabemos que en el index 0 de la lista deberíamos tener un int, pero esto no es así, al asignar el valor de la siguiente manera:
+
+	int val = list.get(0);
+
+Nos devolverá un error ya que estamos intentando guardar un Integer dentro de un int y no son lo mismo. Para hacer esto deberíamos castearlo como int primero de la siguiente forma:
+
+	int val = (int) list.get(0);
+
+Pero esto es muy engorroso y tenemos que saber MUY BIEN que guarda adentro cada objeto, usar 'instanceof', chequear que dato es, castearlo. Estoy puede traer muchísimos errores.
+Podríamos también, en vez de tener una colección de 'Object', tener una colección de 'int'. Ahora se soluciona nuestro problema, creando una ListInt y definiendo todos los métodos que queremos como add(), get(), indexof(), etc. Ahora, que pasa si queremos tener una lista de Strings ? tenemos que volver a definir esta ListString, al igual que ListInt, con muchísimos métodos compartidos. Y si luego queremos tener una colección de usuarios ? De nuevo, crear una ListUsuarios, definir de nuevo todos los métodos, etc. Podemos ver muy facilmente que esta práctica no tiene sentido, duplica código, y se hace imposible de trabajar.
+
+Para solucionar esto podríamos crear una lista genérica 'GenericList' que acepte un parámetro todavía sin definir, y que el mismo se defina cuando se crea una instancia de la colección. Para eso usamos E o T, y luego tenemos que definir métodos y constructores teniendo en cuenta que todavía no sabemos de qué tipo será la colección:
+
+public class GenericList<T> {
+	private T[] items = new (T[]) new Object[size];
+	int count;
+
+	public void add(T item){
+		items[count++] = item;
+	} 
+
+	public T get(int index){
+		return items[index];
+	}
+}
+
+Ahora vemos como se generalizaron todos nuestros métodos, get devuelve algo de tipo T pero todavía no sabemos que es; add guarda algo de tipo T que, de nuevo, no tenemos idea qué es.
+De esta manera podemos definir qué tipo de objeto queremos guardar solo en una linea:
+
+var IntegerList = new GenericList<Integer>
+var StringList = new GenericList<String>
+var UsuariosList = new GenericList<Usuarios>
+
+Y el beneficio de esto también es que, una vez que definimos qué tipo de objeto guardará nuestra colección, podremos trabajar sobre ese tipo solamente. Si intentamos agregar un string a una lista de ints:
+
+IntegerList.add("1");
+
+el compilador tirará error, ya que solo se aceptan ints en IntegerList. Lo mismo ocurre cuando usamos el método get(), como definimos antes que devolverá un objeto de tipo T, sabemos que nos devolverá un int en esta lista:
+
+int val = IntegerList.get(1);
+
+Ahora no tenemos que chequear qué tipo de dato hay en el index 1 de nuestra colección mediante un instanceof, y luego castearlo antes de guardarlo en nuestra variable.
+Todo esto nos beneficia en tener un código mucho más limpio, y tenemos mucha mayor 'compile time type safety', y podremos ver nuestros errores en tiempo de compilación.
+Si vemos el BYTECODE de nuestra GenericList<T>, veremos que JAVA reemplaza a todas nuestras T[] por Objects, al igual que nuestro primer ejemplo. Esto es porque virtualmente es lo mismo, y JAVA generalzia más aun todo trabajando siempre con Objects, la ventaja de definir nuestra GenericList como T[] es que nos aseguramos 'compile time type safety', pero internamente trabaja siempre con Objetos. Nuestros Integer, String, Users, se guardarán siempre como Objetos (parecido al código JS vs TS, TS nos da robustez, pero cuando escribimos nuestro código TS y lo convertimos a JS, vemos que todo se generaliza en código JS y en realidad la robustez de TS solo es en tiempo de compilación). En el caso de tener una lista con restricciones como GenericList<T extends Number> Java reemplaza todas nuestras T's con Number en vez de Objetos (no necesita generalizar tanto por la restricción que agregamos). Lo mismo con las Interfaces, todas nuestras T's se reemplazan por nuestra interfaz (si tenemos más de una interfaz, agarra la primera solamente).
