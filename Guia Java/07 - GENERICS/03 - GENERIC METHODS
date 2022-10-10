@@ -30,3 +30,25 @@ Ahora al ser éste método static podremos llamarlo desde cualqueir lado y pasar
 	Utils.max()
 
 El compilador nos dice que este método acepta parámetros de tipo T (T first, T second), todavía no sabe qué le pasaremos. Una vez que le pasamos el primer parámetro, supongamos un int, nos cambia el mensaje del compilador a (int first, int second), por lo que no podremos pasar un int y un String u otro parámetro, una vez que definirmos el tipo del primer parámetro, nos obliga a ingrear un segundo parámetro del mismo tipo.
+Para pasar parámetros ditstintos hay que aplicar lo siguiente:
+
+MUTIPLE TYPES PARAMETERS:
+
+Cuando queremos pasar dos tipos genéricos que son distintos entre si hay que declara dos "type parameteres" distintos. Cuando hacemos esto usualmente los llamamos "clave, valor" y usamos las letraletras K, V de la siguiente manera:
+
+public statc <K, V> void print (K key, V value){
+	System.out.println(key + " = " + value);
+}
+
+Ahora si, al pasar un parmaétro de cierto tipo, no estamos restringidos a qué segundo tipo de parámetro usar.
+También podemos definir clases con tipos de parámetros múltiples:
+
+public class KeyValuePair<K, V> {
+	private K key;
+	private V value;
+
+	public KeyValuePair(k key, v value){
+		this.key = key;
+		this.value = value;
+	}
+}

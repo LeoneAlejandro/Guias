@@ -1,0 +1,67 @@
+WILDCARDS
+
+Cuando vimos herencia nos acostumbramos a ver el concepto de guardar un Empleado, clase que extiende a Persona, dentro de una lista de Personas. En Generics, este tipo de polimorfismo no funciona. Supongamos que tenemos la clase Empleado y el método printUser:
+
+		public class Empleado extends User{}
+
+Y en otro paquete 'Utils' tenemos los métodos:
+
+		public static void printUser(User user){
+			System.out.printl(user);
+		}
+
+		public static void printUsers(GenericList<User> users){}
+
+Ahora desde una clase main queremos llamar a estos métodos static. Podremos usar el método printUser pasándole tanto un user como un Empleado, tal como lo venimos haciendo desde que vimos polimorfismo. Pero no podremos usar el método printUsers pasándole una GenericList<Empleado> cuando un método espera una GenericList<User>.
+
+		public class Main {
+			public static void main (String[] args){
+				//Esto funciona como siempre, sin problemas
+				User user = new Instructor();
+				Utils.printUser(user)
+
+				//Esto no funciona
+				var users = new GenericList<Empleado>();
+				Utils.printUsers(users);
+			}
+}
+
+Este error se da porque una lista genérica de Empelados NO es un subtipo de una GenericList de User. Estas listas genéricas mantienen internamente (lo vemos en el BYTECODE) una lista de Ojbects sin importar qué le pasemos; ya sea que le pasemos una clase User o Empleado, solo tendremos UNA única GenericList en el proyecto, y ésta no es subtipo de si misma. Estamos trabajando con una clase sola. Como podemos solucionar esto ? Una forma es pasar la lista de Empleados a Users uno por uno y luego pasar la nueva lista de Users a Utils.printUsers(), pero es muy engorroso. La otra forma es mediante WILDCARDS.
+
+
+Para utilizar esta herramienta tenemos que usar el cáracter <?> llamando WILDCARD y utilizarlo en el método printUsers de la siguiente manera:
+
+		public static void printUsers(GenericList<?> users){
+			users.get();
+		}
+
+Cuando usamos una WILDCARD, JAVA creará un nuevo tipo de varibale específico para nuestra WILDCARD. Java hará esto creando una clase CAP#1 (capture of ? #1, usamos #1 porque puede haber muchas a la vez)
+
+		class CAP#1 {}
+
+y ahora el método users.get() de printUsers devuelve una instancia de esta clas CAP#1. Por lo que a este ejemplo podremos pasarle una variable de tipo CAP (que no tenemos) o su superclase Object (que es TODO en Java), por lo que le podremos pasar CUALQUIER COSA.
+Esto no es muy útil por ahora, ya que no queremos guardar una GenericList<Integer> o de <String> o de cualquier otra cosa, queremos pasarle una lista de <Users> o cualqueira de sus subtipos o subclases para poder trabajar con todos a la vez. Para eso podemos restringir un poco el tipo de la WILDCAR agregando <? extends User> en el método printUsers. Ahora la clase CAP quedará:
+
+		class CAP#1 extends User {}
+
+Ahora, como User es una superclase de CAP, podremos tomar una CAP y guardarla en un objeto USER usando upcasting de la siguiente manera:
+
+		User x = users.get(0);
+
+Pero no podremos guardarlo como Empleado
+
+		Empleado e = users.get(0);
+
+ya que CAP y Empleado son dos clases complemantene diferentes (ambas extienden a User, pero son distintas).
+Que pasaría si queremos agregar un objeto a esta lista ? Si queremos llamar a users.add() veremos que podremos agregar a esta lista objetos del tipo CAP o cualquiera de sus susblcases. De nuevo, no tenemos acceso nosotros al tipo CAP y tampoco a sus subclases, por lo que con la WILDCARD <? extends User> solo podremos LEER de una lista. Si queremos agregar a una lista tendremos que usar <? super User>.
+Cuando JAVA vea <? super User> va a tratar a este tipo 'unknow' o desconocido, como una SUEPRCLASE de tipo USER. Cual es una sueprclase de User? La clase Object, por lo que de nuevo, podremos guardar en esta lista cualquier tipo, como User o Empleado, u Objeto.
+Ahora, si usamos <? super User> no vamos a poder leer de esta lista porque JAVA no sabrá que está leyendo. Si queremos guardar un dato de la lista en una nueva variable 
+
+		User x = users.get(0);
+
+nos marcará un error el compilador, ya que JAVA no sabe si el Objeto en el index 0 de la lista Users es verdaderamente un User; puede ser un Empleado, un Reperesentante, o cualquier otra cosa. Lo único que podemos hacer es 
+	
+		Object x = users.get(0);
+
+porque obiamente, todo es un Object.
+Entonces si queremos leer de una lista con el carácter <?> llamado WILDCARD tendremos que usar 'extends', si queremos guardar objetos en esta lista debemos usar 'super'.
