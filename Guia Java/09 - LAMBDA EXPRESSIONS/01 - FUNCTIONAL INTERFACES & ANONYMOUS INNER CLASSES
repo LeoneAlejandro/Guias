@@ -1,0 +1,47 @@
+FUNCTIONAL INTERFACES & ANONYMOUS INNER CLASSES
+
+Una interfaz funcional es una interfaz con solamente un único método abstacto. Un ejemplo que vimos es la interfaz 'Comparable' con un único método compareTo(). Estas interfaces pueden tener también más de un método default con lógica e implementación aunque, como vimos anteriormente, no es recomendable que las interfaces tengan lógica en ellas. Las interfaces deben ser contratos solamente.
+Entonces, independientemente de si una interfaz tiene uno o más métodos default o static, si esa interfaz tiene solo UN método abstacto, es una interfaz funcional. Vamos a crear una:
+
+	public interface Printer {
+		void print(String message);
+	}
+
+Luego vamos a crear una clase que implemente ésta interfaz
+
+	public class ConsolePrinter implements Printer {
+		@Override
+		public void print(String message){
+			System.out.println(message);
+		}
+	}
+
+Vamos a crear ahora un clase para jugar y probar estas clases/interfaces:
+
+	public class LambdasDemo {
+		public static void show() {
+			greet(new ConsolePrinter());
+		}
+
+		public static void greet(Printer prinetr) {
+			printer.print("Hello Wolrd")
+		}
+	}
+
+Tenemos entonces un método greet() al cual se le pasa una interfaz, por eso no nos importa la implementación o lógica. Luego desde nuestro método show() llamamos al método greet y tendremos que pasarle un objeto que implemente la interfaz Printer, por lo que pasamos nuestra clase ConsolePrinter. Al ejecutar esto nos devuelve por consola "Hello Wolrd".
+Pero a veces no queremos crear explicitamente una clase (ConsolePrinter) para que implemente nuestra interface (Printer) porque requiere agregar código que tal vez luego nunca se reutilizará. Para eso usamos las 'Anonymous Inner Clases'.
+
+
+ANONYMOUS INNER CLASSES
+
+Para no tener que desarrolar la clase ConsolePrinter podemos directamente desde greet crear una nueva instancia llamando a la interfaz Printer:
+
+	public class LambdasDemo {
+		public static void show() {
+			greet(new Printer());
+		}
+
+		public static void greet(Printer prinetr) {
+			printer.print("Hello Wolrd")
+		}
+	}
