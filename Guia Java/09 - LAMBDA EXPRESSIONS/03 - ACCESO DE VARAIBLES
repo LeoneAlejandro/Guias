@@ -1,0 +1,22 @@
+VARIABLE CAPTURE o ACCESO DE VARIABLES
+
+A qué variables podemos acceder desde una Lambda ? En el cuerpo de la Lambda anterior usamos el parámetro 'message' que declaramos antes, pero también podemos usar cualquier otra variable declarada en el método que la encierra.
+
+	public class LambdasDemo {
+			public static void show() {
+				String prefix = '-';
+				greet(message -> System.out.println(prefix + message));
+			}
+
+También podemos acceder a cualquier variable estática declarada en la clase:
+
+
+	public class LambdasDemo {
+			public static String prefix = '-';
+			
+			public static void show() {
+				greet(message -> System.out.println(prefix + message));
+			}
+
+Y también podríamos acceder al field si tanto el field y la función show no fuesen static.
+Por último, también podemos hacer referencia a 'this' dentro de la Lambda, y hará referencia a la instancia de la clase LambdasDemo, por lo que, en este caso, prefix y this.prefix es lo mismo.

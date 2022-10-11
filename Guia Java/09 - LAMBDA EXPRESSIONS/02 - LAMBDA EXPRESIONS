@@ -1,0 +1,33 @@
+LAMBDA EXPRESIONS
+
+Para seguir con nuestro ejemplo anterior, teníamos la siguiente interfaz funcional con un único método abstacto:
+
+	public interface Printer {
+		void print(String message);
+	}
+
+Ahora, sería útil poder implementar este método en una funcion independiente, en una función que existe por si sola sin pertenecer a una clase; para esto sirven las Lambda Expressions, son funciónes anónimas e indpenedientes.
+Volviendo al ejemplo anterior vamos a reescribirlo con una LE:
+
+Usando Anonymous Inner Clases
+
+		greet(new Printer(){
+			@Override
+			public void print(String message){
+			System.out.println(message);
+			}
+		});
+
+Usando Lambda Expressions
+
+		greet((String message) -> {
+			System.out.println(message);
+		})
+
+Como vemos es mucho más sencillo, en vez de crear una nueva clase Printer sin nombre, y luego sobreescribir el métdodo print dentro de ésta nueva clase, usando Lambda Expressions es muy parecido a una función flecha de JavaScript, tenemos el parámetro que va a recibir la función anónima seguido por una flecha o "Lamda Expression", y luego entre llaves la lógica que se va a llevar dentro de la función. La diferencia con JavaScript es que solo podemos representar mediante Lambda Expressions a interfaces funcionales (interfaces con UN solo método abstracto). Ni siquiera es necesario definir de qué tipo será message, ya que JAVA buscará la interfaz funcional y sabrá que será un String, por lo que podemos removelo. Y si la función tiene un sólo parámetro podemos remover también los paréntesis para dejar un código más limpio y consiso. Usamos los paréntessis cuando no tenemos ninún parámetro ()->{} o cuando tenemos múltiples parámetros. Y como sabemos, si la lógica tiene solo una linea de código, las llaves no son necesarias tampoco. Aplicando todo esto nos quedaría:
+
+		greet(message -> System.out.println(message));
+
+Por último hay que tener en cuenta que las Lambda Expressions son objetos que se usan para representar funciones. Al ser objetos podemos guardar una Lambda Expression en una variable de la siguiente manera:
+
+	Printer printer = message -> System.out.println(message);

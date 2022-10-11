@@ -1,0 +1,50 @@
+METHOD REFERENCES
+
+Muchas veces lo único que hacemos en una Lambda Expression es pasar los parámetros a un método existente, un ejemplo claro es el anterior:
+
+	greet(message -> System.out.prinln(message));
+
+La Lambda le pasa el parámetro message a un método println existente. En estos casos es más facil referenciar estos métodos directamente. Esto se hace con la siguiente estructura:
+
+	Class/Object::method
+
+el method sin (), osea, le pasamos la referencia, no lo llamamos. En el caso anterior quedaría así:
+
+	greet(System.out::prinln);
+
+Estos se llama method reference y éste código es idéntico al anterior usando la flecha. IntelliJ siempre te da la opción de hacerlo automáticamente.
+Con estos method references podemos hacer referencia a métodos estáticos o instanciados en una clase así como también constructores.
+Vemos un ejemplo de cada uno, primero el método estático:
+
+	public class LambdasDemo {
+		public static void print(String message){}			//Tiene la misma firma que el método de la interfaz funcional
+
+		public static void show() {
+			greet(message -> print(message));				//Estos dos métodos son iguales, el segundo es
+			greet(LambdasDemo::print)						//lo mismo pero con Method Reference
+		}
+	}
+
+Como se haría con un método instanciado en vez de static? Tendremos que crear una instancia primero:
+
+	public class LambdasDemo {
+		public void print(String message){}					//Tiene la misma firma que el método de la interfaz funcional
+
+		public static void show() {
+			var demo = new LambdasDemo();
+			greet(message -> demo.print(message));			//Estos dos métodos son iguales, el segundo es
+			greet(demo::print)								//lo mismo pero con Method Reference
+		}
+	}
+
+Y como sería en el caso de un constructor? Primero vamos a definir un constructor (el método print lo borramos, ya no lo usamos):
+
+	public class LambdasDemo {
+		public LambdasDemo(String string){					//Constructor
+		}
+
+		public static void show(){
+			greet(message -> new LambdasDemo(message));		//Estos dos métodos son iguales, el segundo es
+			greet(LambdasDemo::new); 						//lo mismo pero con Method Reference
+		}
+	}

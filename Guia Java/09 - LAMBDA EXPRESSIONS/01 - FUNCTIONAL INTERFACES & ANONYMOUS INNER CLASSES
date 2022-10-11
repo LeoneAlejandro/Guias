@@ -34,14 +34,24 @@ Pero a veces no queremos crear explicitamente una clase (ConsolePrinter) para qu
 
 ANONYMOUS INNER CLASSES
 
-Para no tener que desarrolar la clase ConsolePrinter podemos directamente desde greet crear una nueva instancia llamando a la interfaz Printer:
+Para no tener que desarrollar la clase ConsolePrinter y crear una instancia de la misma dentro de greet(), podemos directamente escribir Prinetr y dejar que JAVA nos autocomplete con una AIC, que quedaría así:
+
 
 	public class LambdasDemo {
-		public static void show() {
-			greet(new Printer());
-		}
+			public static void show() {
+				greet(new Printer(){
+					@Override
+					public void print(String message){
+						System.out.println(message);
+					}
+				});
+			}
 
-		public static void greet(Printer prinetr) {
-			printer.print("Hello Wolrd")
-		}
-	}
+			public static void greet(Printer prinetr) {
+				printer.print("Hello Wolrd")
+			}
+		}	
+
+Ahora tenemos dentro de greet() una clase anonima, sin nombre, es solo una implementación; y la llamamos inner porque la usamos dentro de un método.
+Esto también es muy verborrágico, y no muy limpio a la hora de leer el código. Para esto JAVA implementó las Lambda Expressions para tener el mismo resultaod con menos código.
+
