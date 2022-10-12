@@ -1,0 +1,31 @@
+COLLECTORS
+
+Muchas veces queremos guardar un stream en una colección, para esto podemos usar el método .collect() sobrecargado. La mayoría de las veces usamos el método que acepta como argumento un objeto Collector. Este Collector es una interface y tiene muchas implementaciones para transformar un stream en una List, Set, Map, etc.
+Para crear uno de estos Collectors usamos la clase Collectors que tiene muchos métodos statics incorporados como .toList() que devolverá una instancia de la interface que sabe como convertir un stream en una List. Podemos entonces hacer:
+
+	var result = movies.stream()
+						.filter(m -> m.getLikes() > 10)
+						.collect(Collectors.toList());
+
+Ahora result será una List<Movie> con todas las pelis con +10 likes. También podemos convertirlo en un Set<Movie> con .toSet().
+Lo mismo podemos hacer con HashMaps con un par clave:valor, para eso tenemos que pasarle dos funciones al .toMap(), una función KeyMapper y otra ValueMapper para determinar qué atributos vamos a suar para key y cual para value:
+		
+		movies.stream()
+				.filter(m -> m.getLikes() > 10)
+				.collect(Collectors.toMap(m -> m.getTitle(), m -> m.getLikes()));
+
+O, con method reference nos queda:
+
+		var result = movies.stream()
+							.filter(m -> m.getLikes() > 10)
+							.collect(Collectors.toMap(Movie::getTitle, Movie::getLikes));
+
+Ahora si hacemos un println de result tenemos un hashmap { movie1=20, movie2=30 } de clave:valor de todas las películas con +10 likes. Para guardar el objeto película o Movie 	como valor cambiamos Movie::getLikes por 'm -> m', y ahora tenemos un hashmap con clave: titulo, valor: objeto película, que nos mostrará la referencia en memoria con el nombre del paquete como siempre. La labda 'm -> m' se puede reemplazar por 'Function.identity()', y devuelve lo mismo. Esta 'Function.identity()' acepta un valor y lo devuelve.
+
+Otro collector es summarizing; hay 3 tipos, sumarizingInt, Double y Long. 
+
+		var result = movies.stream()
+						.filter(m -> m.getLikes() > 10)
+						.collect(Collectors.summarizingInt(Movie::getLikes));
+
+Este collector nos devuelve información del resultado final como 'count', cantidad de elementos del stream, 'sum' la suma de los valores, 'min' el minimo valor del stream, 'max' el máximo, y el 'avg' promedio de todos los valores de los elementos del stream.

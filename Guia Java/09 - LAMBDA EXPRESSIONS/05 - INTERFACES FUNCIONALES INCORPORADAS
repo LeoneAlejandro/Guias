@@ -1,0 +1,166 @@
+INTERFACES FUNCIONALES INCORPORADAS
+
+Hay varias interfaces funcionales que son muy útiles que ya vienen incuildas en JAVA. Estas están declaradas en el paquete java.util.function. Cuando vemos la documentación hay muchísimas interfaces y puede ser abrumador, pero todas caen dentro de 4 categorías:
+
+ ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌───────────┐
+ │ CONSUMER │   │ SUPPLIER │   │ FUNCTION │   │ PREDICATE │
+ └──────────┘   └──────────┘   └──────────┘   └───────────┘
+
+La interfaz CONSUMER representa una operación que toma un solo argumento y no devuelve resultado: void consume (obj).
+La interfaz SUPPLIER es lo opuesto, representa una operación que no toma inpus y devuelve un valor: obj sullpy().
+La interfaz FUNCTION representa una función que mapea un valor a otro valor distinto: obj map(obj).
+Y PREDICATE representa una función que recibe un objeto y chequea si satisface cierto cirterio: bool tes(condition). Usamos esta interfaz para filtrar data.
+
+Vamos a verlas en detalle a cada una:
+
+ ┌──────────┐
+ │ CONSUMER │ 
+ └──────────┘   
+Muchos métodos en JAVA esperar un objeto que implementa una interfaz consumer. Esta interfaz tiene un único método abstacto 'accept(T)' que, como dijimos antes, toma un argumento y no deuvelve un valor. Hay muchas variaciones de la interfaz como 'BiConsumer' que toma 2 valores como argumento y no devuelve valor, o 'IntConsumer' que tomás más específicamente un Int como argumento, y no devuevle valor. Veamos un ejemplo, vamos a crear una lista con ciertos número y despues veremos como podremos iterar entre ellos:
+
+ 	public class LambdaDemo {
+ 		public static void show(){
+ 			List<Integer> list = List.of(1, 2, 3);
+
+ 			//Imperative Programming
+ 			for(var item: list)
+ 				System.out.println(item);
+
+ 			//Declarative Programing
+ 			list.forEach(item -> System.out.println(item));
+ 		}
+ 	}
+
+Vemos que podemos hacer un for each como siempre lo hicimos, o podemos usar al método forEach de la instancia list y veremos que el método acepta como parámetro un objeto Consumer<? super Integer> (un Consumer de Integer para ser más exacto). La interfaz Consumer es una interfaz funcional ya que posee un único método abstacto como dijimos, por lo que podemos representarla con una Lambda expression. Entonces al forEach le pasamos una lambda con un parámetro 'item' que va a ser Integer aunque haya que aclararlo porque JAVA lo sabe. Tampoco hace falta llaves en la lógica porque es un solo renglón. Por lo tanto nos queda solo la linea 27. Al final tenemos entonces la primer forma de iterar la lista, de forma imperativa, dando instrucciones de cómo hacerlo, llamada "Imperative Programming"; y la segunda forma declarativa, en vez de instruir que hacer mediante instrucciones, decimos qué se debe hacer, sin importar la implementación real, solo decimos 'para cada item, imprimir item' sin saber cómo funciona internamente.
+
+La interfaz consumer también tiene un método default (con lógica) 'andThen' que nos permite encadenar consumers, por lo que podremos correr muchas operaciones en secuencia. Veamos un ejemplo práctico de la interfaz consumer y del encadenamiento de opreaciones:
+
+	public class LambdaDemo {
+		public string void show(){
+			List<String> list = List.of("a", "b", "c");
+			Consumer<String> print = item -> System.out.println(item);
+			Consumer<String> printToUppercas = item -> System.out.println(item.toUpperCase());
+
+			list.forEach(print.andThen(printUpperCase));
+		}
+	}
+
+En este ejemplo definimos dos funciones consumers que reciben un item y lo imprimen. Ahora cuando llamamos al método forEach() el mismo toma un consumer como dijimos, le pasamos el consumer print y éste consumer tiene un método que podemos llamar 'andThen' que toma otro consumer, al cual le podremos pasar printUpperCase para obtener un resultado en consola "a A b B c C". Este encadenamiento se puede hacer indefinidamente por lo que le podríamos volver a agregar .andThen(print) la final para imprimir por tercera vez el caracter.
+
+
+ ┌──────────┐
+ │ SUPPLIER │	  
+ └──────────┘	
+La interfaz supplier es la opuesta a la consumer, no acepta argumentos y devuelve un valor. La misma tiene un único método 'get()' que devuelve un valor del tipo T. Esta interfaz también es funcional y podemos representarla usando una Lambda Expression. Veamos un ejemplo:
+
+ 	pupblic class LambdaDemo {
+ 		Supplier<Double> getRandom = () -> Math.random();
+
+ 		var random = getRandom.get();
+ 		System.out.println(random);
+ 	}
+
+Vemos que la lambda no toma argumentos por lo que hay que poner paréntesis vacíos antes de la flecha y luego no hace falta ni llaves, ni poner la palabra 'return' ya que es una sola linea y es obligatorio devolver algo. Ahora cuando imprimimos 'random' por consola tendremos un número random generado por Math.random();
+
+
+ ┌──────────┐
+ │ FUNCTION │	 
+ └──────────┘	
+Esta interfaz representa una función u operación que toma un argumento y devuelve un valor. Esta interfaz tiene 4 métodos, 3 con implementación (default) y uno solo abstracto 'apply(T t)'. Vamos a definir en un ejemplo una función que acepta un String y devuelve Integer:
+
+ 	public class LambdaDemo {
+ 		public static void show(){
+ 			Function<String, Integer> map = str -> str.length();
+
+ 			map.apply("Sky");
+ 		}
+ 	} 
+
+Este es un ejemplo bastante sencillo, tenemos una función que acepta un String (le pasamos 'Sky') y nos devuelve el length.
+
+ ┌───────────┐
+ │ PREDICATE │	
+ └───────────┘
+Es extremadamente útil y tiene muchísimas aplicaciónes. Se usa principalmente para filtrar data. Esta interfaz tiene un único método abstracto 'test(T t)' que acepta un argumento y devuelve un booleano. Tamién tenemos algunas especializaciones como 'BiPredicate' que toma 2 valores, o 'IntPredicate' que toma un int, y ambas devuelven booleans.
+Veamos un ejemplo, porngamos que queremos pasar un string y queremos ver si tiene más de 5 chars:
+
+	public class LambdaDemo {
+		public static void show() {
+			Predicate<String> isLongerThan5 = str -> str.length > 5;
+
+			isLongerThan5.test("sky");
+		}
+	}
+
+Definimos la función y su lambda expression, y luego llamamos al método test pasandole el String. Esto nos devolverá true o false dependiento qué le pasemos.
+
+
+COMBINANDO PREDICATES 	
+──────────────────────┘
+
+Podemos combinar predicates para crear predicates más complejos, esto se hace mediante los métodos default de la interfaz, que son 'and()', 'negate()' y 'or()' que funcionan como las operaciones '&&', '!' y '||'. Cada una de estas funciones acepta otro predicate como argumento por lo que podemos encadenarlas para formar otra predicate. Veamos un ejemplo:
+
+	public class LambdaDemo {
+		public static void show() {
+			Predicate<String> hasLeftBrace = str -> str.startsWith("{");
+			Predicate<String> hasRightBrace = str -> str.endsWith("}");
+
+			Predicate<String> hasLeftAndRightBraces = hasRightBrace.and(hasRightBrace);
+			hasLeftAndRightBraces.test("{key:value}");
+		}
+	}
+
+en este caso tenemos dos predicates y las unimos con un and() y creamos una nueva. También podemos combinarlas para formar distintos tipos como:
+		
+		hasAnyBraces = hasRightBrace.or(hasLeftBrace);	//devuelve true si tiene algúna llave
+		hasNotBraces = hasAnyBraces.negate();			//hace lo contrario al anterior, de vuelve true si no hay llaves
+
+
+ ┌──────────────────────────┐
+ │ BINARY y UNARY OPERATORS │	
+ └──────────────────────────┘
+Al principio dijimos que hay 4 categorías principales de interfaces funcionales, pero ahora vamos a ver un par especiales. La primera es la BINARY OPERATOR que es una forma especial de Function, de BiFunction para ser más específico, ya que toma 2 argumentos del tipo T y devuelve un resultado del tipo T también. Estas son muy útiles para funcoines matemáticas ya que podemos trabajar solo con Integers y tener funciones más ágiles. Veamos un ejemplo:
+
+	public class LambdaDemo {
+		public static void show() {
+			BinaryOperator<Integer> add = (a, b) -> a + b;
+			Function<Integer, Integer> square = a -> a * a;
+
+			var result = add.andThen(square).apply(1,2);
+			System.out.println(result);
+		}
+	}
+
+Aqui definimos dos funciones, una para sumar 2 números, luego otra para caluclar el cuadrado de otro, y luego las combinamos, y, como es una Function, tiene el métodod .apply() para pasarle los valores requeridos.
+
+La segunda es UNARY OPERATOR que extiende la interfaz Function también y toma un valor del tipo T y devuelve un valor de tipo T. Es parecida a la anterior pero más específica aún, y podemos usarla para definir funciones como la siguiente:
+
+		UnaryOperator<Integer> square = n -> n * n;
+		UnaryOperator<Integer> increment = n -> n + 1;
+
+Vemos que son funciones matemáticas más básicas con un solo valor.
+
+
+
+
+
+┌─────────────────────────────────────────┐
+│ CREANDO FUNCIONES o COMPOSING FUNCTIONS │	
+└─────────────────────────────────────────┘
+
+Podemos usar muchas funciones pequeñas para crear nuevas funciones más complejas. Veamos un ejemplo facil, supongamos que tenemos un string del formato "key:value" y queremos transformar a este string de dos formas, la primera es cambiar : por = y la segunda es agregar llaves al principio y al final; esto lo podemos hacer de la siguiente forma:
+
+	public class LambdaDemo {
+		public stativ void show(){
+			Function<String, String> recplaceColon = str -> str.replace(":", "=");
+			Function<String, String> addBraces = str -> "{" + str + "{";
+
+			var result = replaceColon
+							.andThen(addBraces)
+							.apply("key:value");
+			
+			System.out.println(result);
+		}
+	} 
+
+Una ves que tenemos las funciones podemos concatenarlas con el andThen igual que antes y podemos guardar 'replaceColon.andThen(addBraces)' en una nueva función, o podemos llamar a .apply() y pasarle el str directamente, guardarlo en una var e imprimirlo. De nuevo, esto es programación declarativa o 'declarative programing' ya que en vez de decirle cómo hacer algo, expresamos qué se necesita hacer, los detalles están en otro lado. Y tenemos muchas pequeñas funciones que vamos a reutilizar para armar funciones más complejas. Cuando escribimos código de esta manera, solemos separar por linea las distintas funciones como se ve en las lineas 92, 93 y 94; cada statment está en una nueva linea. También podemos usar el método .compose() en vez de .andThen() pero compose funciona al revés y hacerlo en el mismo orden quedaría 'addBraces.compose(replaceColon)'.

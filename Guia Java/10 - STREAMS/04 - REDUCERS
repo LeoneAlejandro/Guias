@@ -1,0 +1,37 @@
+REDUCERS
+
+Estos son métodos que reducen un Stream de objetos a un único objeto que reponde a una consulta que hagamos. Por ejemplo el método count() para contar ciertos elementos de un Stream; el método count entonces reduce un Stream al número de elementos de ese Stream. Otros métodos son findAny() o findFirst() que nos devuelven un solo objeto del stream. También max() y min() que nos devuelven la cantidad máxima dependiendo de un Comparator que le pasemos. 
+Todas estas operaciones son terminadoras, osea una vez que las llamamos, no se podrá seguir trabajando con el stream.
+Vemaos algunos ejemplos:
+
+	movies.stream()
+			.anyMatch(m -> m.getLikes() > 20);
+
+Nos devuelve un boolean si hay alguna película con +20 likes. De la misma manera .allMatch() nos devuelve un boolean si TODAS las películas tienen +20 likes. Igual con .noneMatch() nos devuelve un booleano si NINGUNA pelicula cumple.
+
+El método .findFirst() busca el primer objeto del stream. El métdo .findAny() devuelve cualquier elemento del stream. También está el método .max() y .min() que devuelven el máx y min elemento de un Stream basado en un Comparator:
+
+	movies.stream()
+			.max(Comparator.comparing(Movie::getLikes));		//Devuelve la peli con máx likes
+
+
+Un reducer importante es el método .reduce(). Este método está sobrecargado y la mayoría de las veces usamos el método pasándole un BinaryOperator (una Function que acepta 2 valores y devuelve uno); en este caso, este BinaryOperator se llama Accumulator y su objetivo es acumular valores:
+
+	movies.stream()						o, con method reference		movies.stream()
+			.map(m -> m.getLikes())											.map(Movie::getLikes)
+			.reduce((a,b) -> a + b);										.reduce(Integer::sum);
+
+Después de la operación map(), vamos a tener una lista de ints que son los likes de todas las películas [10, 20, 10, 30]. Ahora este acumulador se aplica a los primeros 2 elemenos del stream, los suma, y lo devuelve, cambiando el stream a 
+[30, 10, 30], luego hace lo mismo otra vez -> [40, 30] y por último devuelve 50. Este método reduce() devuelve un Optional<>; la clase Optional representa un objeto que puede o no tener un valor, el valor es opcional, y la razón es ya que a veces tendremos un stream vacío y no se podrán acumular valores en un stream vacío, esto evita problemas con una devolución null. Supongamos que guardamos el stream anterior en un 'Optional<Integer> sum' y después intentamos obtener el valor final con 'sum.get()', si el stream estuviese vacío nos devuelve una excepción; para evitar esto le podemos pasar un valor default en el caso de que el stream esté vacío, y esto lo hacemos con un:
+
+	sum.orElse(0);
+
+O podemos usar el método sobrecargado recuce() que acepta un int primero, el cual devolverá si no tiene un resutltado:
+
+	Integer sum = movies.stream()
+						.map(Movie::getLikes)
+						.reduce(0, Integer::sum);
+
+	sum.get();
+
+Ambas ejecuciones (linea 27 con el método de 20-22 y 31-35) nos devuelven el valor de la suma de todos los ints o 0.

@@ -1,0 +1,101 @@
+STREAMS
+
+Fueron introducidas en JAVA para tener la posibilidad de procesar una colección de objetos o data en una forma declaratavia o funcional. Como vimos antes la forma imperativa era cuando dabamos instrucciones de cómo hacer algo (for, if, etc) mientras que la forma declarativa es más directa y decimos QUE debemos hacer. Un ejemplo de instrucciones declarativas es SQL, una QUERY es declarativa; nosotros no tenemos idea como funciona internamente el filtro de SQL, pero lo llamamos y filtramos. Programación funcional es una forma especial de programación declarativa pero trae algunos conceptos adicionales. Veamos un ejemplo, supongamos que tenemos una lista o colección que guarda instancias de películas con nombre y cantidad de likes:
+
+	public class StreamsDemo {
+		public static void show() {
+			List<Movie> movies = List.of(
+				new Movie("title1", 10),
+				new Movie("title2", 20),
+				new MOvie("title3", 25)
+			);
+
+		//Imperative Programming
+		int count = 0;
+		for(var movie: movies)
+			if(movie.getLikes() > 10)
+				count++;
+		}
+	}
+
+Mediante la programación imperativa haríamos lo anterior, para cada película en una colección, si la cantidad de likes es > 10, sumamos un contador +1.
+Lo mismo se puede escribir de forma declarativa mucho más facil y para esto usamos el método stream(). Todas las colecciones en JAVA tienen este método stream() y devuelve una secuencia (o stream) de objetos pero no es una colección, no guarda data, solamente es una forma de sacar data de una colección, son como una tubería que saca agua de un tanque (colección). El objeto que devuelve stream tiene muchos métodos, dentro de los cuales uno es 'filter()' y con ésto podmeos filtrar data antes de sacarla. Este método filter acepta como parámetro un Predicate del tipo Movie donde podemos pasar una lambda con un predicate que chequea si se cumple la condición > 10 likes. Y por último tenemos otro método 'count()' con el que podremos contar la cantidad de data (o movies) que salen de esta tubería o stream. Entonces podríamos reescribir de forma declarativa y nos quedaría así:
+
+	public class StreamsDemo {
+		public static void show() {
+			List<Movie> movies = List.of(
+				new Movie("title1", 10),
+				new Movie("title2", 20),
+				new Movie("title3", 25)
+			);
+
+			//Imperative Programming
+			int count = 0;
+			for(var movie: movies)
+				if(movie.getLikes() > 10)
+					count++;
+
+			//Declarative Programming
+			int count2 = movies.stream()
+				  			.filter(movie -> movie.getLikes() > 10);
+							.count();
+		}
+	}
+
+Esta forma es mucho más facil, no tenemos que declarar un contador, iterar por cada uno de los objetos en la colección y chequear si cumple una condición, todo a mano; solamente declaramos qué tipo de data queremos que salga de una colección, filtrada por una Predicate, y que se cuenten.
+Con Streams podemos procesar una colección de objetos en una forma funcional y esto genera un código limpio y facil de leer.
+
+
+ CREANDO UN STERAM  
+───────────────────┘  
+
+Hay distintas formas de crear un Stream: desde una colleción, desde arrays, desde un número arbitrario de objetos, y también podemos generar streams finitos e infinitos. Veamos ejemplos de cada uno:
+Desde una colección: cada clase que implemente la interfaz Collection tiene la habilidad de devolver un stream mediante éste método.
+		
+	Collection<Integer> x;
+	x.stream()
+ 
+Desde un array: Los arrays no tienen el método stream(), pero si lo tiene la clase Arrays a la cual le podemos pasar nuestro array para poder devolver un stream. Todos los streams tienen un método 'forEach()' para iterrar el array, que acepta como parámetro un IntConsumer, una especialización primitiva de la interfaz funcional Consumer, que acepta un parámetro como argumento y no devuelve ningún valor, por lo que podemos escribir algo así:
+
+	int[] numbers = {1, 2, 3}
+	Arrays.stream(number)
+			.forEach(n -> System.out.println(n));
+
+También podemos crear un stream desde un número arbitrario de objetos: la clase Stream tiene un método de fábrica static 'of()'al que le pasamos tantos argumentos como querramos:
+
+	Stream.of(1, 2, 3, 4);
+
+También podemos crear streams infinitos con esta clase mediante el método .generate() que acepta un Supplier como argumento. Un supplier no aceptaba argumentos y devuelve valores por lo que podemos crear un stream infinito así:
+
+	Stream.generate(() -> Math.random());
+
+Esto nos generará un stream infinito de números arbitrarios. Esto es algo que no podemos hacer con una colección porque nos quedaríamos sin memoria si queremos guardar un número infinito de objetos en una colección. En cambio en un stream, la función '() -> Math.random()' va a ser llamada cada vez que leemos un número del stream, osea, no se generan infinitamente antes de usar el stream, sino a medida que los vamos usando. Esto se llama 'lazy evaluation' o evaluación perezosa. Si queremos limitar para que no sea infinta la cantidad de data sacada del stream, encadenamos el método con .limit(), donde le pasamos un int con la cantidad requerida. Podríamos definir un ejemplo:
+
+	var stream = Stream.generate(() -> Math.random());		//hasta este paso no genera nada, lazy ev.
+	stream.limit(3)
+			.forEach(n -> System.out.println(n));
+
+Ahora solo imprime 3 números aleatorios, sin el .limit(3) la consola imprime número tras número sin parar hasta que paremos nosotros el programa.
+Tenemos otro método para generar streams finitos e infinitos y es el método .iterate() que acepta 2 argumenos, el primero es una Seed o valor inicial, y el segundo argumento tiene que ser un UnaryOperator que modificará este valor. Un UnaryOperator era una función que toma un valor y devuelve un nuevo valor. Veamos un ejemplo donde empezamos con 1 y luego iteramos sumando 1 al valor anterior:
+
+	Stream.iterate(1, n -> n + 1);
+
+Entonces el primer valor será 1 y cada vez que leemos ese valor se creará uno nuevo sumándole 1 al valor que acabamos de leer. 
+		Stream.iterate(1, n -> n + 1)
+				.limit(3)
+				.forEach(n -> System.out.println(n));
+
+Si lo limitamos y lo imprimimos con un forEach de la siguiente manera, obtendremos los números del 1 al 10 impresos por consola.
+
+
+PRIMITIVE STREAMS  
+───────────────────┘ 
+
+Para trabajar con valores primitivos como int, double o long es más eficiente trabajar con alguno de los tipos especializados como intSteram, doubleStream o longStream.
+Estos Streams tienen alguns métodos especiales como .rage():
+
+	IntStream.range(1, 5)
+				.forEach(System.out::println);
+
+Nos imprime los números del 1 al 4, si queremos que el 5 esté incluido podemos usar .rangeClosed().
+El resto de los métodos que vemos más adelante como mapping, slicing, reducing, collecting, todo funciona de la mimsma manera con un Stream o con un IntStream o cualquier otro tipo de stream primitivo.

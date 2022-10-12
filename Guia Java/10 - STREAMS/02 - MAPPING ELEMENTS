@@ -1,0 +1,40 @@
+MAPPING ELEMENTS
+
+Muchas veces necestiamos transformar los valores de un stream y para hacer eso usamos el método map() o flatMap(). Volviendo al ejemplo de películas, supongamos que solo nos interesa el nombre de la película, entonces en vez de tener un stream de objetos 'Movie' queremos tener un stream de Strings donde estos Strings son los títulos de las películas:
+
+	public class StreamsDemo {
+		public static void show() {
+			List<Movie> movies = List.of(
+				new Movie("title1", 10),
+				new Movie("title2", 20),
+				new Movie("title3", 25)
+			);
+		}
+	}
+
+llamamos al método map() para transformar cada objeto Movie a un tipo diferente. El métod map acepta como argumento una Function, y esta Function acepta como argumento un objeto Movie y devuelve un valor diferente <?>. Cuando definimos mediante la lambda que la función devolvera 'movie.getTitle()' -que es un String- ahora el método .forEach() devuelve un String y lo podemos ver mediante IntelliJ.
+
+		movies.stream()
+				.map(movie -> movie.getTitle())
+				.forEach(name -> System.out.println(name));
+
+Esta es la increible funcionalidad de streams donde podemos crear 'procesing pipelines' o tuberías de procesamiento (data pipeline en inglés: conjunto de elementos conectados en serie). Tenemos una pipe desde una fuente stream que nos devuelve objetos, luego conetamos otra pipe que transforme estos objetos y extraiga su título, y luego pasamos el titulo a la nueva pipe que lo imprimirá por consola.
+
+Por otro lado el método flatMap() nos ayuda a trabajar con listas. Supongamos que tenemos un stream de listas de ints:
+
+	var stream = Stream.of(List.of(1, 2, 3), List.of(4, 5, 6));
+	stream.forEach(list -> System.out.println(list));
+
+Las lineas de código anteriores nos devolverá:
+	
+	[1, 2, 3]
+	[4, 5, 6]
+
+Porque, como dijimos, no tenemos un stream de ints, tenemos Stream<List<Integer>> o, un stream de List<Integer> o, un stream de listas de Integers; y a veces no queremos trabajar con listas y queremos 'aplanarlas' para trabajar solo con ints; no tener un arquitectura de listas de ints, sino tener una sola lista final con todos los ints de todas las listas.
+Para esto usamos el método flatMap() que acepta como argumento una Function que acepta como argumento una List<Integers> y devuelve un nuevo Stream<?>:
+
+	stream.flatMap(list -> list.stream())
+			.forEach(n -> System.out.println(n));
+
+Entonces mediante 'list -> list.stream()' convertimos cada lista en un stream, por lo que a forEach le llega un int, no una List<Integer>, y podremos imprimirlo en pantalla. Ahora la consola nos devolverá todos los números de todas las listas impresos en lineas diferentes.
+Entonces el método flatMap() nos transformará un Stream<List<x>> -> Stream<x>. Osea nos transformará un stream de listas de objetos en un stream de objetos, y no tiene que ser necesariamente una lista, puede ser un Set, un Array, etc.

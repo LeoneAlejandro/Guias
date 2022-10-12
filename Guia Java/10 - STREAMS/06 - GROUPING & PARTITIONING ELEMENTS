@@ -1,0 +1,62 @@
+GROUPING & PARTITIONING ELEMENTS
+
+
+Agrupando elementos
+───────────────────┘
+
+Muchas veces necesitamos agrupar o clasificar nuestra data, por ejemplo, si queremos agrupar nuestras películas por genero. Vamos a agregar un ENUM genre y luego lo agregamos a la clase Movie con su constructor y setter. Ahora podemos crear un nuevo stream:
+
+	public class Streamsdemo {
+		public static void show(){
+			var movies = List.of(
+				new Movie(a, 10, Genre.THRILLER),
+				new Movie(b, 20, Genre.ACTION),
+				new Movie(c, 30, Genre.ACTION)
+			)
+		}
+	}
+
+Luego llamamos al método groupingBy() de la clase Collectors. Este método está sobrecargado, y la mayoría de las veces usamos el método que acepta como argumento un classifier. Este classifier es una Function que acepta un objeto y determina como vamos a clasificar o agrupar nuestra data. En nuestro caso lo vamos a clasificar por genero por lo que le pasamo ese method reference
+
+
+		var result = movies.stream()
+							.collect(Collectors.groupingBy(Movies::getGenre));
+
+El resultado es un Map<Genre, List<Movie>>, por lo que este map estará constituido por un map con el Genre y cada movie que la contenga:
+	
+	{ ACTION=[b, c], THRILLER=[a]}
+
+En vez de b, c y a veremos las referencias porque no tenemos el método toString() sobreescrito, pero se entiende. La segunda versión del método podrá aceptar un classifier y un Collector, por lo que podemos usar cualquier collector que vimos antes, como
+
+		var result = movies.stream()
+							.collect(Collectors.groupingBy(Movies::getGenre, Collectors.counting()));
+
+Esto nos devuelve: { THRILLER=1, ACTION=2 }. También podemos cambiar el método counting por mapping() para mappear el nombre de la película, y al método mapping podemos pasarle otro collector con el método joining para que los imprima en consola separados por coma:
+
+		var result = movies.stream()
+							.collect(Collectors.groupingBy(
+										Movies::getGenre, 
+										Collectors.counting(
+												Movie::getTitle,
+												Collectors.joining(", "))));
+
+Esto nos devuelve { ACTION=b,c, THRILLER=a }.
+
+
+Particionando elementos
+───────────────────────┘
+
+A veces queremos particionar nuestra data, por ejemplo, todas las películas que tengan +20 likes por un lado y todas las que tengan menos por el otro, para eso usamos el método partitioningBy del a clase Collectors. Este método acepta un Predicate, osea, una Function que acepta un objeto Movie y devuelve un Boolean, basada en esta condición se particionarán nuestras películas:
+
+	movies().stream()
+			.collect(Collectors.partitioningBy(m -> m.getLikes() > 20));
+
+El resultado va a ser un Map<Boolean, List<Movie>>; entonces en este map tendremos 2 entrys, una que tendrá las películas con > 20 likes y otra con < 20 likes. Pero al igual que en el método groupingBy, podemos pasar un segundo Collector que se llama 'downstream collector'. Podemos pasar entonces un segundo collector mapping() para mapear los objetos Movie a Strings y unirlos usando una " ,"
+
+	movies().stream()
+			.collect(Collectors.partitioningBy(
+						m -> m.getLikes() > 20,
+						Collectors.mapping( Movie::getTitle,
+											Collectors.joining(", "))));
+
+Como resultado tendremos las claves:valores { false=a, b, true=c } donde las false serán las que tengan < 20 likes y la true las que tengan > 20 likes.

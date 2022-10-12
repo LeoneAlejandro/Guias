@@ -1,0 +1,68 @@
+MANIPULATING STREAMS
+
+ Filtrando un stream  
+─────────────────────┘
+
+Los métodos de Stream caen dentro de dos categorías, los 'Intermedios' donde se tiene un stream y se encadena con otros métodos que devuelven stream; y los 'Terminal' donde al ejecutar el método se termina de trabajar con ese objeto del stream. Por ejemplo, .filter() es intermediario, por lo que podemos hacer un movie.filter().filter().filter() cuantas veces querramos, mientras que si al tercer método después le agregamos un forEach() el mismo devuelve void por lo que una vez que apendamos ese método, no podemos encadenar ninguno más.
+
+Los métodos Intermedios son map() y filter() y como dijimos, devuelven un nuevo stream y podemos seguir transformando esa pipe o stream para conseguir la data que querramos.
+El método forEach() es terminal porque finaliza el stream, pero hay que tener en cuenta que si no llamamos un método terminal a un stream, no se hace nada, solo se filtra o se mapea, pero nunca se ejecuta algo con esa data.
+
+
+Cortando un Stream
+───────────────────┘
+
+También tenemos métodos para cortar o 'slice' un stream. Como vimos antes el método .limit() pone un límite a la cantidad de objetos que salen del steram. Otro método es skip() que saltea n elementos de un stream (útil para paginación). Y también los métodos takeWhile(predicate) y dropWhile(predicate), donde el primero implica que siga tomando datos del stream mientras se cumpla la condición del predicate y dropWhile lo contrario. La diferencia con filter() es que filter itera la data source entera y va mostrando los que cumplen la condición, en cambio el takeWhile avanza en el stream y se frena cuando encuentra algo que cumpla una condición.
+Todos estos métodos son intermediarios.
+
+Si tenemos 3 películas en la colección movie podemos modificarla de la siguiente manera:
+(el print del forEach es m -> sout(n) como veníamos viendo)
+
+	movies.stream().limit(2).forEach(print)				//imprime los primeros 2 objetos
+	movies.stream().skip(2).forEach(print)				//imprime solo el último
+	movies.stream().takeWhile(m-> m.getLikes() < 30)	//imprime los objetos hasta que encuentra uno con +30 likes
+
+El takeWhile() frena cuando encuentra uno con +30 likes, y si hay otros con menos de 30 después, no importa. El dropWhile es lo contrario, se saltea todos los objetos del streams hasta que encuentre uno con el criterio que pedimos.
+
+
+Ordenando un Stream
+────────────────────┘
+
+Para ordenar un stream por algún atributo se usa el método sorted(). Este métdo está sobrecargado y acepta ser llamado sin parámetros o por un objeto Comparator. Si se llama sin pasar nada, la clase Movie debe extender a la interfaz Comparable<Movie> y debe tener un método @Override compareTo() que determina cómo una película debe ser ordenada (ej: por el título, por ID, etc). Ahora, que pasa si nuestra clase Movie cumple con esta condición pero no queremos ordenar por el campo que está declarado? Para eso podemos pasarle un objeto Comparador nuevo y ordenarlo por cualqueir otro atributo que querramos.
+Entonces si llamamos:
+
+	movies.stream()
+			.sorted()
+			.forEach(m -> System.out.println(n));
+
+dependerá de la clase Movie para determinar el orden; de lo contrario le podemos pasar un Comparador (lambda que tome 2 objetos, y devuelva un int):
+
+	movies.stream()
+			.sorted((a,b) -> a.getTitle().compareTo(b.getTitle()))
+			.forEach(m -> System.out.println(n));
+
+Podemos reescribir esto también usando el método comparing de la interfaz Comparator que toma como argumento una Function que toma un objeto Movie y devuelve un valor distinto:
+
+	movies.stream()
+			.sorted(Comparator.comparing(m -> m.getTitle()))
+			.forEach(m -> System.out.println(n));
+
+Y usando la técinca de Method Reference podemos reescribir 'm -> m.getTitlte()' con 'Movie::getTitle' para simplificarlo aún más.
+
+	movies.stream()
+			.sorted(Comparator.comparing(Movie::getTitle))
+			.forEach(m -> System.out.println(n));
+
+Si queremos revertir el orden del sorted() agregamos .reversed() al método comparing.
+
+
+Imprimir valores únicos
+────────────────────────┘
+
+Supongamos que tenemos muchas películas y las imprimimos por likes:
+
+	movies.stream()
+			.map(Movies::getLikes)
+			.forEach(System.out::println);
+
+Ahora tendremos en la consola una lista de todos los likes de películas y muchos podrían repetirse. Para no mostrar repetidos usamos el método intermediario '.distinct()'
