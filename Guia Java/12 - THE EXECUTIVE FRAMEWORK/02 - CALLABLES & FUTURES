@@ -1,0 +1,52 @@
+CALLABLES & FUTURES
+
+A veces queremos devolver un valor desde una task o tarea, para esto usamos la interfaz CALLABLE. Podemos ver que el método de una instancia de Executors executor.submit() está sobrecargado y podemos pasarle, además de un objeto Runnable como lo estabamos haciendo, también le podemos pasar un objeto Callable. Callable es una interfaz similar a Runnable, pero esta interfaz representa una tarea que devuelve un valor. Esta interfaz tiene un único método '.call()' pero en vez de devolver void como Runnable, devuelve 'v' que es el parámetro de tipo generico. Entonces si a la lambda que escribimos antes para hacer pasar un Runnable le agregamos una linea final con 'return' JAVA detectará que la lambda representa un objeto Callable en vez de Runnable.
+Ahora si guardamos el resultado en una variable:
+
+	public class ExecutorsDemo {
+		public static void show() {
+				var executor = Executors.newFixedThreadPool(2);
+			
+			try{ 
+				var future = executor.submit(() -> {
+									System.out.println(Thread.currentThread().getName());
+									return 1;
+				});
+			} finally {
+				executor.shutdown();
+			} 
+		}
+	}
+
+vemos que esta var future es de tipo Future<Integer>, y este Future es una interfaz que representa el futuro resultado de una operación, una operación que se completará en el futuro. Esta interfaz tiene varios métodos como .get() para obtener el valor que devolverá este Future; .cancel() para cancelar una operación; .isCancelled() para chequear si la operación está cancelada; .isDone() que nos dice si la operación está completada o no.
+Cuando llamamos un método, como por ej, .get(), el método bloqueará el thread que se esté usando y lo hará esperar hasta que el resultado de future esté listo. Eventualmente devolerá un valor, en este caso, un int. También habrá que manejar algunas excepciones con try..catch. Las excepciones para el método .get son InterruptedException y ExecutionException, la primera por si se interrumpe la tarea, la segunda por si la tarea en el bloque try devuelve una excepción.
+
+Todo esto es parecido a las promesas de JavaScript, veamos un ejemplo:
+
+	public class ExecutorsDemo {
+		public static void show() {
+				var executor = Executors.newFixedThreadPool(2);
+			
+			try{ 
+				var future = executor.submit(() -> {
+									LongTask.simulate();
+									return 1;
+				});
+
+				System.out.println("Otro trabajo");
+				try { 
+					var result = future.get();
+					System.out.println(result);
+				} catch(InterruptedException | ExecutionException e) {
+					e.printStackTrace();
+				}
+			} 
+			finally {
+				executor.shutdown();
+			} 
+		}
+	}
+
+Ahora cuando corramos el programa veremos inmediatamente el mensaje "Otro trabajo" porque el método submit() no va a esperar a que se complete la LongTask (método con un timeout de 5 segundos para simular una tarea larga). Va a empezar esta LongTask en un thread separado y eventualmente cuando llamamos future.get() tendremos que esperar a que se complete esta tarea. Entonces en la consola veremos "Otro trabajo" y 5 segundos despues veremos "1".
+Para volver a explicarlo, se ejecuta el try catch con el método submit() dejando la ejecución de LongTask en un segundo thread mientras el programa sigue, llega al sout, imprime "Otro trabajo", y sigue el programa, llega a future.get() y tendrá que esperar al thread que está corriendo en paralelo LongTask. Una vez que termina, recién ahí puede imprimir el result = future.get().
+El método .get() es un método bloqueador, cuando lo llamamos, el thread tiene que esperar hasta que el resultado de la tarea del otro thread corriendo LongTask termine aunque ejecutemos la tarea en un thread separado. Estamos haciendo a un thread esperar a que se complete la tarea del otro thread. No estamos usando nuestros threads de forma correcta. Para no caer en este error debemos escribir nuestro codigo de una forma no bloqueante o de forma asincronica o 'Asynchronus programming'.

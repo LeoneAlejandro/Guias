@@ -1,0 +1,15 @@
+SYNCHRONIZED & CONCURRENT COLLECTIONS
+
+Muchas veces queremos compartir una colección entre muchos threads. Para evitar problemas de race condition, osea, que dos threads intenten modificar la colección al mismo tiempo y una de las modificaiones se pierda, podemos usar una colección sincronizada. Esto se hace mediante la clase Collections al crear una colección. Al hacerlo llamamos el método synchronizedCollection y le pasamos un objeto que implemente la interfaz Collection como un ArrayList, o Set, o Map, etc:
+
+	Collection<Integer> collection = Collections.synchronizedCollection(new ArrayList<>());
+
+Internamente nuestros objetos son guardados en una ArrayList pero cuando llamemos a esta colección, el método synchronizedCollection va a envolver a nuestra ArrayList dentro de una colección sincronizada, y en esa colección sincronizada todos los métodos como .add(), .get(), etc van a ser sincronizados. De esta manera dos threads pueden modificar la colección sin problemas de concurrencia.
+
+Esta 'synchronized collection' logra resolver el problema de concurrencia usando 'locks' o bloqueos. Cuando un thread accede a la colección, bloquea a la colección y otros threads tendrán que esperar para modificarla también. Esto puede traer problemas de escalabilidad cuando incrementen la cantidad de threads que necesitan acceder a una colección. En estos casos podemos usar 'concurrent collections' en JAVA. Estas colecciones usan el método de partición para evitar los problemas de concurrencia. Esto significa que dividen la data en segmentos y distintos threads pueden acceder al mismo tiempo a distintos segmentos, pero solo UN thread puede acceder UN segmento a la vez. Esto es más rápido que las colecciones sincronizadas, porque no usan sincronización o bloqueos.
+Tenemos una concurrent collection para cada colección: ConcurrentHashMap, ConcurrentLinkedDeque que es una queue con dos ends implementada en una LinkedList, ConcurrentMap, etc. 
+En un ejemplo, en vez de crear un hashmap de la siguiente manera:
+
+	Map<Integer, String> map = new HashMap<>();
+
+Solo cambiamos HashMap<>(); por ConcurrentHashMap<>(); y solo con eso basta, el resto de los métodos son iguales: .get(key), .put(key, value), .remove(key), etc.

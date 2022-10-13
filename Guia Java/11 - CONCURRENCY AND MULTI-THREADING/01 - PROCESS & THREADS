@@ -1,0 +1,104 @@
+PROCESS & THREADS
+
+Un proceso es una instancia de un programa o aplicación. Un proceso contiene una imagen del código de la aplicación, memoria y otros recursos. Un OS puede ejecutar muchos procesos al mismo tiempo -ej: un antivirus escaneando mientras escuchamos música-, esto se llama concurrencia al nivel de procesos; pero también podemos tener concurrencia dentro de un proceso o en una aplicación usando THREADS.
+Tecnicamente un THREAD es una secuencia o HILO de instrucciones. Todo proceso tiene al menos un hilo llamado 'main', pero podemos crear muchos hilos para correr muchas tareas al mismo tiempo, por ejempo, podemos crear un WebServer que atienda a muchos clientes a la vez, sirviendo a cada cliente con un hilo diferente. O podemos hacer una app que descarge muchos archivos al mismo tiempo, donde cada hilo descarga un archivo separado. Esto es lo que se llama 'MULTI-THREADING'.
+Si una aplicación no usa muchos hilos, solamente está usando un core del procesador sin utilizar correctamente o efectivamente el CPU y se desperdicia hardware.
+Para manipular hilos usamos la clase Thread declarada en el paquete java.lang. JAVA siempre usa un segundo hilo para correr su recolector de basura que limpia los objetos sin usar en memoria.
+Para crear un thread usamos la clase Thread y le debemos pasar un objeto Runnable, osea, un objeto que implemente la interfaz Runnable. Como esta interfaz tiene un único métdo abstacto es una interfaz funcional y por lo tanto la podemos representar con una Lambda Expression. Éste único método de la interfaz no acepta parámetros y devuelve void, por lo que nuestra Lambda deberá respetar esto.
+
+
+Sleep en un Thread
+───────────────────┘
+La clase Thread tiene un método .sleep() que podemos usar para pausar la ejecución de un hilo. Con esto podemos simular una operación que demande tiemepo (por ej descargar un archivo). Este método lanza una InterruptedException si intentamos interrumpir un Thread que está en sleep. Con esto podemos crear un clase para simular una descarga que tome 5 segundos de la siguiente manera:
+
+	public class DownloadFileTask implements Runnable {
+		@Override
+		public void run() {
+			System.out.println("Downloading a flie: " + Thread.currentThread.getName());
+
+			try{ Thread.sleep(5000)
+			} catch(InterruptedException) {
+				e.printStackTrace();
+			}
+
+			System.out.println("Downloading complete");
+		}
+	}
+
+Ahora podemos ir a la clase demo donde simulamos 10 descargas y si vemos por consola, las 10 descargas empiezan a la vez y terminan luego de 5 segundos. Si todas las tareas se corrieran en un solo hilo debería llevarons 50 segundos.
+En el caso de que tengamos más tareas que threads, JVM tiene un 'task scheaduler' que decidirá qué hilos correr por cuanto tiempo, dedicandole a todos los procesos una parte de tiempo del CPU.
+
+
+Creando un Thread
+──────────────────┘
+Para crear un Thread usamos la clase Thread mencionada y creamos una nueva instancia. El constructor de esta clase está sobrecargado y la versión que usamos más comunmente es la que acepta como argumento un ojbeto Runnable, osea, un objeto que implementa la interfaz Runnable. Esta interfaz tiene un único método '.run()' que no acepta parámetros y devuelve void. Podemos correr código en un hilo separado llamamos:
+
+	public class ThreadDemo {
+		public static void show() {
+			Thread thread = new Thread(new DownloadFileTask());
+			thread.start();
+		}
+	}
+
+Ahora la acción de descargar un archivo correrá en un thread separado. Cada thread empieza, ejecuta la tarea que le demos y luego muere, no hace falta que nosotros lo cerremos explicitamente.
+
+
+Uniendo o Joining Threads
+─────────────────────────┘
+Supongamos que luego de bajar los archivos queremos escanearlos para chequear si tienen virus, pero debemos escanearlos LUEGO de haberlos bajado. No sabemos cuanto tiempo llevará bajar cada archivo por lo que no podemos a ojo esperar a que descarge y luego ejecutar el scan. Para eso usamos Thread.join() y esto hará que el hilo que estamos usando espere a que se complete la tarea anterior. Osea bloqueará el hilo hasta que termine de descargar. Este método join también arroja un InterruptedException por lo que debe ir en un try..catch.
+Si corremos:
+
+	public class ThreadDemo {
+		public static void show() {
+			Thread thread = new Thread(new DownloadFileTask());
+			thread.start();
+
+			try {
+				thread.join()
+			} catch (InterruptedException e) { e.printStackTrace(); }
+
+			System.out.println("El archivo está listo para ser escaneado");
+		}
+	}
+
+Entonces con el método join() le decimos al thread corriente que espere a que se complete otro thread. Osea que mientras este thread está esperando, no puede hacer otra cosa.
+
+
+Interrumpiendo un Thread
+─────────────────────────┘
+
+Muchas veces cuando tenemos tareas muy largas, le queremos dar al usuario la habilidad de cancelarla. Supongamos que iniciamos una descarga muy grande y queremos cancelarla luego de un segundo. Para eso usamos el método '.interrupt()'. Éste método es una request, se la enviamos al thread y el thread decidirá si cancelará la tarea o no. Para eso tenemos que programar la tarea que está corriendo el thread para que cada cierto tiempo chequee si hay alguna request de interrupción, y si es así, que interrumpa la tarea. En el caso de descarga de un archivo, podemos programar la descarga para que chequee esta request. Para buscar esta interrupción hacemos un:
+
+	if(Thread.current().isInterrupted()) return;
+	//Sino seguimos con la descarga.
+
+Y luego desde el main u otra clase tenemos que darle la opción al usuario de que arroje un Thread.interrupt(); para que salte esta interrupción.
+
+
+Waiting
+────────┘
+
+Estos métodos ya no se usan mucho, pueden traer muchos errores y sin dificiles de trabajar, pero veamoslo igualmente.
+Muchas veces queremos que un thread espere a que una codición sea verdadera. En un caso hicimos:
+
+	var thread1 = new Thread(() -> {
+			while(!status.isDone()) {}
+			System.out.println("Done!");
+	});
+
+En este caso el thread esperaba a que la condición isDone sea verdad para imprimr el mensaje. Pero implementar esto con un while loop hace que espera por ciclos del cpu, el while esperando la condición se ejecuta muchísimas veces. Podemos mejorar esto usando los métdoso .wait() y .notify(). Todos los objetos en JAVA tienen estos métodos ya que los hereda de la clase Object. Entonces podemos agregar éste método dentro del while para que solo se ejecute una vez. El método wait tiene que estar encerrado entre un try..catch porque puede arrojar una InterruptedException, y también tiene que estar encerrada en un bloque Synchronized:
+
+	var thread1 = new Thread(() -> {
+			while(!status.isDone()) {
+				synchronized (status) {
+					try{
+						status.wait();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+			System.out.println("Done!");
+	});
+
+De esta manera el while se ejecuta una sola vez, ejecuta la linea status.wait() y hace que el thread quede esperando hasta que otro thread, en otra parte de código, ejecute un status.nofity(), o .notifyAll() si tenemos muchos threads esperando a que cambie este objeto status. El método notify y notifyAll tienen que estar encerrados en un bloque 'syncronized' o JAVA nos devuelve una excepción.

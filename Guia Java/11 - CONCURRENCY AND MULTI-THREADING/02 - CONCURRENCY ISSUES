@@ -1,0 +1,50 @@
+CONCURRENCY ISSUES
+o problemas de concurrencia
+
+En un escenario real, todos los hilos que trabajan cierto momento no están aislados entre si. En muchos casos nuestros hilos tienen que acceder y modificar recursos compartidos. Por ejemplo cuando descargamos algo, todos los hilos deben repotar la cantidad de bytes bajados a un objeto que comparten entre todos, para reportar progreso a un usuario. Ahora, si más de un thread accede al objeto compartido al mismo tiempo y uno de ellos cambia este objeto, vamos a tener ciertos problemas. 
+El primer problema es cando más de un thread intenta modificar la misma data al mismo tiempo. Cuando esto sucede decimos que tenemos un 'Race condition' que significa que muchos hilos estan corriendo una carreera o compitiendo para modificar alguna data.
+Otro problema es cuando un thread modifica data que no son visibles para el resto. Por ejemplo 2 threads acceden al objeto, una lo modifica pero el otro ya accedió al objeto compartido y no ve esa modificación. Entonces varios threads pueden ver diferente al objeto. Esto se llama 'Visibility problem' o problema de visibilidad.
+Estos problemas son los que vimos también en SQL. Siempre que tengamos acceso y modificaciones de muchas partys al mismo tiempo vamos a encontrarnos con estos problemas.
+Si queremos cosntruir una app usando multi-threading necesitamos saber como prevenir estos problemas y debemos escribir código que pueda ser corrido por muchos threads en paralelo con seguridad. Esto se llama 'thread-safe code'. Esta frase la vemos en todos lados en la documentación de JAVA. Si vemos que una clase es thread-safe significa que la podemos usar con seguridad en apps con multi-threading.
+
+
+Race conditions
+────────────────┘
+Supongamos que tenemos un programa que usa multi-threading para descargar archivos. Cada hilo descargará cierta cantidad de bytes y luego queremos que acceda a un objeto 'DownloadStatus' que tiene un método:
+
+	public void incrementTotalBytes(){
+		totalBytes++;
+	}
+
+Entonces cada vez que un hilo descarge un byte tendrá que reportarlo a la instancia 'DownloadStuats'. Esto generará problemas de competitividad porque muchas veces los threads querrán informar al mismo tiempo los bytes descargados y perderemos mucha información. Al final, totalBytes siempre será mucho menor que la cantidad de bytes descargados reales. Esto sucede porque la operación totalBytes++ es una 'non-atomic operation' u operación no atómica porque involucra muchos pasos (3); primero el valor de totalBytes debe ser leido en la memoria main del cpu, luego incrementará su valor y luego el valor aumentado se grabará en memoria. Son 3 pasos: get-increment-wirte. En contraste, una operación atómica consta de un solo paso.
+
+Como solucionamos esto?
+
+- Continement: 
+La solución más simple es no compartir data entre threads. Esto se llama 'confinement' porque queremos confinar o restringir a que cada thread tenga su propia data. En vez de que todos los threads compartan un objeto 'status', cada thread tendrá su propio objeto 'status' y luego los combinaremos a todos al final.
+
+- Inmuttability:
+Otra estrategia es usar objetos inmutables. Un objeto es inmutable si no se puede modificar su data una vez creado. Por ejemplo un String en JAVA es inmutable, si lo queremos cambiar a uppercase, se crea uno nuevo. Compartir objetos inmutables entre hilos no trae ningún riesgo, ya que los hilos solo podrán leer este objeto sin poder modificarlo.
+
+- Synchronization:
+Otra solución es prevenir que muchos hilos puedan acceder el mismo objeto al mismo tiempo. De esta manera coordinamos el acceso de los threads a un objeto compartido. Esto se logra usando 'locks'; podemos poner bloqueos a cierta parte de nuestro código para que solo pueda acceder un thread a la vez. La sincronización fuerza al código a correr secuencialmente que va en contra de la idea de los threads y la concurrencia de hilos. Además ejecutar sincronización es muy problemático. Un problema es el que vimos en SQL, un 'deadlock' donde dos threads se bloquean entre si, uno siempre esperando a que termine el otro para poder continuar. Siempre esquivar la sincronización.
+
+- Atomic objects:
+Otra estrageia es usar objetos atómicos. Como dijimos estos son objetos que aceptan operaciones atómicas, o de un solo paso u operación. Esto logra prevenir que los hilos accedan a un objeto al mismo tiempo sin bloqueos o 'locks' como la sincronización. Se llaman atómicos porque se hace en un solo paso, no puede dividirse. Existen muchas clases atóimcas en JAVA, por ejemplo, AtomicInteger. Cuando creamos una variable, en vez de crear
+	private int totalBytes
+vamos a crear la variable con una instancia de esta clase AtomicInteger:
+	private AtomicInteger totalBytes = new AtomicInteger();
+Entonces luego para incrementar en uno el valo, en vez de hacer totalBytes++, llamaremos al método .incrementAndGet(). Este métdo incrementa en uno nuestra variable de forma atómica, garantizando atomicidad en la operación. Ahora muchso threads pueden incrementar esta variable en forma concurrente sin esperar a otro thread. También, en vez de usar el valor directamente totalBytes como lo hacíamos con un int, tenemos que llamr a totalBytes.get();
+Otra clase en JAVA que es más rápida que las AtomicClases es la clase Adder. Tenemos las subclases LongAdder y DoubleAdder para sumar valores. También tenemos que cambiar el tipo de variable a
+	private LongAdder totalBytes = new LongAdder();
+y luego, para obtener el valor podemos usar .intValue() y para incrementar su valor usamos .increment().
+
+- Partitioning:
+La última solución es la particón de data en segmentos que puedan ser accedidas al mismo tiempo. Muchos threads pueden acceder una colección de objetos, pero un thread a la vez puede acceder a un segmento de esa colección de objetos.
+
+
+Para el problema de visibilidad, en algunos casos como en la sincronización, se puede usar la keyword 'volatile' cuando se declara una variable. Muchas veces cuando un thread tiene que leer una variable, lo hace al principio y la guarda en cache (memoria del cpu) y de esta manera puede volever a leerla más rápido. Esto trae el problema que si nuestra variable cambia (porque otro thread lo modificó), el thread no se dará cuenta porque sigue leyendo la guardada en cache que nunca cambió. Para eso usamos volatile:
+	
+	private volatile bollean isDone;
+
+De esta manera le decimos que este valor es volatil y que lo lea siempre de memoria, nunca de cache (memoria del cpu).

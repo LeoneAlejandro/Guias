@@ -1,0 +1,32 @@
+THREAD POOLS
+
+Threads son los bloques fundamentales de las apps que trabajan con concurrencia, pero trabajar directamente con threads trae algunos problemas. El primero es que tenemos un número limitado de thread y si no tenemos cuidado podemos terminar creando muchos threads y tener OutOfMemoryExceptions y nuestra app crashea. El otro problema es que crear estos threads es costoso. JAVA para esto creo el 'thread pool', que es una pileta llena de threads llamadas 'worker threads' y estos threads pueden ser rehusados para ejecutar varias tareas. Cuando un 'worker thread' termina de ejectuar su tarea vuelve a la pileta para volver a ser utilizada en otra tarea. Estos threads no son creados, eliminads y recreados, y están siempre disponibles para ser usadas. También, como una thread pool va a tener un número fijo de threads no nos tenemos que preocupar por crear demasiados threads y quedarnos sin memoria. Por ejemplo, podemos crear una thread pool de 10 threads y darle 1000 tareas y el thread pool se encargará de darle las 1000 tareas a los 10 threads. Si todos los threads están ocupados, las tareas esperarán en una cola o queue. Apenas un thread esté disponible agarrará la primer tarea de la cola y la ejecutará.
+
+En JAVA la idea de un thread pool es representada usando la interfaz ExecutorService y sus implementaciones. La mayor parte del tiempo usamos ThreadPoolExecuter que es una típica implementación de threadpool. También ScheduledThreadPoolExcecuter donde podemos ejecutar tareas programadas después de un delay o periodicamente, por ejemplo, que se ejecute una tarea dentro de 5 horas o cada 2 horas.
+Para crear un threadpool usamos la clase Executors del paquete java.util de JAVA que tiene muchas clases static de fábrica para crear un ExcecutorService. Se usa esta clase porque crear un 'new ThreadPoolExcecuter()' nos va a pedir un montón de argumentos para el constructor como corePoolSize, maximumPoolSize, keepAliveTime, etc, que puede ser complejo. Por eso es mejor usar lo métodos de la clase Excecutors. Luego podemos llamar al método .newFixedThreadPool() para crear una pool con un número específico de threads. Luego de crearlo podemos llamar al método submit() que está sobrecargado. Podemos pasarle un objeto Runnable que puede ser una lambda porque es una interfaz funcional:
+
+	public class ExecutorsDemo {
+		public static void show() {
+			var executor = Executors.newFixedThreadPool(2);
+			executor.submit(() -> {
+				System.out.println(Thread.currentThread().getName());
+			});
+		}
+	}
+
+Esto nos devuelve 'pool-1-thread-1', osea que estamos usando una pool 1 y un thread 1, sin explicitamente crear un thread. Ahora, cuando queremos correr dos veces este programa, la segunda vez nos notificará que el programa todavía está corriendo y si queremos cancelarlo, esto es porque el Excecutor, luego de ejecutar la tarea dada, sigue esperando a otra tarea, no se va a terminar y va a quedar en memoria esperando otra tarea; por eso hay que explicitamente cerrarlo luego de terminar todas las tareas con un executor.shutdown() entre la linea 14 y 15. Puede pasar que antes de que se llegue a la linea 14 para cerrarlo tenemos una excepción que interrumpe el flow y nunca llega a ejecutarse, o cerrarse el Executor, por eso siempre tenemos que encerrar toda la lógica con un try..catch y poner el executor.shutdown() en el bloque 'finally' para que SIEMPRE se cierre sin importar si la lógica se concretó o saltó una excepción:
+
+	public class ExecutorsDemo {
+		public static void show() {
+			try{ 
+				var executor = Executors.newFixedThreadPool(2);
+				executor.submit(() -> {
+					System.out.println(Thread.currentThread().getName());
+				});
+			} finally {
+				executor.shutdown();
+			} 
+		}
+	}
+
+Esta es la ventaja del 'Executor Framework', no nos tenemos que preocupar de crear threads, pero siempre vamos a tener que seguir teniendo en cuenta problemas de concurrencia. El framework solo nos ayuda con la manipulación de threads.

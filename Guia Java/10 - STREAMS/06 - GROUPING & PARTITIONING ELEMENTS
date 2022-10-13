@@ -2,7 +2,7 @@ GROUPING & PARTITIONING ELEMENTS
 
 
 Agrupando elementos
-───────────────────┘
+────────────────────┘
 
 Muchas veces necesitamos agrupar o clasificar nuestra data, por ejemplo, si queremos agrupar nuestras películas por genero. Vamos a agregar un ENUM genre y luego lo agregamos a la clase Movie con su constructor y setter. Ahora podemos crear un nuevo stream:
 
