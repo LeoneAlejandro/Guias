@@ -1,0 +1,166 @@
+PROYECTO DE EJEMPLO
+
+Proyecto 'Best Price Finder'
+
+Vamos a poner todo lo que vimos en uso. Queremos escribir un programa para buscar el precio más barato entre varios productos. Queremos hacer todo esto de forma asincrónica. Supongamos que queremos conseguir los precios de vuelos de distintas páginas web y luego queremos devolver al usuario los precios de los vuelos en orden.
+Primero vamos a crear una clase Quote con dos atributos, el nombre del sitio web y el precio del vuelo de ese sitio, y creamos un constructor para inicializar estos valores y también getters:
+
+	public class Quote {
+		private final String site;
+		private final int price;
+	
+		public Quote(String site, int price) {
+			this.site = site;
+			this.price = price;
+		}
+
+		public String getSite() {
+			return this.site;
+		}
+
+		public int getPrice() {
+			return this.price;
+		}
+	}
+
+Luego creamos una nueva clase FlightService que creará nuevas quotes de diferentes agencias de viajes. Primero creamos un método para que nos devuelva un quote, pero si hacemos que el método devuelva Quote este método será sincrónico, por lo que tenemos que hacer que el método nos devuelva un CompletableFuture<Quote>. Luego dentro del método simulamos una operación que tarde un tiempo en devolvernos el future con la función simulate() de la clase LongTask que es un setTimeout de algunos segundos. Luego del timeout devolvemos una nueva instancia de Quote con un site y un price random que creamos antes.
+
+	public class FlightService {
+		public CompletableFuture<Quote> getQuote(String site) {
+			return CompletableFuture.supplyAsync(() -> {
+				System.out.println("Getting a Quote from" + site);
+				LongTask.simulate();
+
+				var random = new Random();
+				var price = 100 + random.nextInt(10);
+
+				return new Quote(site, price);
+			});
+		}
+	}
+
+Ahora volvemos a nuestra clase Demo y creamos una instancia de FlightService, luego le pedimos a la instancia .getQuote() y le pasamos el primero sitio. Esto devuelve un CompletableFuture y le pedimos .thenAccept(quote -> System.out.println(quote)) que lo reemplazamos por el method reference.
+
+	public class CompletableFuturesDemo {
+		public static void show() {
+			ver service = new FlightService();
+			service.getQuote("site1")
+					.thenAccept(System.out::println);
+		}
+
+		try{
+			Thread.sleep(10_000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+
+Si corremos este programa terminará inmediatamente porque en ningún lugar estamos esperando a que se complete la operación de las lineas 47-48, por esto agreagamos el sleep de 10 segundos, y éste sleep debe ir en un try..catch. Ahora si, si ejecutamos esta app veremos en consola el mensaje "Getting a Quote fomr site1" y algunos segundos después nos devolverá el Quote{site='site1', prrice=102} (102 es random).
+Ahora que creamos esto podemos trabajar para obtener quotes de diferentes sitios. Volviendo a la clase FlightService, podemos crear un nuevo método getQuotes (plular, devuelve más de 1). Para esto el método deberá devolver una List<CompletableFuture<Quote>>. Creamos una lista de varios sitios adentro, y para cada site deberíamos tener una quote. Hay 2 formas de hacer esto una es crear la List<CompletableFuture<Quote>> luego iterar esta lista y llamar al método getQuote() para cada site. Pero hay una mejor manera de forma funcional, usando la API Streams. Obtenemos entonces un Stream de sites y mapeamos los objetos que obtenemos de este stream con un CompletableFuture<Quote>; esto lo hacemos con un .map(site -> getQuote(site)) o con el method reference mejor. Cual es el tipo de retorno del método .map()? Este método devuelve un Stream<CompletableFuture<Quote>>. Como vimos antes el método map() es intermedio, si no hacemos nada con el resultado no devuelve nada ni termina de hacer nada con ese stream. Eventualmente tenemos que colectar estos resultados en una colección. Para eso encadenamos el método .collect(). Ahora si devolvemos mediante 'return' esta lista List<CompletableFuture<Quote>>.
+
+	public class FlightService {
+		public List<CompletableFuture<Quote>> getQuotes() {
+			var sites = List.of("site1", "site2", "site3");
+			
+			return	site.stream()
+						.map(this::getQuote)
+						.collect(Collectos.toList())
+		}
+
+		public CompletableFuture<Quote> getQuote(String site) {
+			return CompletableFuture.supplyAsync(() -> {
+				System.out.println("Getting a Quote from" + site);
+				LongTask.simulate();
+
+				var random = new Random();
+				var price = 100 + random.nextInt(10);
+
+				return new Quote(site, price);
+			});
+		}
+	}
+
+Ahora volvemos al CompletableFuturesDemo y en vez de llamar al método getQuote() llamamos a getQuotes() que devuelve una List<CompletableFuture<Quote>>. Ahora hay que consumir cada futuro e imprimir su resultado que es el objeto Quote. Para eso convertimos esta list en un stream nuevamente y usamos de nuevo el método map pasándole una función que tome como argumento un CompletableFuture<Quote>> y devuelva otra cosa. Entonces le vamos a pasar una lambda que llame al método .thenAccept() y le pasaremos la quote del future para que lo imprima por terminal (lo hacemos mediante method reference, 'quote -> System.out.println(quote)'). De nuevo map() es intemedio, y no hará nada hasta que no usermos una operación terminante.	Ahora podemos encadenar .collect() y guardar los resultados en una nueva lista List<Quotes>.
+
+	public class CompletableFuturesDemo {
+		public static void show() {
+			ver service = new FlightService();
+			service.getQuotes()
+					.stream()
+					.map(future -> future.thenAccept(System.out::println))
+					.collect(Collections.toList());
+		}
+
+		try{
+			Thread.sleep(10_000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+
+Como vemos, en la clase FlightService le creamos un stream, y luego lo guardamos en una lista, y ahora volvemos a hacer lo mismo por lo que podemos volver a FlightService y cambiar el tipo de devolución de getQuotes() a Stream<CompletableFuture<Quote>> y podemos elminiar la linea 67 que crea una nueva lista. Ahora desde CompletableFuturesDemo podemos llamar a ese Stream directamente.
+
+	public class FlightService {
+		public Stream<CompletableFuture<Quote>> getQuotes() {
+			var sites = List.of("site1", "site2", "site3");
+			
+			return	site.stream().map(this::getQuote);
+		}
+		... //no pongo todo para hacerlo más corto
+
+Y podemos eliminar el stream() de la linea 89 de CompletableFuturesDemo. Entonces llamamos a getQuotes(), esto nos devolverá un Stream de objetos future, para cada objeto future hacemos un .thenAccept(), aceptamos el resultado e imprimimos el código.
+
+	public class CompletableFuturesDemo {
+		public static void show() {
+			ver service = new FlightService();
+
+			service.getQuotes()
+					.map(future -> future.thenAccept(System.out::println))
+					.collect(Collectos.toList())
+		}
+
+		try{
+			Thread.sleep(10_000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+
+Ahora si ejecutamos esto en consola veremos que imprime 3 lineas "Getting a quote from" cada site, luego de varios segundos nos devuelve los 3 Quotes con sitio y precio.
+
+Vamos a hacer el problema más interesante agregando un delay random a cada sitio para que cada sitio responda en un momento distinto. Con esto veremos que mostraremos estas Quotes a medida que las obtenemos. Para esto volvemos a la clase LongTask y modificamos cómo actúa .simulate():
+
+	public class LongTask {
+		public static void simulate(int delay) {
+			try {
+				Thread.sleep(delay)
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+Ahora nuestro método simulate acepta un parámetro int que pasaremos de forma random para que cada site tarde un tiempo distinto. Ahora debemos ir a la clase FlightService y vamos a reutilizar nuesstro objeto random para pasarle un delay random al método simulate. Pasémosle un tiempo random entre 1 y 3 segundos.
+
+	public class FlightService {
+		public Stream<CompletableFuture<Quote>> getQuotes() {
+			var sites = List.of("site1", "site2", "site3");
+			
+			return	site.stream().map(this::getQuote);
+		}
+
+		public CompletableFuture<Quote> getQuote(String site) {
+			return CompletableFuture.supplyAsync(() -> {
+				System.out.println("Getting a Quote from" + site);
+				
+				var random = new Random();
+				LongTask.simulate(1_000 + random.nextInt(2_000));
+
+				var price = 100 + random.nextInt(10);
+
+				return new Quote(site, price);
+			});
+		}
+	}
+
+Ahora si volvemos a ejecutar nuestra app veremos que las Quotes que devuelve, las devuelve en secuencia donde cada una tarda un tiempo distinto.

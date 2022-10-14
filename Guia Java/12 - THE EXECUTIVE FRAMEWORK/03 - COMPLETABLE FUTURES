@@ -1,3 +1,81 @@
 COMPLETABLE FUTURES
 
-La clase CompletableFuture<T> implementa la interfaz Future<T>
+La clase CompletableFuture<T> implementa la interfaz Future<T>, por lo que cada CompletableFuture va a ser un objeto Future y con este CompletableFuture podemos explicitamente un objeto Future.
+CompletableFuture también implementa otra interfaz llamada CompletionStage<T>, y esta segunda interfaz representa 'un estado de una posible operación asincrónica'. Que significa esto? En casos reales muchas veces una operación asincrónica involucra muchos pasos, por ej podemos llamar una API remota para obetener cierta data, luego transformamos esta data a cierta estructura y finalmente guardamos la data en una BD; esos serían 3 pasos. La interfa CompletionStage reperesenta un paso o 'stage' de una operación asincrónica y nos da la posibilidad de usar varios métodos para combinar o usar estos pasos en una forma declarativa. Esto es parecido a como usamos la api Streams para escribir una query compleja en una forma declarativa. Antes usamos .map, .filter para construir una query compleja; podemos hacer lo mismo con la CompletionStage.
+
+Esto es muy parecido a las promesas en JAVA donde manipulamos de forma declarativa, como si fuesen funciones sincrónicas, a operaciones asincrónicas que trabajan con posibles resultados futuros, o promesas de valores, de operaciones que corren en paralelo con otras.
+
+
+Implementando una API asincrónica
+──────────────────────────────────┘
+Vamos a crear una API asincrónica o servicios de prueba para ver un ejemplo: creamos una nueva clase de prueba MailService que se encarga de enviar mails. Supongamos que cada vez que enviamos un mail es una operación que lleva tiempo y no se hace instantaneamente. Estas operaciones deben ser ejecutadas en un segundo thread, no en el main. Para eso inventamos una clase LongTask con un método .simulate() que es una operación con un timeout de 5 sigundos para simular una operación que nos demora tiempo.
+	
+	public static class MailService {
+		public void send() {
+			LongTaks.simulate();
+			System.out.println("Mail sent.");
+		}
+	}
+
+Luego, si en nuestro main creamos una instancia del MailService y ejecutamos el método send, ésta sería una operación sincrónica o bloqueante, por lo que si escribimos una linea abajo imprimiendo un mensaje:
+
+	public class Main {
+		pubic static boid main(String[] args) {
+			var service = new MailService();
+			service.send();
+			System.out.println("Imprimiendo un mensaje...");
+		}
+	}
+
+No veremos el mensaje "Imprimiendo..." hasta que se termine de ejecutar service.send() ya que es una operación bloqueante. Este es el problema de las operaciones sincrónicas o bloqueantes, cada vez que tenemos una operación que demora o lleva tiempo, nos demora el resto del código, por eso debemos correr estas operaciones en un segundo thread de forma asincrónicas. Para implementar éste método de forma asincrónica, creamos un nuevo método en la clase MailService que en vez de devolver void, devolverá un CompletableFuture<void>:
+
+	public static class MailService {
+		public void send() {
+			LongTaks.simulate();
+			System.out.println("Mail enviado.");
+
+			public CompletableFuture<void> sendAsync() {
+				return CompletableFuture.runAsync(() -> send());
+		}
+	}
+
+Este nuevo método sendAsync devuelve un CompeltableFuture, para eso usamos la interfaz CompletableFuture con el método .runAsync() y le pasamos una lambda expression con un método que será ejecutado en un thread separado de nuestra 'thread pool' de forma asincrónica. Ahora en el main en vez de llamar service.send() llamamos a service.sendAsync(), pero como ésta es ahora un método asincrónico, veremos primero el mensaje "Imprimiendo un mensaje..." y 5 segundos depués se enviará el mensaje y veremos "Mail enviado".
+
+
+Ejecutando código on completion
+────────────────────────────────┘
+Muchas veces queremos ejecutar código cuando otra tarea termine de completarse, por ejemplo, guardar un resultado en una BD. Para eso usamos el método .thenRun() de la interfaz CompletionStage. La interfaz CompletionStage sirve para modelar pasos dentro de una operación asincrónica. Si creamos un objeto del tipo CompletionStage podemos ver muchos de sus métodos, y muchos empienzan con la palbra 'then', eso significa que cuando esta operación termina, luego hará otra cosa. Este método .thenRun() acepta como argumento un objeto Runnable. También tenemos el método .thenRunAsync() para que ejecute una segunda acción de forma asincrónica cuando temrine la primera. Si ejecutamos un print .getName() del thread que trabja con .thenRunAsync, veremos que es forzado a trabajar en un thread aparte, no en el main, de forma asincrónica.
+Otro método útil es .thenAccept() que acepta un Consumer como argumento y es muy útil si queremos obtener el resultado de un CompletableFuture. Y de misma manera, tenemos el método .thenAcceptAsync() que ejecuta una segunda tarea de forma asincrónica usando el consumer.
+
+
+Creando un CompletableFuture
+─────────────────────────────┘
+Esta clase CompletableFuture tiene un par de métodos que usamos para crear un objeto del tipo CompletableFuture. Si queremos ejecutar una tarea que no devuelve valores usamos .runAsync() que acepta un objeto Runnable o un Runnable + un Executor y ejecutra una tarea de forma asincrónica. Si no le pasamos un Executor ejecutará la tarea en una 'common thread pool'. Este método .runAsync() devolvera un objeto del tipo CompletableFuture<void> porque nuestra tarea no devuelve un valor. Entonces podemos ejecutar una tarea de forma asincrónica solo con una linea de código:
+	
+	Runnable task = () -> System.out.println("Task");
+	var future = CompletableFuture.runAsync(task);
+
+sin necesidad de crear un Executor, luego pasarle una tarea, y luego hacer un shutdown.
+Si queremos que la acción asincrónica nos devuelva un valor usamos el método .supplyAsync() que acepta un Supplier como argumento o, al igual que antes, un Supplier + un Executor si queremos especificar que threads usar. Este método devolverá un CompletableFuture<Integer>:
+
+	Supplier<Integer> task = () -> return 1;
+	var future = CompletableFuture.supplyAsync(task);
+
+Si queremos obtener este valor que nos dará el CompletableFuture<> usamos llamamos la método future.get(), pero cuidado que éste método es bloqueante. Luego veremos como conseguiro de forma asincrónica así no tendrá que esperar a que termine la tarea.
+
+Manejandro Excepciones
+───────────────────────┘
+Hemos visto como consumir el resultado de una tarea asincrónica, pero que pasa si esta tarea nos tira una excepción en vez de resolver la tarea? Veamos como manejar excepciones y transformar estas en valores.
+Si ejecutamos una operación que devuelve o un CompletableFuture o una Excepción pero nunca los consumimos, no pasa nada, ya que la excepción salta en un thread paralelo, no en el main, y no se corta el flujo de nuestro código. Cuando llamamos al método .get() de un futuro, ahora si nos puede devolver, o un valor (el esperado de la tarea) o una excepción. Por eso cuando llamamos al método .get() o a otros que puedan consumir un futuro, lo hacemos un bloques try..catch para, en el caso de que devuelva una excepción, manejarla de forma correcta. 
+Nunca queremos que nuestra aplicación crashee con una excepción, para eso tenemos que codear de forma de que si salta una excepción, podamos usar un valor default para que el código se siga ejecutando. Supongamos que tenemos una app que busca el pronóstico del tiempo online y nos lo devuelve, si salta una excepción podemos recuperar el último valor lanzado y devolverlo en vez de crashear la app.
+Para trabajar esta excepción, antes de llamar al método .get() llamamos al método .exceptionally() que acepta como argumento una función que mapea un Throwable a otro tipo. Entonces le podemos pasar una lambda que mapee esta excepción que devuelve a otro tipo diferente:
+
+	try {
+		var temp = future.excepcionally(ex -> 1).get();
+		System.out.println(temp);
+	} catch (InterruptedException | ExecutionException e) {
+		e.printStackTrace();
+	}
+
+Entonces supongamos que la última temperatura que leimos del pronósitoco es '1', de esta manera consumimos el CompeltableFuture de 'future' con el método .get() pero si nos llega a devolver una excepción, con el método .exceptionally nos cubrimos y le decimos que devuelva 1. Osea, o 'temp' toma el valor de la función .get(), o en el caso de que esta funcion devuelva una excepción, toma el valor '1'.
+Hay que tener en cuenta que este método .excepcionally devuelve un nuevo objeto CompletableFuture, diferente al que creamos primero 'future'.
