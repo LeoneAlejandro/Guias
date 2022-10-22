@@ -17,7 +17,7 @@ public class TaxReport {
 	}
 }
 
-Queremos cambiar nuestra calse TaxReport dependa de la implementación concreta u objeto "TaxCalculator2018", sino que queremos que dependa de una interface. Para hacer esto debemos cambiar el tipo de nuestro atributo "calculator" a la interfaz "TaxCalculator". Luego tendremos que cambiar la creación de "new TaxCalculator2018" ya que queremos que esta clase no sepa nada de la implementación de TaxCalculator2018. Para esto debemos pasar nuestro argumento de la siguiente manera.
+Queremos cambiar nuestra calse TaxReport, y que no dependa de la implementación concreta u objeto "TaxCalculator2018", sino que queremos que dependa de una interface. Para hacer esto debemos cambiar el tipo de nuestro atributo "calculator" a la interfaz "TaxCalculator". Luego tendremos que cambiar la creación de "new TaxCalculator2018" ya que queremos que esta clase no sepa nada de la implementación de TaxCalculator2018. Para esto debemos pasar nuestro argumento de la siguiente manera.
 
 public class TaxReport {
 	private TaxCalculator calculator;
