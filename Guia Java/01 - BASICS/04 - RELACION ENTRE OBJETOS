@@ -1,0 +1,46 @@
+Relación entre Objetos
+
+Dependencia
+───────────┘
+
+La dependencia es el tipo de relación más débil entre clases. Hay una dependencia entre dos clases si cambios en la definición de la primera clase repercute o resulta en modificaciones en la segunda. Las dependencias ocurren cuando usamos nombres concretos de clases en nuestro código; por ejemplo, cuando especificamos tipos en firmas de métodos, cuando instanciamos objetos vía constructores, etc.
+Podemos hacer una dependencia más débil si hacemos nuestro código dependiente de interfaces o clases abstractas en vez de clases concretas.
+
+
+	 ┌───────────┐        ┌────────┐
+	 │ Profesor  │------->│ Curso  │
+	 └───────────┘        └────────┘
+
+UML. Profesor depende del material del curso.
+
+Usualmente un diagrama UML no muestra cada dependencia, hay demasiadas en cualquier proyecto real. En vez de contaminar el diagrama con dependencias, deberíamos ser muy selectivos y mostrar solo los que son relevantes e importantes a representar y comunicar.
+
+
+Asociación
+───────────┘
+
+La asociación es una relación en donde un objeto usa o interacciona con otra. En diagramas UML la relación de asociación se representa con una flecha sólida, desde un objeto hasta el objeto que usa.
+
+	 ┌───────────┐        ┌─────────────┐
+	 │ Profesor  ├───────►│ Estudiante  │
+	 └───────────┘        └─────────────┘ 
+
+Es muy común tener asociaciones  bi-direccionales, con puntas de flechas en ambos extremos.
+La asociación puede verse como un tipo de dependencia especializado, donde un objeto siempre tiene acceso a los objetos con los cual interacciona, por en cambio, una simple dependencia no establece una unión permanente entre objetos.
+
+Para solidificar la diferencia entre dependencia y asociación veamos un ejemplo:
+Imaginemos que tenemos una clase profesor
+
+	public class Professor {
+		var Student student
+
+		public void teach(Course c ) {
+			this.student.remember(c.getKnowledge);
+		}
+	}
+
+Si vemos el método teach(), se le pasa como argumento una clase 'Course', que luego se usa en el cuerpo del método. Si alguien cambia el método getKnowledge() de la clase 'Course' (cambia el nombre del método, agregar algun parámetro más a su firma, etc) nuestro programa se rompe. Esto se llama DEPENDENCIA.
+
+En general usamos asociaciones para representar algo como un campo de una clase. La unión está siempre, en el sentido de que siempre podemos acceder al campo desde la otra clase (una orden de un customer por ej.). Pero no siempre debe ser un campo. Si modelamos nuestras clases desde la perspectiva de una interfaz, puede solamente indicar la presencia de un método que devolverá la orden del customer.
+
+Ahora, veamos el campo 'Student' y cómo se usa en el método teach(). Podemos decir con seguridad que la clase Student también es una dependencia de la clase 'Professor': si el método remember() cambia, el código de 'Professor' se romperá. Sin embargo, como el campo 'Student' siempre es accesible por cualquier método de 'Professor', la clase 'Student' no solo es una dependencia, sino también una ASOCIACIÓN.
