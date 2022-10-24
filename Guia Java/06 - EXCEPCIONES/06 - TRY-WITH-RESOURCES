@@ -1,0 +1,48 @@
+TRY-WITH-RESOURCES
+
+Usualmente se usaba el bloque finally para liberar recursos como por ejemplo cerrar con .close() un Scanner o un BufferReader. Se hacía en el bloque finally ya que el mismo se ejecuta independientemente de si se ejecutara el bloque try o catch con una excepción. Para no duplicar la linea de liberación de recursos dentro de ambos bloques, puede unificarse en el bloque finally, pero esto también trae su complejidad y verborragia ya que incluso liberar un BufferReader, por ejemplo, puede venir con una excepción de entrada y salida también, y esto nos obliga a tener también un bloque try..catch dentro del bloque finally.
+
+Todo esto se puede solucionar mediante una nueva sintaxis, desde JAVA 7, que se llama try-with-resources que nos permite lograr que los recursos se auto-liberen, osea JAVA libera los recursos por nosotros.
+Esta nueva sintaxis se logra agregando () al bloque try, que nos permite declara cuales son los recursos que vamos a abrir para que luego JAVA se encarge de cerrarlos. 
+Antes teníamos el siguiente código:
+
+
+puiblic class VisorDeTXTs {
+	public void mostrarTxt(String ruta) {
+		File elArchivo = new File(ruta);
+		BufferReader br = null;
+
+		try {
+			br = new BufferReader(new FileReader(elArchivo));
+			System.out.println(br.readLine());
+		} catch (IOException e) {
+			System.out.println("Error de E/S: " + e.getMessage());
+			throw new RuntimeException("Error inesperado en el catch");
+		} finally {
+			try {
+				br.close();
+			} catch (IOException ex) {
+				System.out.println("No se pudo liberar el br");
+			}
+		}
+	}
+}
+
+Todo esto se puede escribir de la siguiente manera utilizando el try-with-resources:
+
+uiblic class VisorDeTXTs {
+	public void mostrarTxt(String ruta) {
+		File elArchivo = new File(ruta);
+
+		try (BufferReader br = new BufferReader(new FileReader(elArchivo));) {
+			System.out.println(br.readLine());
+		} catch (IOException e) {
+			System.out.println("Error de E/S: " + e.getMessage());
+			throw new RuntimeException("Error inesperado en el catch");
+		} 
+	}
+}
+
+
+Como vemos definimos el BufferReader dentro del bloque try y no nos tenemos que hacer cargo de cerrar el br. Esto es mucho más legible y simple.
+Pero hay que entender que tenemos ciertas restricciones de lo que podemos poner dentro de los paréntesis del try, ya que podemos poner solamente todo aquello que implemente la interfaz 'AutoCloseable'. Java podrá liberar los recursos siempre que implemente esta interfaz AutoCloseable. La clase BufferReader ya implementa esta interfaz desde JAVA 7, y por eso es que JAVA puede liberar estos recursos.
