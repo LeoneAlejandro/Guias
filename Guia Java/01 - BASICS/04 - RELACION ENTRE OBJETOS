@@ -44,3 +44,42 @@ Si vemos el método teach(), se le pasa como argumento una clase 'Course', que l
 En general usamos asociaciones para representar algo como un campo de una clase. La unión está siempre, en el sentido de que siempre podemos acceder al campo desde la otra clase (una orden de un customer por ej.). Pero no siempre debe ser un campo. Si modelamos nuestras clases desde la perspectiva de una interfaz, puede solamente indicar la presencia de un método que devolverá la orden del customer.
 
 Ahora, veamos el campo 'Student' y cómo se usa en el método teach(). Podemos decir con seguridad que la clase Student también es una dependencia de la clase 'Professor': si el método remember() cambia, el código de 'Professor' se romperá. Sin embargo, como el campo 'Student' siempre es accesible por cualquier método de 'Professor', la clase 'Student' no solo es una dependencia, sino también una ASOCIACIÓN.
+
+
+Agregación 	
+───────────┘
+
+Objeto A conoce la existencia de Objeto B, y consiste de B. Clase A depende de Clase B.
+
+Agregación es un tipo especializado de asociación que representa relaciones "one-to-many", "many-to-many" o "whole-part" entre multiples objetos.
+
+	 ┌───────────────┐        ┌───────────┐
+	 │ Departamento  │<>─────>│ Profesor  │
+	 └───────────────┘        └───────────┘
+
+	UML. Departamento contiene profesores.
+
+Usualmente, debajo la agregación, un objeto "tiene" un conjunto de otros objetos y sirve como contenedor o colección. El componente puede existir sin el contenedor, o puede unirse o linkearse a muchos contenedores al mismo tiempo. En UML se representa con un diamante o rombo en el contenedor y una flecha apuntando al componente.
+
+
+Composición
+────────────┘
+
+Objeto A conoce la existencia de Objeto B, consiste de B, y maneja el ciclo de vida de B. Clase A depende de Clase B.
+
+Es un tipo de agregación específico o especial, donde un objeto está compuesto de una o más instancias de otro objeto o clase. La diferencia entre este tipo de relación y las otras es que el componente solo puede existir como una parte del contenedor.
+
+  ┌──────────────┐        ┌───────────────┐
+  │ Universidad  │◄►─────>│ Departamento  │
+  └──────────────┘        └───────────────┘
+
+  UML. Universidad contiene departamentos.
+
+En UML la relación se representa de igual forma que la agregación, pero con un dombo o diamante sólido.
+
+
+Y como veremos más adelante también tenemos las relaciones de implementación de interfaces y herencia de clases, para dar una definición rápida y ver las diferencias:
+
+- Implementación: se da cuando una clase implementa una interfaz, básicamente es como un contrato donde una interfaz obliga a una clase a implementar métodos con cierta firma. Clase A define métodos declarados en la interfaz B. Objetos A pueden ser tratados como B. Clase A depende de B.
+
+- Herencia: Se da cuando se crea una nueva clase encima de otra ya existente, heredando atributos con valores y métodos con implementaciones, ya no solo es un contrato que obliga a cumplir requisitos, sino que hereda lógica. Clase A hereda interfaz e implementación de Clase B, pero puede extenderla. Objeto A puede ser tratado como B. Clase A depende de B.
