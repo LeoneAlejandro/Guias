@@ -1,4 +1,4 @@
-Relación entre Objetos
+RELACIÓN ENTRE OBJETOS
 
 Dependencia
 ───────────┘
@@ -80,6 +80,6 @@ En UML la relación se representa de igual forma que la agregación, pero con un
 
 Y como veremos más adelante también tenemos las relaciones de implementación de interfaces y herencia de clases, para dar una definición rápida y ver las diferencias:
 
-- Implementación: se da cuando una clase implementa una interfaz, básicamente es como un contrato donde una interfaz obliga a una clase a implementar métodos con cierta firma. Clase A define métodos declarados en la interfaz B. Objetos A pueden ser tratados como B. Clase A depende de B.
+- Implementación: se presenta cuando una clase implementa una interfaz, básicamente es como un contrato donde una interfaz obliga a una clase a implementar métodos con cierta firma. Clase A define métodos declarados en la interfaz B. Objetos A pueden ser tratados como B. Clase A depende de B.
 
-- Herencia: Se da cuando se crea una nueva clase encima de otra ya existente, heredando atributos con valores y métodos con implementaciones, ya no solo es un contrato que obliga a cumplir requisitos, sino que hereda lógica. Clase A hereda interfaz e implementación de Clase B, pero puede extenderla. Objeto A puede ser tratado como B. Clase A depende de B.
+- Herencia: se da cuando se crea una nueva clase encima de otra ya existente, heredando atributos con valores y métodos con implementaciones, ya no solo es un contrato que obliga a cumplir requisitos, sino que hereda lógica. Clase A hereda interfaz e implementación de Clase B, pero puede extenderla. Objeto A puede ser tratado como B. Clase A depende de B.
