@@ -1,17 +1,17 @@
 METHOD INJECTION
 
-Es muy similar al setter injection, pero cuando usamos setters tenemos que acordarnos de llamar al setter y pasarle la nueva dependencia, antes de trabajar sobre la nueva instancia.
+Es muy similar al setter injection pero cuando usamos setters tenemos que acordarnos de llamar al setter y pasarle la nueva dependencia antes de trabajar sobre la nueva instancia.
 Mediante Method Injection, podemos hacer las dos cosas a la vez, inyectar una nueva dependencia y trabajar sobre ella. 
 
-Volviendo a la clase TaxReport, agregaremos un nuevo parámetro para el método showReport:
+Volviendo a la clase TaxReport, agregaremos un nuevo parámetro para el método showReport, antes la firma del método no aceptaba parámetros pero ahora aceptará un calculator del tipo TaxCalculator:
 
-public class TaxReport {
-	private TaxCalculator calculator;
+		public class TaxReport {
+			private TaxCalculator calculator;
 
-	public showReport(TaxCalculator calculator){	//Agrego el parámetro calculator del tipo TaxCalculator
-		var tax = calculator.calculateTax();
-		System.out.pritnln(tax);
-	}
+			public showReport(TaxCalculator calculator){	//Agrego el parámetro calculator del tipo TaxCalculator
+				var tax = calculator.calculateTax();
+				System.out.pritnln(tax);
+			}
 
 
 Esta sería la diferencia entre los dos casos:
@@ -41,3 +41,6 @@ MethodInjection: Ya no hace falta tener un constructor ni un setter, directament
 					report.showReport(new TaxCalculator2023(10_000));
 				}
 		}
+		
+Como vemos, pasamos la dependencia "calculator" como un parámetro del método showReport() y no como un parámetro de TaxReport() e inyectándolo como constructor, o mediante un setter que ya no existe.
+Éste método de inyección de dependencias es muy útil cuando necesitamos inyectar muchas dependencias distintas al mismo método, pero normalmente la inyección de dependencias más común es por constructor ya que se usa la misma instancia a lo largo del código.
