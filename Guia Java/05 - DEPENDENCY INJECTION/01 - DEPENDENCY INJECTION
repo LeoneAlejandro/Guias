@@ -2,7 +2,7 @@ DEPENDENCY INJECTION
 
 Se trata de un patrón de diseño que se encarga de extraer la responsabilidad de la creación de instancias de un componente para delegarla en otro. De acuerdo con este concepto, las clases deben ser suministradas de un objeto o instancia para trabajar con ella, sin la necesidad de crear o instanciar el objeto, deben delegar esa responsabilidad. Este otro componente al que fue delegado creará y pasara o INYECTARÁ esta DEPENDENCIA. 
 Es la forma más común de inversión de control. La inversión de control es el principio por el cual un objeto o un programa cede el control a alguien más (framework u otros objetos). Esto se apoya sobre el principio de "separación de intereses" (separation of concerns), donde cada clase es encargada de hacer una sola cosa. La inyección de dependencias es el ceder el control de instanciar una clase: si una clase debe usar una instancia, la misma debe ser suministrada desde otra clase y no instanciada por ella misma.
-Esto también reduce el acplamiento (loose-coupling); elimina las dependencias entre clases para hacer un código más flexible y dinámico sin necesidad de modificar una clase al cambiar otra. La dependencia o coupling (acoplamiento) entre una clase y una interfaz es mucho menor que entre clases, ya que la interfaz no tiene implementación o código, solo es un contrato o firma. Por eso al crear interfaces tenemos que hacerlas lo más livianas y con menor acoplamiento posible.
+Esto también reduce el acplamiento (loose-coupling); elimina las dependencias entre clases para hacer un código más flexible y dinámico sin necesidad de modificar una clase al cambiar otra. La dependencia o coupling (acoplamiento) entre una clase y una interfaz es mucho menor que entre clases, ya que la interfaz no tiene implementación o código, solo es un contrato o firma. Por eso, al crear interfaces, tenemos que hacerlas lo más livianas y con menor acoplamiento posible.
 Esta inyección se hará mediante constuctores, setters y métodos, que veremos más adelante.
 
 Veámoslo más sencillamente con un ejemplo.
@@ -16,7 +16,7 @@ public class TaxCalculator2018 implements TaxCalculator {
 	private double taxableIncome
 
 	@Override
-	private double calculateTax (){
+	private double calculateTax() {
 		return taxableIncome * 0.3;
 	}
 }
@@ -42,7 +42,7 @@ En los siguiente capítulo definiremos distintos tipos de inyección de dependen
 Cuales son las ventajas de la inyección de dependencias ?
 La primer ventaja es que nos permite cambiar la implementación en tiempo de ejecución. Si tuviesemos una instancia definida y la creamos directamente dentro del objeto ya no tenemos posibilidad de cambiarla. Pero si definimos una dependencia y permimitimos que alguien más la inyecte o "pase", esto abre la posibilidad a que las distintas implementaciones que neceistemos puedan cambiar en un momento dado. 
 La segunda ventaja es que nos facilita mucho a la hora de hacer testing. Al separar responsabilidades y quitar la labor de crear las dependencias nos facilita testear por separado ambas cosas. También al utilizar inyección de dependencias podemos utilizar técnicas como los "Mocks" que son objetos especiales que utilizamos para proveer dependencias en entornos de pruebas. 
-La tercera razón y quizá la más importante es que reduce el acoplamiento o "coupling", que como vimos antes es muy importante en la programación orientada a objetos. Esto es porque no existe un conocimiento directo entre las dependencias sino que siempre hay que proveerlas. Al una clase no crear una instancia de otra, estamos reduciendo el coupling entre estas dos clases. Reducir el coupling nos permite cambiar implementaciones, mejorar el código con mucha más facilidad ya que al tener menos coupling tendremos que cambiar menos clases que estén relacionadas con la clase que querramos cambiar.
+La tercera razón y quizá la más importante es que reduce el acoplamiento o "coupling", que como vimos antes es muy importante en la programación orientada a objetos. Esto es porque no existe un conocimiento directo entre las dependencias sino que siempre hay que proveerlas. Reducir el coupling nos permite cambiar implementaciones, mejorar el código con mucha más facilidad ya que al tener menos coupling tendremos que cambiar menos clases que estén relacionadas con la clase que querramos cambiar.
 
 Es necesario hacer inyección de dependencias con Frameworks ?
 No, no es necesario, podemos crear todas las inyecciones de dependencias sin ninguna herramienta, pero a medida que un proyecto se va agrandando se va haciendo cada vez más complejo. Esto es porque las dependencias van aumentando en profundidad: cuando un objeto1 depende de un objeto2, y luego este objeto2 depende de otro objeto3, y así sucesivamente, las dependencias se van complejizando mucho en capas. 
