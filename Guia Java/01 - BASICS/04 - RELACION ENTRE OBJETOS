@@ -25,7 +25,7 @@ La asociación es una relación en donde un objeto usa o interacciona con otra. 
 	 │ Profesor  ├───────►│ Estudiante  │
 	 └───────────┘        └─────────────┘ 
 
-Es muy común tener asociaciones  bi-direccionales, con puntas de flechas en ambos extremos.
+Es muy común tener asociaciones bi-direccionales, con puntas de flechas en ambos extremos.
 La asociación puede verse como un tipo de dependencia especializado, donde un objeto siempre tiene acceso a los objetos con los cual interacciona, por en cambio, una simple dependencia no establece una unión permanente entre objetos.
 
 Para solidificar la diferencia entre dependencia y asociación veamos un ejemplo:
@@ -34,8 +34,8 @@ Imaginemos que tenemos una clase profesor
 	public class Professor {
 		var Student student
 
-		public void teach(Course c ) {
-			this.student.remember(c.getKnowledge);
+		public void teach(Course c) {
+			this.student.remember(c.getKnowledge());
 		}
 	}
 
