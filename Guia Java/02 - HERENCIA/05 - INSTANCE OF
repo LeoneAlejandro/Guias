@@ -1,9 +1,9 @@
 INSTANCE OF
 
 Al haber aprendido ahora UPCASTING, podemos ver que en una variable no solo cabe la identidad de un objeto del tipo de esa variable -en un int siempre hay un int, en una varibale tipo Auto siempre hay un objeto Auto- sino que también podemos tener identidades de objetos derivados gracias a una relación de herencia - en una variable del tipo Vehículo hay un objeto Auto.
-Para poder trabajar sobre una variable necesitamos saber saber que tipo de objeto contiene esa variable o parámetro, y para esto ahora tenemos un nuevo operador, "instanceof", que nos va a permitir saber si justamente en una variable o parámetro contamos un objeto de determinado tipo, nos servirá para más adelante hacer el proceso inverso al UPCASTING, el DOWNCASTING o especialización.
+Para poder trabajar sobre una variable necesitamos saber que tipo de objeto contiene esa variable o parámetro, y para esto ahora tenemos un nuevo operador, "instanceof", que nos va a permitir saber si justamente en una variable o parámetro contamos con un objeto de determinado tipo, y nos servirá para más adelante hacer el proceso inverso al UPCASTING, el DOWNCASTING o especialización.
 
-Entonces, como vimos en capítulos anteriores, supongamos que tenemos la superclase Vehículo y las subclases Auto y Moto. Como dijimos, una concecionaria puede tener un arraylist o colección de vehículos donde pasamos autos y motos, casteados como vehículos, a la colección. Ahora, una vez guardado una lista de autos y motos, como sabremos cómo trabajar sobre estas instancias ? Supongamos que tenemo
+Entonces, como vimos en anteriormente, supongamos que tenemos la superclase Vehículo y las subclases Auto y Moto. Como dijimos, una concesionaria puede tener un arraylist o colección de vehículos donde pasamos autos y motos, casteados como vehículos, a la colección. Ahora, una vez guardado una lista de autos y motos, como sabremos cómo trabajar sobre estas instancias ?
 
 instanceof es un operador como cualquier otro (>, <, !=, ==, etc), que compara dos variables y devuelve verdadero o falso. 
 Básicamente instaceof es operador de igualdad, que evalúa el tipo de datos, no valores.

@@ -1,7 +1,7 @@
 UPCASTING
 
 El UPCASTING o generalización nos va a permitir tener objetos de determinado tipo pero tratarlos como si fueran de otro para tener algunas ventajas.
-Para empezar con un ejemplo seguiremos con el modelo de la superclase Vehículo y las subclases Auto y Moto. Con este modelo crear las siguientes instancias como venimos viendo:
+Para empezar con un ejemplo seguiremos con el modelo de la superclase Vehículo y las subclases Auto y Moto. Con este modelo podemos crear las siguientes instancias como venimos viendo:
 
 		Vehículo v = new Vehículo("MarcaFalsa", "RTY", "QWE456");
 		Auto a = new Auto(ture, "MarcaFalsa", "COM2", "ABC123");
@@ -32,9 +32,9 @@ Cuando generalizamos perdemos las propiedades intrínsecas de las sublcases, por
 
 		Auto a = new Auto(ture, "MarcaFalsa", "COM2", "ABC123");
 
-Podremos llamar al método "a.prenderAire()" así también como el "a.acelerar" que pertenecen a la clase Auto (por herencia o no). Por en cambio si casteamos este auto y lo tratamos como vehículo de la siguiente manera:
+Podremos llamar al método "a.prenderAire()" así también como el "a.acelerar()" que pertenecen a la clase Auto (por herencia o no). Por en cambio si casteamos este auto y lo tratamos como vehículo de la siguiente manera:
 
 		Vehículo v = a
 
-ahora, usando la generalización, podremos llamar al método "v.acelerar" pero no así al método "v.prenderAire()" que lo perdimos por lo cual nos tirará error ya que estamos viendo el mismo auto (v = a, es el mismo auto que antes) pero como si fuese un vehículo, y como sabemos, los vehículos no tienen el método "prenderAire".
+ahora, usando la generalización, podremos llamar al método "v.acelerar()" pero no así al método "v.prenderAire()" que lo perdimos por lo cual nos tirará error ya que estamos viendo el mismo auto (v = a, es el mismo auto que antes) pero como si fuese un vehículo, y como sabemos, los vehículos no tienen el método "prenderAire".
 Como podemos recuperar estas propiedades perdidas u ocultas al generalizar ? ver "DOWNCASTING" e "INSTANCEOF"
