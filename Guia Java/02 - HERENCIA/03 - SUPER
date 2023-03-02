@@ -3,7 +3,7 @@ SUPER
 Cuando definimos HERENCIA dijimos que como regla de oro "LOS CONSTRUCTORES NO SE HEREDAN" bajo ninguna circunstancia. Cuando hay herencia de por medio debemos saber que SIEMPRE el constructor de cualquier CLASE invocará primero al constructor de su SUPERCLASE, haciendo una especie de cascada ascendente. Para invocar al constructor de una SUPERCLASE en el constructor de una SUBCLASE hay que utilizar la palabra "super". La palabra super indica que queremos hacer referencia a la superclase, y como en este caso queremos invocar al constructor debemos llamarlo con paréntesis "super()".
 Al llamar a "super()" tendremos que pasar los argumentos que admita el constructor de la SUPERCLASE.
 
-Volviendo al ejemplo que vimos antes tendremos el siguiente modelo (que para simplificarlo solo ponemos los constructores):
+Volviendo al ejemplo que vimos antes tendremos el siguiente modelo (que para simplificarlo solo ponemos los atributos):
 
   ┌─────────────────┐
   │ Vehículo        │

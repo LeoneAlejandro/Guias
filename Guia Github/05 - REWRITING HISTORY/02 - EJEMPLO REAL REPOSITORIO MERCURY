@@ -18,7 +18,7 @@ Ahora vamos a solucionar la historia de este repo.
 
 --- DESHACER LOS ULTIMOS COMMITS:
 
-Decidimos que el último commit "." es innecesario y lo queremos deshacer, para este caso tenemos 2 opciones: si ya compartimos este commit al repo remoto, hay chances de que alguien haya trabajado sobre este commi, por lo que no deberíamos removerlo, deberíamos hacer un "revert" que crea un nuevo commit que deshace los cambios del commit que queremos deshacer. Para este caso deberíamos hacer un 
+Decidimos que el último commit "." es innecesario y lo queremos deshacer, para este caso tenemos 2 opciones: si ya compartimos este commit al repo remoto, hay chances de que alguien haya trabajado sobre este commit, por lo que no deberíamos removerlo, deberíamos hacer un "revert" que crea un nuevo commit que deshace los cambios del commit que queremos deshacer. Para este caso deberíamos hacer un 
 	
 		git revert HEAD
 

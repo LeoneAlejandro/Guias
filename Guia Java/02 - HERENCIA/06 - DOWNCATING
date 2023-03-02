@@ -1,28 +1,28 @@
 DOWNCATING
 
-El downcasting o especialización es proceso inverso al UPCASTING o generalización. Continuando con el ejemplo de la concesionaria, en el UPCASTING lo que hacíamos es guardar una variable tipo Auto en una variable más general, que mediante herencia es superclase de Auto, vehículo.
+El downcasting o especialización es el proceso inverso al UPCASTING o generalización. Continuando con el ejemplo de la concesionaria, en el UPCASTING lo que hacíamos es guardar una variable tipo Auto en una variable más general, que mediante herencia es superclase de Auto, vehículo.
 
 		Auto a = new Auto(ture, "Toyota", "Corolla", "ABC123");
 		Vehículo v = a;
 
 Esto nos permitía tratar a muchas sublcases de Vehículo de igual manera y agruparlas en una colección por ejemplo, pero perdiendo -ocultando- los métodos y atributos específicos de la subclase generalizada.
-En el DIWNCASTING lo que hacemos es el paso contrario, si por ejemplo tenemos un vehículo podemos volver a verlo como un Auto (o una Moto, depende lo que sea) para recuperar las propiedades que lo hacen Auto. 
+En el DIWNCASTING lo que hacemos es el paso contrario, si tenemos un vehículo podemos volver a verlo como un Auto (o una Moto, depende lo que sea) para recuperar las propiedades que lo hacen Auto. 
 La generalización es facil ya que ni hace falta castear el tipo como vimos antes - "Vehículo v = (Vehículo) a" ya que lo hace JAVA automáticamente, sin embargo cuando queremos hacer lo contrario tenemos que especificar el tipo al cual queremos castear el vehículo para guardarlo en otra variable, de la siguiente manera:
 
 		Auto a2 = (Auto) v;
 
-Tenemos que especificar a que tipo de variable queremos promocionar esta variable v. Una vez hecho el UPCASTING el auto "a2", que es el mismo auto que teníamos más arriba como "a", y también es el mismo que teníamos casteado como vehículo "v" (es siempre la misma referencia), ahora si recuperamos las propiedades ocultas en la variable "v" pudiendo selecciónar a2.tieneAire o a2.prenderAire() (atributos y métodos propios de un Auto).
+Tenemos que especificar a que tipo de variable queremos promocionar esta variable v. Una vez hecho el UPCASTING, el auto "a2", que es el mismo auto que teníamos más arriba como "a", y también es el mismo que teníamos casteado como vehículo "v" (es siempre la misma referencia en memoria), ahora si recupera las propiedades ocultas en la variable "v" pudiendo selecciónar a2.tieneAire o a2.prenderAire() (atributos y métodos propios de un Auto).
 Este proceso siempre va de la mano con instanceof, donde funciona como una validación de datos, preguntando antes del casteo si esa variable es una instancia del tipo que queremos promocionar.
 
 	if(v instanceof Auto){
 		Auto a2 = (Auto) v;
-		a.prenderAire();				//o direcamente en una sola línea "((Auto) v).prenderAire();"
+		a2.prenderAire();				//o direcamente en una sola línea "((Auto) v).prenderAire();"
 	} 
 
-Si es verdadero se hace el DOWNCASTING, si da falso, no.
-Esto se hace porque por error podemos forzar el casto de un auto a una moto si hiciesemos por ejemplo:
+Si es verdadero se hace el DOWNCASTING y se ejecuta el método prenderAire(), si da falso, no.
+Esto se hace porque por error podemos forzar el casteo de un auto a una moto si hicieramos por ejemplo:
 	
 		Moto m2 = (Moto) v;
 		m2.hacerWheelie();
 
-Este código compila, ya que no se ve nada raro, pero un vehículo no es una Moto (como vimos arriba, es un auto), por lo que no tenemos errores en tiempo de compilación, pero si al ejecutarse tirando un error java.lang.ClassCastException.
+Este código compila, ya que no se ve nada raro, pero éste vehículo 'v' no es una Moto (como vimos arriba, es un auto), por lo que no tenemos errores en tiempo de compilación, pero si al ejecutarse tirando un error java.lang.ClassCastException.

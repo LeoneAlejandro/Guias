@@ -1,7 +1,6 @@
 SETTER INJECTION
 
 Este es otro tipo de inyección utilizando Setters, aunque la inyección de dependencias por constructores es más común. 
-
 Volviendo al ejemplo de TaxReport, teníamos la siguiente clase:
 
 public class TaxReport {
@@ -23,7 +22,7 @@ public void setCalculator(TaxCalculator calculator){
 	this.calculator = calculator
 }
 
-Ahora además de inyectar la dependencia mediante el constructor, también lo podemos hacer mediante el setter de esta clase. Cual es el beneficio ? Que podremos cambiar las dependencias a lo largo de la vida de nuestra aplicación. Podremos, en el main, inyectar una dependencia en el constructor y luego cambiarla en el medio:
+Ahora además de inyectar la dependencia mediante el constructor, también lo podemos hacer mediante el setter de esta clase. Cual es el beneficio? Que podremos cambiar las dependencias a lo largo de la vida de nuestra aplicación. Podremos, en el main, inyectar una dependencia en el constructor y luego cambiarla en el medio:
 
 public class Main {
 	
