@@ -1,0 +1,94 @@
+DEPENDENCY INJECTION
+─────────────────────┘
+
+Podemos definir distintas clases de la siguiente manera
+
+@Component
+class YourBusinessClass {
+	Dependency1 dependency1;
+	Dependency2 dependency2;
+	
+	public String toString() {
+		return "Using " + dependency1 + " and " + dependency2;
+	}
+}
+
+@Component
+class Dependency1 {}
+
+@Component
+class Dependency2 {}
+
+
+Podríamos pensar que estamos injectando Dependency1 y 2 en la clase YourBusinessClass, pero al hacer un sysout vemos que estamos usando "null and null", esto es porque dependency1 y 2 son campos que fueron creados dentro de la clase YourBusinessClass pero nunca inicializados. Al agregar @Autowired a ambos campos estamos haciendo una inyección de dependencias mediante REFLEXION, osea, sin setters ni constructores, sino por medio de Spring. Esta inyección es por campos o "field injection"".
+
+@Component
+class YourBusinessClass {
+	@Autowired
+	Dependency1 dependency1;
+	@Autowired
+	Dependency2 dependency2;
+	
+	public String toString() {
+		return "Using " + dependency1 + " and " + dependency2;
+	}
+}
+
+Ahora si veremos que estamos usando instancias de las clases Dependency1 y 2 que fueron creadas por Spring.
+
+
+También podemos forzar a Spring a hacer inyección de dependencias de distintas maneras. Por ejemplo si agregamos setters al código anterior y cambiamos el @Autowired a esos setters:
+
+@Component
+class YourBusinessClass {
+	Dependency1 dependency1;
+	Dependency2 dependency2;
+
+	@Autowired
+	public void setDependency1(Dependency1 dependency1) {
+		System.out.println("Setter Injection - setDependency1");
+		this.dependency1 = dependency1
+	}
+	
+	@Autowired
+	public void setDependency2(Dependency2 dependency2) {
+		System.out.println("Setter Injection - setDependency2");
+		this.dependency2 = dependency2
+	}
+
+	public String toString() {
+		return "Using " + dependency1 + " and " + dependency2;
+	}
+}
+
+Ahora vemos que Spring injecta las dependencias 1 y 2 a la clase YourBusinessClass pero por setter. Todo funcionará igual, veremos que el toString() nos da el mismo resultado que antes, usando las instancias creadas por Spring, pero la forma en que son creadas es distinta, y lo podemos ver por los dos sysouts que veremos diciendo "Setter Injection - ...".
+
+Podemos hacer lo mismo por constructor de la siguiente manera:
+
+
+@Component
+class YourBusinessClass {
+	Dependency1 dependency1;
+	Dependency2 dependency2;
+
+	@Autowired
+	public YourBusinessClass(Dependency1 dependency1, Dependency2 dependency2) {
+		super();
+		System.out.println("Constuctor Injection");
+		this.dependency1 = dependency1;
+		this.dependency2 = dependency2;
+	}
+
+	public String toString() {
+		return "Using " + dependency1 + " and " + dependency2;
+	}
+}
+
+Ahora vemos de nuevo en el toString() que las dependencias usadas son exactamente las mismas, son las instancias creadas por Spring pero también vemos el sysout que nos indica que la inyección de dependencias esta vez fue hecha por constructor.
+La ventaja de hacer inyección de dependencias por constructor es que el decorator @Autowired no es obligatorio.
+
+
+Que tipo de inyección de dependencias usar ?
+─────────────────────────────────────────────┘
+
+Spring recomienda usar inyección de dependencias basadas en constructores así de esa manera toda la inicialización de una clase ocurre toda en un mismo método, y una vez que la inicialización terminó, el Bean ya está listo para ser usado.

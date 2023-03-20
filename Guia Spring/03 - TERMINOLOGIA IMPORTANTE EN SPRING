@@ -1,0 +1,48 @@
+03 - TERMINOLOGIA IMPORTANTE EN SPRING
+───────────────────────────────────────┘
+
+En apliaciones reales existen una gran cantidad de dependencias. Las multiples capas (WEB, BUSINESS, DATA) son dependientes entre si y existen miles de dependencias entre ellas.
+Spring Framework facilita la creación de aplicaciones removiendo la responsabilidad de crear instancias u objetos y sus dependencias y haciendo foco en la lógica de negocio.
+Esto se logra a través de anotaciones creando componentes con @Component o @Bean y dependencias con @Autowire.
+
+@Component(...): Una instancia de la clase decorada será manejada por el framework Spring. Es una de las anotaciones más importantes de Spring.
+
+@ComponentScan("package"): Es cómo Spring busca las clases @Component. Spring buscará los componentes necesarios en el paquete "package" y todos sus subpaquetes.
+
+Dependencia: Son insntancias de clases que necesitamos pasarle a otra clase para que funcione.
+
+Inyección de dependencias: Spring primero intenta identificar todos los @Component, identificará cuales son las dependencias de estos componentes y los intentará conectar. Osea, Spring identifica Beans, sus dependencias y los cablea o conecta (wire them together). 
+
+Inversion de Control: Antes lo que hacíamos es crear objetos (var game = new MarioGame()), pasarlos como dependencias (var gameRunner = new GameRunner(MarioGame)) cuando creamos nuevos objetos, y los conectamos o cableamos. En estos casos el programador está en control, explicitamente escribiendo código para instanciar e inyectar dependencias. La inversión de control es ceder ese control a Spring mediante anotaciones o decorators. Al definir @Component, @Autowired, estamos dejando que Spring haga todo esto por nosotros. Esto en proyectos de gran tamaño es algo vital.
+	- Spring Beans: Cualquier objeto manejado por Spring es un Spring Bean.
+	- IoC Container:  Es el componente en el framework que maneja los ciclos de vida de los Beans y dependencias.
+	- Autowiring: Proceso de conectar las dependencias para un Bean. Cuando Spring detecta un Bean intenta identificar cuales son las dependencias que necesita, las busca y las inyecta.
+
+
+Cuando usar @Component y @Bean ?
+──────────────────────────────────┘
+
+ ┌─────────────┬───────────────────────────────────────────┬───────────────────────────────────────────────────┐
+ │             │ @Component                                │   @Bean                                           │
+ ├─────────────┼───────────────────────────────────────────┼───────────────────────────────────────────────────┤
+ │ Donde se    │ Puede ser usado en cualquier clase Java   │   Típicamente usado en métodos específicos        │
+ │ usa ?       │                                           │   en Spring Configuration classes                 │
+ ├─────────────┼───────────────────────────────────────────┼───────────────────────────────────────────────────┤
+ │ Facilidad   │ Muy facil de usar. Solamente agregamos    │   Necesitamos escribir todo el código para        │
+ │ de uso      │ la anotación                              │   la creación del Bean y también para la          │
+ │             │                                           │   inyección de dependencias                       │
+ ├─────────────┼───────────────────────────────────────────┼───────────────────────────────────────────────────┤
+ │ Autowiring  │ Yes - Field, Setter or Constructor inj    │   Yes - method call or method parameters          │
+ │             │                                           │                                                   │
+ ├─────────────┼───────────────────────────────────────────┼───────────────────────────────────────────────────┤
+ │ Quien crea  │ Spring Framework                          │   Nosotros escribimos el código de creación       │
+ │ el Bean ?   │                                           │                                                   │
+ ├─────────────┼───────────────────────────────────────────┼───────────────────────────────────────────────────┤
+ │ Recomendado │ Instanciar Beans para tu propio código    │  1: Lógicas de negocios custom que queremos hacer │
+ │ para        │ o aplicación                              │  específicamente nosotros antes de crear un Bean  │
+ │ **          │                                           │  2: Instanciar Beans para librerías de 3ros       │
+ └─────────────┴───────────────────────────────────────────┴───────────────────────────────────────────────────┘
+
+** Para explayar un poco más: usar @Bean cuando tenemos lógica de negocios especiales antes de crear el bean. Por ejemplo, queremos chequear varios datos antes de crear el Bean "Persona", y queremos que se cumplan ciertas condiciones antes. Otro caso es cuando queremos hacer Beans para liberías externas, por ejemplo, estamos usando Spring Security, nosotros no tenemos ningún acceso al código de Spring Security por lo que no podemos modificar ese código y agregar un @Component en el, entonces si queremos crear Beans para Spring Security necesitamos usar @Bean.
+En cambio @Component es recomendado para aplicaciones propias, si estamos codeando componentes para nustra app y creando Beans, es recomendable usar @Component, a menos que, como dijimos antes, tenemos mucha lógica particular para crear el Bean.
+
