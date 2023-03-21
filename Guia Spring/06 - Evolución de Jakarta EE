@@ -1,0 +1,39 @@
+06 - Evolución de Jakarta EE
+─────────────────────────────┘
+
+Inicialmente todas las entreprise capabilities fueron construidas en JDK o Java Development Kit, o en el lenguaje Java. Con el tiempo fueron separados bajo el nombre de J2EE o Java 2 Platform Enterprise Edition. Luego se renombró JEE o Java Enterprise Edition.
+Luego fue renombrado Jakarta EE (Oracle dió los derechos de JEE a Eclipse Fundation)
+Especificaciones importantes:
+	- Jakarta Server Pages (JSP) - utilizado para crear vistas en web apps
+	- Jakarta Standard Tag Library (JSTL) - para mostrar información dinámicamente en web pages
+	- Jakarta Enterprise Beans (EJB)
+	- Jakarta RESTful Web Services (JAX-RS)
+	- Jakarta Bean Validation
+	- Jakarta Context and Dependency Injection (CDI) - especificaciones alrededor de como hacer DI 
+	- Jakarta Persistance API (JPA) - como interactuar con BD relacionales
+
+Jakarta EE es soportado por Spring 6 y Spring Boot 3 y por eso en muchas clases hacemos referencia al paquete jakarta.packages (en vez de javax como antes).
+
+
+Jakarta Contexts & Dependency Injection (CDI)
+─────────────────────────────────────────────┘
+
+Es una especificación o interfaz (sin implementación presente). Spring Framework implementa CDI y como parte de CDI hay algunas anotaciones importantes que son soportadas por Spring:
+	- Inject(muy similar a Autowired en Spring)
+	- Named(muy similar a Component en Spring)
+	- Qualifier
+	- Scope
+	- Singleton
+
+Las anotaciones Qualifier, Scope y Singleton son muy similares a las de Spring.
+
+Para usar CDI hay que agregar la dependencia en pom.xml:
+
+	<dependency>
+		<groupId>jakarta.inject</groupId>
+		<artifactId>jakarta.inject-api</artifactId>
+		<version>2.0.1</version>
+	</dependency>
+
+Y para crear Beans, realizar inyección de dependencias, etc hay que definir todo en un nuevo archivo XMLConfiguration que hace que sea muy engorroso. Es importante saber que existe el CDI, su funcionamiento y su similaridad con Spring, pero siempre es más útil y más facil de usar Spring. Al usar CDI no contaminamos los POJOs con anotaciones de Spring y hace un código más limpio, pero generar todas las relaciones, definiciones de beans, etc en otro nuevo XML es muy engorroso. También al usar Spring es mucho más facil de mantener el código. Debuguear es más facil en XML Configs en vez de Annotations.
+Es muy importante también no mezclar Spring Boot y sus anotaciones con XML Configs, o se usa un método o el otro, pero nunca los 2 juntos.

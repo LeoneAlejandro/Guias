@@ -1,0 +1,83 @@
+07 - Spring Annotations & Concepts Review
+──────────────────────────────────────────┘
+
+ANNOTATIONS
+───────────┘
+
+@Configuration 
+		Indica que una clase declara uno o más métodos @Bean y pueden ser procesados por el Spring container para generar bean definitions. Al agregar esta anotación significa que estamos creando un "Java Configuration File" y en este archivo podemos definir cualquier cantidad de métodos y podemos agregar anotaciones @Bean en estos métodos y Spring automáticamente creará beans para todos los valores que devuelvan estos métodos.
+
+@ComponentScan
+		Define paquetes específicos a escanear para encontrar componentes. Spring Framework necesita saber donde los componentes son definidos. Si no especificamos un paquete en la anotación se escanearán todos los paqutes de la clase anotada y sus subpaquetes.
+
+@Component
+		Indica que una clase anotada es un componente. Si la clase anotada es parte del paqute anotado como @ComponentScan, un bean será creado para la clase anotada como @Component.
+
+@Service
+		Es una especialización de @Component indicando que la clase anotada es un componente y contiene lógica de negocio.
+
+@Controller
+		Es una especialización de @Component que indica que la clase anotada es un componente y es un "Controller" (ejemplo: web controller). Típicamente usado para definir controladores en aplicaciones web y REST APIs
+
+@Repository
+		Otra especialización de @Component que indica que la clase anotada es usada para recuperar y o manipular data de una base de datos.
+
+@Primary
+		Indica que un bean tiene priodidad sobre otro cuando dos o más candidatos califican para ser autowired en una dependencia con un único valor. Si tenemos que inyectar un "game" en la clase "GameRunner" y tenemos 2 candidatos, Spring devolverá una excepción a menos que un game esté anotado como @Primary o especifiquemos una dependencia a inyectar.  
+
+@Qualifier
+		Usado en un campo o parámetro como un identificador para beans candidatos a ser inyectados cuando se hace el autowiring. @Primary es muy genérico, indicamos que un bean tiene prioridad sobre el resto para ser inyectado como una dependencia. @Qualifier le da un identificador único y específico que puede ser usado para indicar cual dependencia queremos inyectar. @Qualifier tiene prioridad sobre @Primary si es que se indica cual qualifier inyectar.
+		Al inyectar una dependencia, por ejemplo, en un constructor debemos indicarlo de la siguiente manera "public GameRunner(@Qualifier("SuperContraGame") GamingConsole game)". Si no especificamos el @Qualifier("SuperContraGame") antes de pasar el parámetro "GamingConsole game", se inyectará el bean con @Primary o devolverá excepción.
+
+@Lazy
+		Indica que un bean debe ser inicializado solamente si se hace referencia al mismo. De no tener esta anotación la inicialización es "Eager" que significa que todos los componentes se inicializarán al inicio de la applicación independientemente de si el componente será usado o no a lo largo de su vida.
+
+@Scope(value=ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+		Define a un bean como "prototupo" lo que hará que una nueva instancia sea creada cada vez que se haga referencia a un bean. El scope por defecto (sin ninguna anotación) es "Singleton" que indica que el objeto o bean será el mismo siempre, osea una sola instancia por IoC Container.
+
+@PostConstruct
+		Identifica un método que será ejecutado luego de inyectar una dependencia para realizar alguna inicialización. Luego de que todas las dependencias son inyectadas en un bean, si queremos realizar alguna inicialización o lógica, anotamos al método a ejecutarse como @PostConstruct.
+
+@PreDestroy
+		Identifica a un método que será ejecutado inmediatamente antes de que la instancia sea destruida o removida por el container. Usualmente usado para liberar recursos que un bean específico está usando antes de ser removido. Justo antes de que un bean sea removido por el container o el Spring IoC Context, llamará al método anotado por @PreDestroy.
+
+@Name
+		Anotación de CDI (Jakarta Context & Dependency Injection) muy similar a @Component
+
+@Inject
+		Anotación de CDI muy similar a @Autowired
+
+
+
+CONCEPTOS
+─────────┘
+
+Dependency Injection:
+		Spring Framework necesita identificar los beans, sus dependencias y necesita cablear (wire) las dependencias en los beans.
+
+Inversión de Control:
+		Ceder la responsabilidad de crear beans e inyectar sus dependencias a Spring. Antes lo hacía el programador y él es quien tenía el control, pero ahora se cede la responsabilidad a Spring Framework.
+
+Constructor Injection:
+		Inyección de dependencias por constructor. Llamamos al constructor de una clase para inyectar su dependencia en el.
+
+Setter Injection:
+		Utilización de métodos setters para inyectar una dependencia.
+
+Field Injection:
+		Si no tenemos constructores ni métodos setters para inyectar una dependencia, Spring usa inyección por reflexión (reflection) y se llama Field Injection.
+
+IoC Container:
+		Spring IoC Context que maneja Spring Beans y su ciclo de vida. El IoC Container es responsable de la creación, vida y terminación de los beans.
+
+Bean Factory:
+		Spring IoC Container básico. Usado raramente.
+
+Application Context:
+		Spring IoC Container avanzado con features empresiariales específicos. Fácil de usar en web apps con "internalization features" y buena integración con Spring AOP.
+
+Spring Beans:
+		Objetos manejados por Spring.
+
+Auto-wiring:
+		Cuando tenemos Sping Beans siempre tenemos dependencias. Spring necesita encontrar las dependencias correctas e inyectarlas en el Bean. Este proceso de inyección de dependencias, cablead o "wiring" se llama "Autowiring".

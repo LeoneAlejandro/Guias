@@ -1,0 +1,63 @@
+04 - BEANS SCOPE: SINGLETON VS PROTOTYPE
+─────────────────────────────────────────┘
+
+Se puede agregar @Scope(value="prototype") o @Scope(value="singleton") para definir el scope de un Bean. Se puede lograr lo mismo con (value=ConfigurableBeanFactory.SCOPE_PROTOTYPE) o SCOPE_SINGLETON.
+
+Podemos ver que si hacemos dos clases distintas:
+
+		@Component
+		public NormalClass {}
+
+		@Component
+		@Scope(value=ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+		public PrototypeClass {}
+
+Y luego hacemos uns sysout de las mismas repetidas veces de la siguiente manera:
+
+		System.out.println(context.getBean(NormalClass.class));
+		System.out.println(context.getBean(NormalClass.class));
+		System.out.println(context.getBean(NormalClass.class));
+
+
+		System.out.println(context.getBean(PrototypeClass.class));
+		System.out.println(context.getBean(PrototypeClass.class));
+		System.out.println(context.getBean(PrototypeClass.class));
+
+
+veremos que la clase NormalClass sin tener ningun tipo de Scope (por default es un singleton) siempre hará referencia al mismo lugar en memoria, osea, siempre será la misma instancia y solo podrá haber una instancia de ese objeto por IoC Container. En cambio el sysout de PrototypeClass será siempre distinto, los HashCodes serán distintos en cada println ya que cada vez que llamamos a getBean() se creará una nueva instancia, bean u objeto de la clase PrototypeClass y nos la devolverá en el print. Se creará una instancia diferente cada vez que el bean sea referenciado, y podemos tener muchas instancias por IoC Container.
+
+También tenemos scopes aplicables SOLAMENTE para aplicaciones WEB o "web-aware SpringApplicationContext". 
+Estos scopes son:
+ -"Request" donde tendremos una sola instancia por cada HTTP request.
+ -"Sesion" un objeto o instancia por cada HTTP Session o sesión de usuario.
+ -"Application" tenemos un objeto por web app runtime. Siempre es el mismo objeto para toda la aplicación.
+ -"Websocket" un objeto por instancia de Websocket.
+
+
+  ┌─────────────┬───────────────────────────────────────────┬───────────────────────────────────────────────────┐
+  │             │  Prototype                                │   Singleton                                       │
+  ├─────────────┼───────────────────────────────────────────┼───────────────────────────────────────────────────┤
+  │ Instancias  │  Puede haber muchas por IoC Container     │   Solo una por IoC Container    	 	 	        │
+  ├─────────────┼───────────────────────────────────────────┼───────────────────────────────────────────────────┤
+  │ Beans	    │ Una nueva instancia por cada referencia   │   La misma instancia reusada siempre		        │
+  │ de uso      │ al bean                                   │   										        │
+  ├─────────────┼───────────────────────────────────────────┼───────────────────────────────────────────────────┤
+  │ Default	    │ No, hay que especificar con @Scope  	    │   Yes, sin anotación escpecial @Scope siempre  	│
+  │             │                                           │   serán singletons								│
+  ├─────────────┼───────────────────────────────────────────┼───────────────────────────────────────────────────┤
+  │ Code Snippet│ @Scope(value=ConfigurableBeanFactory  	│   Nada o Scope pero con SCOPE_SCOPE		        │
+  │ 		    │					.SCOPE_PROTOTYPR)       │                                                   │
+  ├─────────────┼───────────────────────────────────────────┼───────────────────────────────────────────────────┤
+  │ Uso 	    │ Raramente usado. Usado para beans para un │  	Beans genéricos que pueden usarse a lo largo de │
+  │ 	        │ estado, por ejemplo información de usuario│   toda la aplicación, sin información específica 	│
+  │				│ no podemos usar siempre la misma insancia │   o única.										│
+  │             │ tendremos un bean por usuario             │        											│
+  └─────────────┴───────────────────────────────────────────┴───────────────────────────────────────────────────┘
+
+
+
+Diferencia entre Java Singleton (GOF) vs Spring Singleton
+──────────────────────────────────────────────────────────┘
+
+Es muy importante entender la diferencia. Singleton es un patrón de diseño. Hay un libro muy importante sobre patrones de diseño (GOF - gang of four) donde describen un Java Singleton como una instancia objeto por JVM o Java Virtual Machine, por en cambio un Spring Singleton es un objeto o instancia por Spring IoC Container.
+Un Java Singleton y un Spring Singleton pueden ser lo mismo solamente si tenemos un solo IoC Container por JVM, pero si corremos múltiples IoC Containers por JVM, tendremos múltiples Spring Singletons, aunque no es frecuente correr más de un IoC Container por JVM. En el 99.99% de los casos JS y SS son lo mismo.

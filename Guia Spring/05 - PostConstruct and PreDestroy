@@ -1,0 +1,31 @@
+05 - PostConstruct and PreDestroy
+──────────────────────────────────┘
+
+La anotación @PostConstruct puede ser usada en un método que necesita ser ejecutado inmediatamente después de que la inyección de dependencias se haya realizado para realizar alguna inicialización. Este método con el decorator @PostConstruct será invocado o ejecutado antes de que la instancia de la clase creada pueda ser usada por cualquier otra clase. En otras palabras, inmediatamente después de crear la instancia de la clase SomeClass mediante el decorator @Component y antes de que la instancia de la clase SomeClass pueda ser puesta en servicio y pueda ser usada en cualquier otra parte de la app, el método initialize() será ejecutado.w
+Podemos hacer algo similar con el componente @PreDestroy donde un método será ejecutado inmediatamente antes de ser destruido. Esto es muy útil para hacer un cleanup y liberar recursos antes de destruir una instancia. 
+
+Si tenemos el siguiente código
+
+	@Component
+	public SomeClass {
+		private SomeDependency someDependency;
+
+		public SomeClass(SomeDependency someDependency) {
+			super();
+			this.someDependency = someDependency;
+			System.out.println("All dependencies are ready!")
+		}
+
+		@PostConstruct
+		public initialize() {
+			someDependency.getReady();
+		}
+
+		@PreDestroy
+		public void cleanUp() {
+			System.out.println("Cerrando conexiones activas con BD y haciendo cleanup");
+		}
+	}
+
+Veremos que cuando Spring crea la instancia SomeClass mediante el decorator @Component (que necesitará de otra clase SomeDependency también con el decorator @Component) inyectará la dependencia SomeDependency necesaria en el constructor. Luego de crear esta instancia llamará automáticamente al método initialize() ya que el mismo tiene el decorator @PostConstruct. En la salida veremos entonces el sysout de "All dependencies are ready!" y luego la lógica del método initialize() inmediatamente después.
+Por último, la última linea que veremos será "Cerrando conexiones activas con BD y haciendo cleanup". Osea, justo antes que un bean sea removido del container, el método cleanUp() es ejecutado.

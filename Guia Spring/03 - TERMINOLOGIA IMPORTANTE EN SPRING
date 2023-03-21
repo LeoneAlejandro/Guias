@@ -7,7 +7,7 @@ Esto se logra a través de anotaciones creando componentes con @Component o @Bea
 
 @Component(...): Una instancia de la clase decorada será manejada por el framework Spring. Es una de las anotaciones más importantes de Spring.
 
-@ComponentScan("package"): Es cómo Spring busca las clases @Component. Spring buscará los componentes necesarios en el paquete "package" y todos sus subpaquetes.
+@ComponentScan("package"): Es cómo Spring busca las clases @Component. Spring buscará los componentes necesarios en el paquete "package" y todos sus subpaquetes. Si intentamos usar un componente o bean que esté en otro paquete y no lo declaramos tendremos un error.
 
 Dependencia: Son insntancias de clases que necesitamos pasarle a otra clase para que funcione.
 
@@ -19,8 +19,22 @@ Inversion de Control: Antes lo que hacíamos es crear objetos (var game = new Ma
 	- Autowiring: Proceso de conectar las dependencias para un Bean. Cuando Spring detecta un Bean intenta identificar cuales son las dependencias que necesita, las busca y las inyecta.
 
 
+Spring Stereotype Annotations
+──────────────────────────────┘
+
+@Component - Anotación genérica aplicable a cualquier clase.
+    - Es la base de todas las Spring Stereotype Annotations
+    - Especializaciones de @Component, estas son anotaciones específicas que se usan en vez de @Component:
+            - @Service - Lo usamos para indicar que la clase anotada contiene logica de negocio.
+            - @Controller - Indica que la clase es un Controller (por ej web controller), sirve para definir controllers en web Apps y REST APIs
+            - @Repository - Se usa cuando un bean habla con una BD, guardando, leyendo o manipulando data
+
+
+SIEMPRE es recomendable usar la anotación más específica posible para cada caso. Si una clase maneja una BD siempre usar @Repository, si una clase tiene lógica de negocios SIEMPRE usar @Service. Al usar una anotación específica le damos información al framework de cuales son nuestras intenciones al usar una clase. También podemos usar AOP o "aspect oriented programming" más tarde para agregar funcionamiento adicional por encima (ejemplo: al usar @Repository, Spring automáticamente nos da JDBC Exceptions translation features).
+
+
 Cuando usar @Component y @Bean ?
-──────────────────────────────────┘
+─────────────────────────────────┘
 
  ┌─────────────┬───────────────────────────────────────────┬───────────────────────────────────────────────────┐
  │             │ @Component                                │   @Bean                                           │
@@ -43,6 +57,13 @@ Cuando usar @Component y @Bean ?
  │ **          │                                           │  2: Instanciar Beans para librerías de 3ros       │
  └─────────────┴───────────────────────────────────────────┴───────────────────────────────────────────────────┘
 
-** Para explayar un poco más: usar @Bean cuando tenemos lógica de negocios especiales antes de crear el bean. Por ejemplo, queremos chequear varios datos antes de crear el Bean "Persona", y queremos que se cumplan ciertas condiciones antes. Otro caso es cuando queremos hacer Beans para liberías externas, por ejemplo, estamos usando Spring Security, nosotros no tenemos ningún acceso al código de Spring Security por lo que no podemos modificar ese código y agregar un @Component en el, entonces si queremos crear Beans para Spring Security necesitamos usar @Bean.
+** Para explayar un poco más: usar @Bean cuando tenemos lógica de negocios especiales antes de crear el bean. Por ejemplo, queremos chequear varios datos antes de crear el Bean "Persona", y queremos que se cumplan ciertas condiciones antes (edad, altura, género, etc). Otro caso es cuando queremos hacer Beans para liberías externas, por ejemplo, estamos usando Spring Security, nosotros no tenemos ningún acceso al código de Spring Security por lo que no podemos modificar ese código y agregar un @Component en el, entonces si queremos crear Beans para Spring Security necesitamos usar @Bean.
 En cambio @Component es recomendado para aplicaciones propias, si estamos codeando componentes para nustra app y creando Beans, es recomendable usar @Component, a menos que, como dijimos antes, tenemos mucha lógica particular para crear el Bean.
 
+
+Inicialización Eager vs Lazy
+─────────────────────────────┘
+
+Eager initialization: es la inicialización de Spring y sus componentes por defecto. Todos los beans y componentes serán inicializados al correr un proyecto sin importar si se usa o no. Se puede agregar la anotación Lazy para cambiar este comportamiento. Se recomienda siempre la inicialización Eager ya que si hay algun error en la configuración de Spring lo detectaremos automáticamente.
+
+Lazy initialization: @Lazy: Se le puede agregar este decorator a un component o bean para que no sea creado cuando se inicializa context, sino cuando el mismo es usado. Si no usamos @Lazy y ponemos un sysout en el constructor de un bean, podemos ver el sysout al correr el programa ya que Spring inicializa todos los components y beans al correr el programa. Si agregamos @Lazy veremos que el sysout desaparece, y si luego hacemos uso del Bean o Component (llamamos un método de ese bean) veremos que se inicializa y luego llama al método todo junto. Podemos usar @Lazy en cualquier clase con el decorator @Component o cualquier método con el decorator @Bean. No se recomienda usar siempre ya que si hay algun error en la inicialización de algun componente lo detectaremos solo si ese componente es usado o llamado. En cambio si la inicialización es aEger se detectará al iniciar la aplicación. La ventaja de la inicialización Lazy es que utilizamos menos memoria ya que no se crean los objetos al inicio, sino solamente cuando estos son usados. Solo se recomienda para Beans que se usan muy rara vez en una app.
