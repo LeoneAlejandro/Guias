@@ -2,7 +2,7 @@
 ──────────────────────────────────────────┘
 
 ANNOTATIONS
-───────────┘
+────────────┘
 
 @Configuration 
 		Indica que una clase declara uno o más métodos @Bean y pueden ser procesados por el Spring container para generar bean definitions. Al agregar esta anotación significa que estamos creando un "Java Configuration File" y en este archivo podemos definir cualquier cantidad de métodos y podemos agregar anotaciones @Bean en estos métodos y Spring automáticamente creará beans para todos los valores que devuelvan estos métodos.
@@ -50,7 +50,7 @@ ANNOTATIONS
 
 
 CONCEPTOS
-─────────┘
+──────────┘
 
 Dependency Injection:
 		Spring Framework necesita identificar los beans, sus dependencias y necesita cablear (wire) las dependencias en los beans.
@@ -81,3 +81,26 @@ Spring Beans:
 
 Auto-wiring:
 		Cuando tenemos Sping Beans siempre tenemos dependencias. Spring necesita encontrar las dependencias correctas e inyectarlas en el Bean. Este proceso de inyección de dependencias, cablead o "wiring" se llama "Autowiring".
+
+
+
+Spring Big Picture
+───────────────────┘
+
+Spring Core:
+	Todos los conceptos vistos anteriormente (IoC Container, DI, Autowiring) son partes fundamentales para crear aplicaciones, RESTful APIs, implementar autorización y autenticación, hablar con bases de datos, o integración con otros sistemas, etc. Estos conceptos son parte de Spring Core.
+
+Spring Framework:
+	Contiene múltiples Spring Modules o modulos: Dependiendo de lo que querramos construir usaremos algunos de los siguiente módulos.
+		- Fundamental features: Core (IoC Container, DI, Autowiring)
+		- Web: Spring MVC (web apps, REST API)
+		- Web Reactive app: Spring WebFlux, etc
+		- Data Access: JDBC, JPA
+		- Integration: JMS
+		- Testing: Mock Objects, Spring MVC Tests
+
+Por que Spring Framework está divido en modulos ? Para ofrecer flexibildad, no es necesario usar todo lo que ofrece Spring, podemos elegir solo lo necesario.
+
+Por que es tan popular el ecosistema de Spring ? Loose Coupling; spring maneja la creación y wiring de beans y sus dependencias. Esto hace que sea muy facil crear aplicación sin tanto acoplamiento. Esto también hace muy facil el testeo con Spring Unit Testing. Reduce mucho el boilerplate code o código redundante, verborrágico, o andamiaje; por ejemplo no es necesario el manejo de excepciones en TODOs los métodos, todos los Checked Exceptions son convertidos a Runtime o Unchecked Exceptions.
+Por ejemplo antes se necesitaban 50 o 60 lineas de código para comunicarse con una base de datos, gracias a Spring esto hoy se reduce a 5 lineas de código.
+También Spring provee fexibilidad en la arquitectura de código gracias a sus modulos, y podemos elegir cual de ellos usar para nuestro proyecto. 

@@ -28,4 +28,4 @@ Si tenemos el siguiente código
 	}
 
 Veremos que cuando Spring crea la instancia SomeClass mediante el decorator @Component (que necesitará de otra clase SomeDependency también con el decorator @Component) inyectará la dependencia SomeDependency necesaria en el constructor. Luego de crear esta instancia llamará automáticamente al método initialize() ya que el mismo tiene el decorator @PostConstruct. En la salida veremos entonces el sysout de "All dependencies are ready!" y luego la lógica del método initialize() inmediatamente después.
-Por último, la última linea que veremos será "Cerrando conexiones activas con BD y haciendo cleanup". Osea, justo antes que un bean sea removido del container, el método cleanUp() es ejecutado.
+Por último, la última linea que veremos será "Cerrando conexiones activasc on BD y haciendo cleanup". Osea, justo antes que un bean sea removido del container, el método cleanUp() es ejecutado.
