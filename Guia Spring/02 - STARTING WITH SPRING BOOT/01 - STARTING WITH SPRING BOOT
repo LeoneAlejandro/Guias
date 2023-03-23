@@ -1,0 +1,116 @@
+02 - STARTINGW WITH SPRING BOOT
+───────────────────────────────┘
+
+El objetivo más importante de Spring Boot es ayudar a construir production-ready projects o apps de manera rápida.
+Para crear proyectos rápidos tenemos las siguientes herramientas:
+
+	1) Spring initializer: ayuda a crear proyectos en blanco de manera rápida definiendo dependencias (start.spring.io).
+	2) Spring Boot Starter Projects: nos ayuda a definir rápidamente dependencias para nuestro proyecto.
+	3) Spring Boot Auto Configuration: provee automáticamente configuración basada en las dependencias definidas en el class path.
+	4) Spring Boot Dev Tool: ayuda a realizar cambios en nuestra app sin la necesidad de manualmente resetear el servidor.
+
+Los features importantes para que un proyecto sea production-ready son:
+
+	5) Logging
+	6) Configs diferentes para diferentes envirorments (production, staging, testing). Spring provee Profiles y ConfigurationProperties
+	7) Monitoreo (Spring Boot Actuator)
+
+
+Features que provee Spring Boot para crear proyectos rápidamente:
+─────────────────────────────────────────────────────────────────┘
+
+2) Spring Boot Starter Projects:
+
+	Cuando creamos nuestro proyecto necesitamos una gran variedad de frameworks. Por ejemplo para construir
+
+		- REST APIs: Necesito Spring, Spring MVC, Tomcat, JSON conversion, etc
+		- Escribir Unit Test: Necesito Spring Test, JUnit, Mockito, etc
+
+	La pregunta es, como los agrupamos de forma facil para construir aplicaciones ? Esto es lo que nos provee Starter Projects, nos provee convenientes dependency descriptors para diferentes features. Si abrimos el POM.xml de un proyecto básico iniciado en spring initializr con Starter Web veremos que tenemos 2 dependencias principales, una de las cuales es Spring Boot Starter Web, y si le hacemos control click nos mostrará todas las dependencias que están agrupadas dentro de la dependencia prrincipal. Las dependencias inherentes de SBSW son:
+
+		- Spring Boot Starter: nos ayuda a levantar el Spring context
+		- Spring Boot Starter Json: nos ayuda con la conversion de bin a JSON y JSON a bin
+		- Spring Boot Starter Tomcat: hace que la app corra en TOMCAT
+		- Spring WEB y WEBMVC: Spring MVC framework para nuestra crear nuestra REST API 
+
+
+3) Spring Boot Auto Configuration:
+
+	Para queremos constuir una app web con Spring Boot necesitamos muchas configuraciones como ComopnentScan, DispatcherServlet, DataSources, JSON Conversion, etc.
+	Spring Boot Auto Configuration logra auto configurar todo esto por nosotros decidiendo en base a que frameworks existen en nuestro Class Path y cual es la configuración inicial o existente (annotaciones, etc).
+	Toda la lógica de autoconfiguración se encuentra en "Project/Maven Dependencies/spring-boot-autoconfigure-ver.jar".
+
+
+4) Spring Boot Dev Tools:
+
+	Ayuda a incrementar la productividad de los developers. Para ayudar a aumentar la productividad Dev Tools nos provee la simpleza de no tener que resetear manualmente el servidor al hacer cambios en nuestro código. Una vez que guardamos algun cambio en nuestro proyecto veremos que el servidor se resetea automáticamente.
+
+
+
+Features que provee Spring Boot para crear proyectos production-ready:
+──────────────────────────────────────────────────────────────────────┘
+
+5 y 6) Manejo de App Configs con Profiles: 
+
+	Cuando trabajamos sobre un proyecto tenemos distintos environments (Dev, QA, Stage, Prod, etc) y cada env. diferente necesita distintas configuraciones para la misma app, por ejemplo, en cada env. podemos estar hablando con una base de datos distinta, o distintos web services. Los Profiles nos deja proveer environment-specific-configs.
+	Como logramos esto ? Podemos ir a src/main/resources y crear un nuevo application.properties, como por ej, "application-dev.propperties" donde podemos configurar distintos aspectos dependiendo lo que necesitamos, por ej, loggin.level.org.springframework=trace, esta config hará que los logs que veamos sean mucho más específicos que el default (=info), esto nos ayuda a la hora de ser devs para ver como funciona nuestra app. Si no especificamos que profile usar por defecto, se usará el del file "application.properties", pero si en este file definimos "spring.profiles.active=dev" ahora el loggin será el que definimos en "application-dev.propperties" ya que tiene mayor prioridad. Los loggings más usados son:
+		trace
+		debug
+		info
+		warning
+		error
+		off
+
+	Cada logging mostrará distinta información y ocultará otra para trabajar más facilmente, están ordenados por orden por lo que off no mostrará nada, y cada tipo de loggin mostrará más información a medida que vayamos subiendo (trace mostrará todo, info mostrará info+warining+error, etc).
+
+	Se puede configurar distintas propiedades por perfil de la siguiente manera:
+	Supongamos que en nuestro file "application.properties" tenemos los siguientes valores a usar
+
+			currency-service.url = http://default.in28minutes.com
+			currency-service.username = defaultusername
+			currency-service.key = defaultkey
+
+	Luego podemos crear una clase como la siguiente:
+
+			@ConfigurationProperties(prefix="currency-service")
+			@Component
+			public class CurrencyServiceConfiguration {
+				
+				private String url;
+				private String username;
+				private String key;
+
+				+Getters and Setters
+			}
+
+
+	De esta manera podemos mapear los datos de application.properties al CurrencyServiceConfiguration service. Así podemos ver que si escribimos un controller como el siguiente:
+
+			@RestController
+			public class CurrencyConfigurationController {
+
+				@Autowired
+				private CurrencyServiceConfiguration config;
+
+				@RequestMapping("/currency-config") 
+				public CurrencyServiceConfiguration retriveAll() {
+					return config;
+				}
+			}
+
+	Veremos que si entramos a localhost:8080/currency-config tendremos todos los datos que declaramos en application.properties en el formato de CurrencyServiceConfiguration. 
+	Entonces una combinación de @ConfigurationProperties y perfiles en Spring Boot nos habilita a externalizar toda la configuración necesaria para nuestra aplicación.
+
+
+7) Monitoring:
+
+	La caracterísitca que nos habilita y permite monitorear nuestros proyectos es Spring Boot Actuator. Nos brinda varios endpoints como:
+
+		beans - lista completa de todos los beans en nuestra app
+		health - información sobre nuestra app y su salud (si está corriendo, si está caido, etc)
+		metrics - distintas métricas relacionadas con nuestra app
+		mapping - detalles al rededor de todos nuestros RequestMappings
+		configprops - nos muestra todas las configuraciones de nuestra application.properties
+		env - nos muestra todos los detalles de nuestro environment (puerto usado, version de java, classpath, etc)
+
+	Para hacer uso del acutator por ejemplo entrando al endpoint localhost:8080/actuator/beans donde nos mostrará todos los beans activos, el scope de cada uno (singleton, prototype), los aliases, recursos, dependencias, etc. Lo mismo con el resto de los endpoints recientemente listados. 

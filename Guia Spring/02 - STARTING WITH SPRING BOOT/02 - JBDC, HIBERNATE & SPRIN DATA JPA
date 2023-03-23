@@ -1,0 +1,181 @@
+02 - JPA, HIBERNATE & SPRIN DATA JPA
+─────────────────────────────────────┘
+
+H2 Database:
+────────────┘
+
+	H2 es un sistema de manejo de base de datos en memoria. Este sistema no deja configurar ciertos parámetros para poder desde nuestro navegador modificar bases de datos sobre las que trabajaremos a lo largo del proyecto. La dependencia necesaria en el pom.xml es la siguiente:
+
+		<dependency>
+		    <groupId>org.springframework.boot</groupId>
+		    <artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+		<dependency>
+		    <groupId>com.h2database</groupId>
+		    <artifactId>h2</artifactId>
+		    <scope>runtime</scope>
+		</dependency>
+
+	luego podemos configurar lo siguiente para poder entrar al sistema de manejo de base de datos en el endpoint localhost:8080/h2-database
+
+		spring.h2.console.enabled=true
+		server.contextPath=
+		spring.datasource.url=jdbc:h2:mem:testdb
+
+	También podemos configurar más datos para customizar el acceso como username, password, etc. Luego desde esta url /h2-database podemos crear y modificar tablas, insertar valores y cualquier otro tipo de SQL querys, etc.
+
+
+Para crear un schema y tabla usando h2 debemos crear un archivo llamado "schema.sql" dentro de la carpeta src/main/resources con el formato que querramos que tenga nuestra tabla. Por ejemplo:
+
+		create table course
+		(
+			id bigint not null,
+			name varchar(255) not null,
+			author varchar(255) not null,
+			primary key(id) 
+		);
+
+Ahora cada vez que corramos nuestro proyecto una tabla con el nombre Course y los atributos descriptos será creada.
+
+Tanto cuando usamos JDBC o Spring JPA estamos haciendo SQL queries, pero la diferencia es que en Spring JDBC necesitamos mucha menor cantidad de código para las mismas instrucciones. Un ejemplo del mismo query en JDBC y Spring JPA es el siguiente:
+
+	public void deleteTodo (int id) {
+		PreparatedStatement st = null;
+
+		try {
+			st = db.conn.preparatedStatement("delete from todo where id=?");
+			st.setInt(1, id);
+			st.execute();
+		} catch (SQLException e) {
+			logger.fatal("Query Failed: ", e);
+		} finally {
+			if(st != null) {
+				try {st.close();}
+				catch (SQLException e) {}
+			}
+		}
+	}
+
+	VS Spring JPA
+
+	public void deleteTodo(int id) {
+		jdbcTemplate.update("delete from todo where id=?", id);
+	}
+
+
+EJEMPLO:"QUERYING DATA CON SPRING JDBC
+───────────────────────────────────────┘
+
+Un ejemplo práctico sería, teniendo una clase Course con atributos id, name y author, con getters y setters y constructores, podemos crear la siguiente clase del tipo @Repository
+
+		@Repository
+		public class CourseJdbcRepository {
+
+			@Autowired
+			private JdbcTemplate springJdcbTemplate;
+			
+			private static String INSERT_QUERY =
+					"""
+						insert into course(id, name, author)
+						values(?, ?, ?);	
+					""";
+			
+			private static String DELETE_QUERY =
+					"""
+						delete from course where id=?	
+					""";
+			
+			private static String SELECT_QUERY =
+					"""
+						select * from course where id=?	
+					""";
+			
+			public void insert(Course course) {
+				springJdcbTemplate.update(INSERT_QUERY, course.getId(), course.getName(), course.getAuthor());
+			}
+			
+			public void delete(long id) {
+				springJdcbTemplate.update(DELETE_QUERY, id);	
+			}
+			
+			public Course findById(long id) {
+				return springJdcbTemplate.queryForObject(SELECT_QUERY, new BeanPropertyRowMapper<>(Course.class), id);	
+			}
+			
+Donde tenemos QUERYs específicas y métodos específicos para diferentes consultas o modificaciones de nuestra base de datos. Luego desde un CommandLineRunner podemos pedirle
+
+		@Component
+		public class CourseJdbcCommandLineRunner implements CommandLineRunner {
+
+			@Autowired
+			private CourseJdbcRepository repository;
+			
+			@Override
+			public void run(String... args) throws Exception {
+				repository.insert(new Course(1, "Learn AWS", "AleLeone"));
+				repository.insert(new Course(2, "Learn JDBC", "FiliLeone"));
+				repository.insert(new Course(3, "Learn JPA", "RufinaLeone"));
+				
+				repository.delete(1);
+				
+				System.out.println(repository.findById(2));
+				
+			}
+
+		}
+
+Y veremos que nuestra base de datos primero agregará 3 lineas, luego borrará la primera y luego imprimirá en consola la linea 2. Pero las querys de estos casos son muy engorrosos, el código es muy verborrágico, y tenemos muchas conexiones entre clases. Podemos simplificar mucho esto.
+
+
+JPA:
+────┘
+
+	Al usar JPA podemos simplificar mucho todo este proceso y lo que hacemos es mapear nuestro Bean directamente con la tabla de nuestra base de datos. Podemos tener por ejemplo una clase Course con id, name y author como atributos, y luego creamos una tabla Course también con id, name y author como columnas de la tabla. Luego usamos el decorator @Entity en la clase Course y lo estaremos mapeando con la tabla del mismo nombre.
+
+	Veamos el mismo ejemplo anterior pero con Spring JPA. Vamos a anotar nuestra clase Course con @Entity y tmabién anotaremos a nuestra primary key con @Id y el resto de los atributos con @Column
+
+	@Entity							//si la tabla tuviese un nombre distinto a nuestra clase deberíamos agregar (name="nombre_de_tabla")
+	public class Course {
+
+		@Id
+		private long id;
+		@Column(name="name")		//no es obligatorio aclarar este decorator ya que el nombre del atributo y de la columna de la tabla son iguales
+		private String name;
+		@Column(name="author")		//idem, no es necesario el decorator
+		private String author;
+
+		Constructores + Getters and Setters + toString
+	}
+
+
+	Una vez creada la entidad debemo crear un repositorio para manejarla, y crearemos los mismos métodos que antes para ver las diferencias:
+
+		@Repository
+		@Transactional
+		public class CourseJpaRepository {
+
+			@PersistenceContext 					//es lo mismo que @Autowired pero más específico y mejor en este contexto
+			private EntityManager entityManager;
+			
+			public void insert(Course course) {
+				entityManager.merge(course);
+			}
+			
+			public Course findById(long id) {
+				return entityManager.find(Course.class, id);
+			}
+			
+			public void deleteById(long id) {
+				Course course = entityManager.find(Course.class, id);
+				entityManager.remove(course);
+			}
+			
+		}
+
+	Vemos que ahora no necesitamos las SELECT_QUERY, DELETE_QUERY, etc, ni todos los métodos específicos, ni pasar tantos parámetros. Al estar nuestros cursos mapeados con las tablas se hace todo mucho más sencillo y las 32 lineas desde la 71 a la 103 ahora se redujeron a las últimas 19, siendo también la sintaxsis y lógica mucho más reducida y facil de leer y codear.
+	Corriendo el mismo CommandLineRunner de antes y cambiando la dependencia 
+	
+		@Autowired 
+		private CourseJdbcRepository repository; 
+
+	por nuestro CourseJpaRepository tendremos el mismo resultado que antes con un código mucho más corto, eficiente, facil de leer y codear.
