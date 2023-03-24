@@ -1,0 +1,129 @@
+03 - FIRST APP, JSP & LOGS
+───────────────────────────┘
+
+
+Starting a new app:
+───────────────────┘
+
+Para crear nuestro primer proyecto podemos crear uno nuevo en spring initializer con Spring Web y Dev Tools.
+Una vez hecho esto podemos crear una nueva clase 
+
+		@Controller
+		public class SayHelloController {
+			
+			@RequestMapping("say-hello")
+			@ResponseBody
+			public String sayHello() {
+				return "Hello!";
+			}
+		}
+
+para ahora con TOMCAT poder ver el endpoint localhost:8080/say-hello donde nos devuelve un mensaje. Si queremos agregar HTML podemos agregar el siguiente método
+
+		@RequestMapping("say-hello-html")
+		@ResponseBody
+		public String sayHelloHtml() {
+			StringBuffer sb = new StringBuffer();
+			sb.append("<html>");
+			sb.append("<head>");
+			sb.append("<title> My First HTML Page - Changed</title>");
+			sb.append("</head>");
+			sb.append("<body>");
+			sb.append("My first html page with body - Changed");
+			sb.append("</body>");
+			sb.append("</html>");
+			
+			return sb.toString();
+		}
+
+De esta manera tenemos un HTML pero de forma muy compleja, engorrosa y poco productiva. Para solucionar esto usaremos JSP (java server pages)
+
+
+
+JSP:
+────┘
+
+Es la view technology más popular. Para usarla tenemos que crear un archivo .jsp con el contenido del html y anotar al controller para que se diriga a este archivo:
+
+
+			@RequestMapping("say-hello-jsp")
+			public String sayHelloJsp() {
+				return "sayHello";
+			}
+
+Esta vez no anotamos el método con @ResponseBody ya que nos devolvería el string "sayHello" en vez de redireccionarnos al .jsp. Tipicamente todos los .jsp deben ser creados en una carpeta específica (/src/main/resources/META-INF/resources/WEB-INF/jsp/) definida por Spring Boot. Crearemos entonces un sayHello.jsp con el siguiente contenido:
+
+		<html>
+			<head>
+				<title> My first HTML Page - JSP</title>
+			</head>
+			<body>
+				My first html page with body - JSP
+			</body>
+		</html>
+
+Tenemos también que setear application.properties de la siguiente manera para que Spring sepa en que carpeta buscar los jsp:
+
+		spring.mvc.view.prefix=/WEB-INF/jsp/
+		spring.mvc.view.suffix=.jsp
+
+No hace falta aclarar todo el prefix desde la carpeta src, Spring sabe que está en resources, pero hay que aclarar bien el prefijo para que busque el archivo correcto.
+
+También podemos hacer más dinámico este HTML, pasándole un parámetro en el método y bindiarlo en el HTML. Creamos un nuevo LoginController de la siguiente manera:
+
+		@Controller
+		public class LoginController {
+
+			@RequestMapping("login")
+			public String gotoLoginPage(@RequestParam String name) {
+				System.out.println("Request param is " + name);
+				return "login";		
+			}
+		}
+
+Ahora si agregamos un query parameter en el endpoint de la siguiente manera "localhost:8080/login?name=Ale" veremos que nos mostrará el login.jsp al igual que antes, pero también veremos en consola "Request name is Ale". No es recomendable usar sysouts ni pasar parámetros escribiéndolos a mano pero es solo para demostrar.
+Para pasar este parametro desde el controler al HTML (login.jsp) tenemos que usar "Model". Podemos pasar este model por parámetro en el método 
+
+			@RequestMapping("login")
+			public String gotoLoginPage(@RequestParam String name, ModelMap model) {
+				model.put("name", name)										//queremos pasar bajo el nombre "name" el parámetro name de la query string
+				System.out.println("Request param is " + name);
+				return "login";		
+			}
+
+Luego podemos usar ${ name } para bindear el nombre pasado por url query en el HTML (parecido al property binding de Angular).
+
+
+Logging:
+────────┘
+
+Logging es una de las cosas más importantes a entender. Cuando estamos debugueando solo tenemos los logs como herramienta, y hay que tener cuidado con que logueamos y que no.
+Una de las opciones que Spring Boot ofrece para configurar logins es a través de application.properties donde elegimos el level a loguear.
+	
+		logging.level.org.springframework=debug
+		logging.level.org.springframework=info
+
+Podemos configurar para ver más o menos información con el tipo de log. Debug muestra mucha más información que info. Podemos crear una combinación de esto de la siguiente manera
+
+		logging.level.org.springframework=info
+		logging.level.com.aleleone.firstwebapp=debug
+
+Así podemos ver menos información de como funciona internamente Spring y más información sobre el código relevante a nuestra app. Esto es muy útil también para dejar de usar sysouts en nuestro código y empezar a usar Loggers. Podemos agregar un loguer a nuestro LoginController class de la siguiente manera: (el logback que usamos por default es SLF4j)
+
+		private Logger logger = LoggerFactory.getLogger(getClass());
+		logger.debug("Request param is {}", name)
+
+Al definir el logging.level de spring como info y mi app como debug, y usar logger.debug, podemos ver el mensaje en consola como un log. Si cambiamos nuestro login.level a info en nuestra app tendremos que cambiar el método a logger.info para ver el mensaje.
+Podemos también hacer tres logs de la siguiente manera:
+
+		logger.debut("Print this at debug level");
+		logger.info("Print this at info level");
+		logger.warn("Print this at warn level");
+
+Y luego dependiendo de nuestros seteos en application.properties veremos los mensajes o no. Si elegimos el level=debug veremos los 3 mensajes, si elegimos el level=info veremos solo info+warn, y si elegimos el leve=warn solo veremos el log de warn.
+
+Volviendo a nuestro endpoint, si ahora pasamos localhost:8080/login?name=Ale, y tenemos el logger.debug como en la lina 114 y el level=debug seteado, veremos los siguiente:
+
+		2023-03-24T10:28:14.986-03:00 DEBUG 21232 --- [nio-8080-exec-1] c.a.f.hello.login.LoginController        : Request param is Ale
+
+Es muy útil usar el logger para loguear el mismo mensaje que en la linea 90 pero sin usar Sysouts que está visto como una mala práctica. Ahora veremos una respuesta mucho más útil ya que la linea también contiene mucha más información en el log.

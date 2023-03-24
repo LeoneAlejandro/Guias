@@ -63,9 +63,10 @@ Tanto cuando usamos JDBC o Spring JPA estamos haciendo SQL queries, pero la dife
 	}
 
 
-EJEMPLO:"QUERYING DATA CON SPRING JDBC
-───────────────────────────────────────┘
+QUERYING DATA CON SPRING JDBC
+──────────────────────────────┘
 
+Para hablar con una base de datos en JDBC hay que seguir las convenciónes originales de escribir tanto las QUERYs correspondientes a nuestras busquedas y los métodos que utilizaremos con la lógica de las querys y parámetros que pasaremos
 Un ejemplo práctico sería, teniendo una clase Course con atributos id, name y author, con getters y setters y constructores, podemos crear la siguiente clase del tipo @Repository
 
 		@Repository
@@ -179,3 +180,61 @@ JPA:
 		private CourseJdbcRepository repository; 
 
 	por nuestro CourseJpaRepository tendremos el mismo resultado que antes con un código mucho más corto, eficiente, facil de leer y codear.
+
+
+JDBC vs JPA vs Spring JPA:
+──────────────────────────┘
+
+Como vimos entonces en JDBC tenemos que escribir muchas QUERYs y mucho código JAVA, con Spring JDBC tenemos que seguir escribiendo QUERYs pero mucho menos código JAVA. Con JPA ya no nos tenemos que preocupar por escribir QUERYs, solo código JAVA muy sencillo mapeando entidades a tablas.
+
+Pero hay una forma más simple de hablar con bases de datos y es con Spring Data JPA. SDJPA hace JPA más simple, ni siquiera nos tenemos que preocupar por manejar entidades.
+Vamos a refactorizar el código de Course con Spring Data JPA.
+
+
+
+Spring Data JPA:
+────────────────┘
+
+Ahora tenemos que crear una interfaz que extienda a la clase JpaRepository<T, TD> donde T es la entidad que manejamos (Crouse en este caso) y TD es el campo id (Long en este caso). Una vez hecho esto no tenemos que hace nada más. No tenemos que definir un EntityManager como en la linea 158, no tenemos que definir los 3 métodos de las lineas 160, 164 y 168. Todo esto lo hará Spring por nosotros. Solamente tenemos que cambiar la linea 111 y pasarle a nuestro CommandLineRunner nuestro nuevo @Autowired private "CourseSpringDataJpaRepository repository" y asegurarnos que el nombre de los métodos que antes nosotros creamos sean los mismos métodos estándares de Spring Data JPA. Ahora "insert" será "save", pero findById y deleteById son firmas de métodos de SDJPA por lo que no tenemos que cambiarlos:
+
+		@Component
+		public class CourseCommandLineRunner implements CommandLineRunner {
+
+			@Autowired
+			private CourseSpringDataJpaRepository repository;
+			
+			@Override
+			public void run(String... args) throws Exception {
+				repository.save(new Course(1, "Learn AWS", "AleLeone"));
+				repository.save(new Course(2, "Learn JPA", "FiliLeone"));
+				repository.save(new Course(3, "Learn Spring", "Renata"));
+				
+				repository.deleteById(1l);										//Hay que agregar l en el parámetro para indicar que son "long" 
+				
+				System.out.println(repository.findById(2l));
+			}
+		}
+
+Spring Data JPA ofrece una gran variedad de métodos predefinidos a usar para nuestros repositorys, por ejemplo:
+
+				repository.findAll()				//devuelve todos los crusos
+				repository.count()					//devuelve la cantidad de cursos
+
+Pero también podemos definir métodos especiales y custom, por ejemplo, queremos buscar cursos por autor. Para hacer esto necesitamos seguir una convención sobre atributos, en este caso el método debería llamarse "findByAuthor" por que "Author" es el nombre del atributo o culmna por el que queremos buscar. Éste método se debe definir en la interface CourseSpringDataJpaRepository que hasta ahora estaba vacía:
+
+		public interface CourseSpringDataJpaRepository extends JpaRepository<Course, Long>{
+
+			List<Course> findByAuthor(String author);
+		}
+
+Tenemos también que definir lo que nos devuelve (lista de cursos) y el parámetro necesario (autor). Y luego simplemente podemos usar este método en nuestro CourseCommandLineRunner.
+Es importante volver a remarcar que hay que seguir la convención de nombres: si quiero hacer un nuevo método para buscar cursos por nombre de cursos mi método DEBE llamarse findByName, no puede ser findByCourseName u otro nombre diferente, Spring Data JPA no reconocerá como campo de la tabla o atributo de la clase Course a "CourseName" y el método no funcionará. Nos devolverá un error al intentar instanciar el Bean CourseSpringDataJpaRepository.
+
+
+HIBERNATE vs JPA
+─────────────────┘
+
+Hasta ahora solo hicimos uso del JPA (jakarta.persistance API), ya que JPA define la especificación. JPA es una API, una interfaz, define como podemos definir entidades (@Entity), define como una primarykey (@Id), como definimos atributos (@Column aunque no es obligatorio si el nombre de la columna es el mismo que el atributo) y JPA también nos define quien maneja estas entidades.
+Hibernate es UNA implementación de JPA, la más popular hoy en día. JPA define la API, como mapear los objetos a tablas pero hibernate lo IMPLEMENTA. Hibernate es la implementación de nuestra API (jakarta.persistance API). No es recomendable usar Hibernate directamente ya que podemos lockearnos en Hibernate. Es siempre mejor usar Hibernate a través de Spring Data JPA.
+
+Entonces JPA es una API, define una especificación (COMO mapear entidades, atributos, etc), mientras que Hibernate es una implementación de la JPA.
