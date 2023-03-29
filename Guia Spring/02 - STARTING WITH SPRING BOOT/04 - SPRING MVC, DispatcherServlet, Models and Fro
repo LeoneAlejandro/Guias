@@ -1,0 +1,111 @@
+04 - SPRING MVC, DispatcherServlet, Models and FrontController
+────────────────────────────────────────────────────────────────┘
+
+
+
+Model 1:
+────────┘
+
+	Inicialmente se desarrollaban webapps con Java usando el 100% del código en "VIEWS", osea, los JSPs que creamos anteriormente. Todo se manejaba por JSPs, la lógica relacionada a como mostrar la página, la flow logic de las páginas, y también las querys de las BDs. No existía ningún tipo de controller. Esto hace que sea muy complejo desarrollarlas, haya 0 separación de intereses (separation of concerns), lo que hace que sea muy dificil de mantener y expandir.
+
+	     ┌───────────┐
+	   ┌─┤  Browser  ├─┐
+	   │ └───────────┘ │
+	   │               │
+	┌──▼─┐          ┌──▼─┐
+	│JSP1│          │JSP2│
+	└──┬─┘          └──┬─┘
+	   │               │
+	   │ ┌───────────┐ │
+	   └►│   Model   │◄┘
+	     └───────────┘
+
+
+Model 2:
+────────┘	
+
+	Luego se evolucionó a Model 2 Architecture, donde hay clara separación de intereses y "Model" es la data que se usa para generar la View. La View es la responsable de mostrarle la información al usuario, y los controllers o "Servlet" son los encargados de manejar el flow. Esto hace que sea más facil de mantener que el Model 1, el problema ocurre cuando queremos implementar características comunes a todos los controllers. Por ejemplo, si tenemos 2 Servelts que manejan 2 views distintas, y todos se comunican con "Model", y queremos implementar autenticación en nuestra app. La lógica de autenticación es similar a través de todos los Servlets, como podemos implementarlo ? Aquí es cuando se implementó un "FrontController"
+
+                  ┌───────────┐
+            ┌─────┤  Browser  ├──────┐
+            │     └───────────┘      │
+            │                        │
+     ┌──────▼────┐             ┌─────▼─────┐
+     │  Servelt1 │             │ Servlet2  │
+     └─┬────────┬┘             └┬────────┬─┘
+       │        │               │        │
+   ┌───▼───┐    │               │    ┌───▼───┐
+   │ View1 │    └─────┐   ┌─────┘    │ View2 │
+   └──────┬┘          │   │          └┬──────┘
+          │           │   │           │
+          │       ┌───▼───▼───┐       │
+          └───────►   Model   ◄───────┘
+                  └───────────┘
+
+
+M2 con FrontController:
+───────────────────────┘
+
+	Se basa en el Model 2 pero ahora hay un FrontController que recibe toda la información y requests del Browser y se comunica con todos los Servelts y views de nuestro proyecto. Esto hace que la lógica que concierne a todos se más facil de manejar desde un solo lugar, como por ejemplo autenticación. Solo con autenticarse al FrontController podemos comunicarnos con el resto de la app. Todas las requests van a controlador central, que luego delega responsabilidad a otros controllers (Servelts) o views.
+
+                     ┌───────────┐
+                     │  Browser  │
+                     └─────┬─────┘
+                           │
+                 ┌─────────▼─────────┐
+          ┌──────┤  FrontController  ├───────┐
+          │      └────┬──────────┬───┘       │
+          │           │          │           │
+          │           │          │           │
+    ┌─────▼─────┐ ┌───▼───┐  ┌───▼───┐ ┌─────▼─────┐
+    │  Servelt1 │ │ View1 │  │ View2 │ │ Servlet2  │
+    └──────┬────┘ └─────┬─┘  └─┬─────┘ └────┬──────┘
+           │            │      │            │
+           │            │      │            │
+           │            │      │            │
+           │        ┌───▼──────▼──┐         │
+           └────────►    Model    ◄─────────┘
+                    └─────────────┘
+
+
+
+
+Spring MVC Front Controller - Dispatcher Servlet:
+─────────────────────────────────────────────────┘
+
+	Dispatcher Servlet es la implementación de Spring MVC del patrón "Model 2 FrontController". Dispatcher Servlet es el que accede al FrontController por lo que todas las requests son recibidas por DispatcherServlet ya sea que la request va al login url, o al sayHello url, o a cualquier JSP. Cuando recibe una request intenta procesarla y para poder procesarla hace uso del "model", "view" y "controller". Primero identifica cual es el URL, supongamos que la request fue al login URL (localhost:8080/login), entonces debe delegar la request al LoginController, osea, el controller que puede manejar y procesar la request. Una vez que identifica el controllador correcto para la request, ejecuta el método del controlador (en nuestro ejemplo sería el método gotoLoginPage que redirecciona a un login.jsp), el método devuelve el "Model" y el "View Name". El View Resolver usa el prefijo y subfijo definido en application.properties para mapear la request al JSP correcto, y luego renderiza esta view. El flow sería el siguiente:
+
+	A: Recibe una HTTP Request
+	B: Procesa la HTTP Request
+		B1: Identifica el controller correcto y el método del controller (basado en la URL)
+		B2: Ejecuta el método del controller identificado
+		B3: Identifica la View correcta (usando ViewResolver)
+		B4: Ejecuta la view y la renderiza	
+	C: Devuelve HTTP responsable
+
+             ┌─────────────────────────────────────────────────────────────────────┐
+             │                                                                     │
+             │        ┌──────────────┐   delega request   ┌────────────┐ Maneja la │
+   request ──┼────────►    Front     ◄────────────────────┤            │ request   │
+             │        │  controller  │      ┌─────┐       │ Controller │           │
+  response ◄─┼────────┤              ├──────┤model├───────►            │ Crea      │
+             │        └───▲─────┬────┘      └─────┘       └────────────┘ el modelo │
+             │            │     │       delega renderizado                         │
+             │            │  ┌──┴──┐      de respuesta                             │
+             │  devuelve  │  │model│                                               │
+             │  control   │  └──┬──┘                                               │
+             │            │     │ renderiza respuesta                              │
+             │            │     │                                                  │
+             │         ┌──┴─────▼───┐                                              │
+             │         │    View    │                                              │
+             │         │  template  │                Servlet engine                │
+             │         └────────────┘               (por ej: Tomcat)               │
+             └─────────────────────────────────────────────────────────────────────┘
+
+
+REQUEST VS MODEL VS SESSION:
+────────────────────────────┘
+
+	Requests es tocar un endpoint el cual puede llevar información (por ejempo hacemos una request con username y password para loguearnos), pero toda la información o payload de una request sirve SOLO para esa request, una vez hecha la request esa información se pierde. Cuando usamos model.put("name", name), por defecto, solo será accsesible por el scope de esa request, una vez que hacemos click en un link, hacemos otra request, etc, esa información se pierde. Si queremos acceder a name después de la request, osea, queremos que viva más tiempo la información, deberíamos poner la información en una SESIÓN. Una sesión retiene valores a través de requests.
+
+	Como ponemos valores en sesiones ? Con la anotación @SessionAttributes("name") y declaramos que atributos queremos guardar en la sesión (name en este ejemplo). Esta anotación debemos ponerla en todos los @Controllers donde queremos usar esos atributos.

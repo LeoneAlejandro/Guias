@@ -1,0 +1,91 @@
+05 - DATA VALIDATION con SPRING BOOT
+─────────────────────────────────────┘
+
+Una vez que vamos haciendo nuestro proyect (en este caso una lista de TODOs donde podemos agregar nuevas tareas a realizar) nos vamos dando cuenta que podemos a veces insertar bad data, por ejemplo, podemos agregar una nueva tarea a realizar sin descripción, o sin fecha esperada a ser realizada, etc. Esto lo podemos arreglar facilmente desde HTML agregando required="required" en el "<input name="description" />", pero esta forma de validación no es recomendada ya que puede ser muy facilmente sobrepasada por gente maliciosa. Para solucionar de mejor manera la validación de datos necesitamos "Server-side validation" o validación interna, del lado del servidor, crear validaciones desde nuestro código JAVA.
+Spring Boot y Spring MVC hace muy facil la implementación de un sistema de validación, esto se logra:
+
+	1 - Importando un starter project llamado Spring Boot Starter Validation (lo importamos en el pom.xml)
+	2 - Haciendo uso de un concepto llamado Command Bean (o Form Backing Object). Con esto implementamos un concepto llamado "2-way binding" entre "todo.jsp" y "TodoController.java" (en nuestro ejemplo el todo.jsp es el View, osea, el HTML frontend y el "TodoController.java" es la clase @Controller que maneja todos los endpoints y @RequestMappings de nuestro proyecto).
+	3 - Agregar validaciones a nuestro Bean. En nuestro caso sería la clase Todo.java, que es la clase que define la forma de los Todo's. Entonces cuando definimos que un Todo tiene String nombre podemos agregar además validaciones (xej: String descripción debe tener al menos 10 caracteres, LocalDate targetDate siempre mayor a la fecha actual, etc).
+	4 - Mostrar errores de validación en nuestra View (todo.jsp).
+
+
+Realizar el 2-way binding:
+──────────────────────────┘
+
+	En nuestro ejemplo teníamos en TodoController una clase como la siguiente:
+
+		@RequestMapping(value="add-todo", method = RequestMethod.POST)
+		public String addNewTodo(@RequestParam String description, ModelMap model) {
+			String username = (String) model.get("name");
+			todoService.addTodo(username, description, LocalDate.now().plusYears(1), false);
+			return "redirect:list-todos";
+		}
+
+	Donde bindeabamos un input en addTodo.jsp con "@RequestParam String description" para obtener la descripción del todo a agregar a la lista. Ahora lo que hacemos es borrar este RequestParam y 
+	hacemos un bind directo con nuestro Todo Bean. Para esto eliminamos el @RequestParam y pasamo el bean Todo como parámetro, y cambiamos la forma en que conseguimos description para pasarle al todoService (antes era mediante el RequestParam ahora hacemos uso del getter del todo nuevo que pasamos):
+
+		@RequestMapping(value="add-todo", method = RequestMethod.POST)
+		public String addNewTodo(ModelMap model, Todo todo) {
+			String username = (String) model.get("name");
+			todoService.addTodo(username, todo.getDescription(), LocalDate.now().plusYears(1), false);
+			return "redirect:list-todos";
+		}
+
+	y para bindearlo al JSP agregamos el siguiente tag a nuestro todo.jsp
+
+		<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
+
+	y cambiamos nuestros <form> a <form:form> y agregamos en el mismo modelAttribute="todo" para bindearlo al "todo" que agregamos como parámetro al método addNewTodo(). Luego tenemos que mapear los campos "description", "id" y "done" para obtener la información para pasar como parámetros, esto lo hacemos cambiando nuestro <input> a <form:input> y modificamos el campo name="description" que teníamos dentro del input a path="description". También en este caso hay que agregar 2 inputs mas con path="id" y path="done" para obtener la información también, en estos casos dejamos el type como "hidden" para no mostrarlos en el HTML.
+	Nuestro container en el JSP quedaría así: 
+
+		<div class="container">
+			<h1>TODO Details</h1>
+			<form:form method="post" modelAttribute="todo">
+				Description: <form:input type="text" path="description" required="required" />
+				<form:input type="hidden" path="id" />
+				<form:input type="hidden" path="done" />
+				<input type="submit" class="btn btn-success" />
+			</form:form>
+		</div>	
+
+	Para que todo esto funcione también tenemos que agregar un nuevo Todo vacío para ir populando. Esto se hace agregando las lineas 54, 55 y 56 en nuestro endpoint "add-todo" y pasando como parámetro "ModelMap model"
+
+		@RequestMapping(value="add-todo", method = RequestMethod.GET)
+		public String showNewTodoPage(ModelMap model) {
+			String username = (String) model.get("name");
+			Todo todo = new Todo(0, username, "", LocalDate.now().plusYears(1), false);
+			model.put("todo", todo);
+			return "todo";
+		}
+
+	Esto se hace para que cuando hacemos click en el botón "Add Todo" nos redireccione con el RequestMethod.GET al endpoint "add-todo" y veamos un campo vació para agregar la descripción, pero en el background ya haya un nuevo "todo" vacío que iremos populando (creado en la linea 55). Una vez que agregamos la descripción en el View y hagamos click en el botón "Enviar" para agregar el todo, el método addNewTodo se ejecutará ya que este botón envía es una request al endpoint "add-todo" pero con el RequestMethod.POST. 
+
+	Todo este proceso de 2-way binding puede cambiar de proyecto a proyecto. En nuestro caso el 1er lado del 2-way binding se da en el método showNewPage. Si cambiamos el tercer parámetro de la linea 55 a "Prueba", veremos prepopulado el input "description" donde nosotros deberíamos agregar la descripción. El segundo lado del binding es el valor que nosotros agregamos al input "description" y mapeamos al post request. Este segundo mapeo se hace en el método addNewTodo de la linea 26. Cuando agregamos una descripción y hacemos click en enviar estamos bindenado esa descripción al campo "description" en la variable "Todo todo" que pasamos en la linea 27. El primer binding sería del Bean (nuevo todo vacío creado) al Form (input que vemos en el View) y el segundo del Form (descripción que escribimos en el input del View) al Bean (Todo todo que obtenemos como parámetro en el método addNewTodo).
+
+
+Agregar validaciones:
+─────────────────────┘
+
+	Este proceso es mucho más simple y se logra agregando anotaciones en la clase que define los campos a valida. En nuestro caso tenemos el Todo.java donde definimos la forma de los Todos, ahora agregaremos algunas anotaciones:
+
+	public class Todo {
+
+		private int id;
+		private String username;
+		@Size(min=10, message = "Ingresar por lo menos 10 caracteres")
+		private String description;
+		private LocalDate tragetDate;
+		private boolean done;
+
+	Constructor + getters + setters }
+
+	Ahora con la anotación @Size podemos definir que el campo description debe tener al menos 10 caracteres y seteamos un mensaje de error en el caso de que el tamaño no se cumpla. Para que esta validación esté activa debemos agregar @Valid antes del "Todo todo" que pasamos como parámetro en la linea 27, en el método addNewTodo. También agregaremos un tercer parámetro "BindingResult result" en el mismo método y agregaremos el siguiente if al método:
+
+		if(result.hasErrors()) {
+			return "todo";
+		}
+
+	De esta manera si la validación no se cumple no nos redireccionará al método "redirect:list-todos", sino que nos dejará en la misma url que estábamos. Para ver el mensaje de error en nuestra View también tendremos que agregar la siguiente linea entre las lineas 43 y 44 de juestro JSP:
+
+		<form:errors path="description" cssClass="text-warning" />
