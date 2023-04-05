@@ -1,0 +1,36 @@
+07 - SPRING BOOT STARTERS & AUTOCONFIGS
+────────────────────────────────────────┘
+
+Como son manejadas las Requests ?
+─────────────────────────────────┘
+
+Cuando hablamos de Spring MVC estamos hablando de un "Front Controller Pattern", lo que sucede es que todas nuestras requests primero van a un "DispatcherServelt". Todas las requests pasan por DispatcherServlet ya que está mapeado a la root url (url=[/]). Una vez que DispatcherServlet recibe la request la mapeará al controller correspondiente. Quien configura este DispatcherServlet ? Está configurado por algo llamado "DispatcherServletAutoConfiguration", una de las features más importantes de Spring Boot. Basado en las clases disponibles en el "class path" Spring Boot detecta automáticamente que estamos construyendo una Web App, una REST API, y por ello configura automáticmante un DispatcherServlet.
+
+
+Como los objetos son convertidos a JSON en las respuestas ?
+───────────────────────────────────────────────────────────┘
+
+Supongamos que tenemos este GET request:
+
+	@GetMapping(path = "/hello-world-bean")
+	public HelloWorldBean helloWorldBean() {
+		return new HelloWorldBean("Hello World");
+	}
+
+y que tenemos una clase HelloWorldBean que tiene un parámetro llamado "message" que debe ser pasado en su constructor para ser instanciado. Cuando ejectuamos la get request mediante la url "/hello-world-bean" nos devolverá un JSON con la clave:valor { message: Hello World" }, y esto sucede gracias a "@ResponseBody" y "JacksonHttpMessageConverters".
+	
+	@ResponseBody: cuando anotamos la clase que contiene al método HelloWorldBean con @RestController, y nos metemos dentro de este decorator, veremos que @RestController es una @interface que está decorada con @ResponseBody (por ende, cualquier clase anotada con @RestController está también anotada con @ResponseBody). La anotación @ResponseBody le informa al controller que el objeto devuelto es automáticamente serializado en un JSON y devuelto en el objeto HttpResponse. Cuando usamos @ResponseBody en un método, Spring convierte el valor devuelto y lo escribe en la respuesta HTTP automáticamente.
+
+	JacksonHttpMessageConverters: La conversión por defecto o default que está seteada en Spring Boot Auto Configuration es usando JacksonHttpMessageConverters, que está a cargo de realizar la serialización a JSON.
+
+
+Quien configura error mapping ?
+───────────────────────────────┘
+
+Por defecto si intentamos tocar alguna url que no esté configurada o mapeada nos mostrará un mensaje "Whitelabel Error Page" con algunos detalles de la request y mensaje de error. Quien y como se configura esta página ? Esta página de error también es resultado de Auto Configuration, en este caso ErrorMvcAutoConfiguration.class.
+
+
+Cómo están disponibles todos los JARS ?
+───────────────────────────────────────┘
+
+Spring Boot Starter Web es una dependencia que agrupa un montón de dependencias útiles para nuestros proyectos. En nuestro caso vimos Spring, Spring MVC, Jackson, Tomcat, etc. Todos estos jars están incluidos en spring-boot-starter-web.

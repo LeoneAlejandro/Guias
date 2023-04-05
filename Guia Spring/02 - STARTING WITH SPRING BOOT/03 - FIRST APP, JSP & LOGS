@@ -94,6 +94,10 @@ Para pasar este parametro desde el controler al HTML (login.jsp) tenemos que usa
 Luego podemos usar ${ name } para bindear el nombre pasado por url query en el HTML (parecido al property binding de Angular).
 
 
+A lo largo de una aplicación veremos que mientras la vamos construyendo empezaremos a repetir mucho código. Para evitar esto se puede usar un concepto llamado "JSP Fragments".
+
+
+
 Logging:
 ────────┘
 

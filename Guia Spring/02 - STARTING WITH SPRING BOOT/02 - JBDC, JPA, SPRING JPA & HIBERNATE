@@ -141,7 +141,7 @@ JPA:
 		@Id
 		private long id;
 		@Column(name="name")		//no es obligatorio aclarar este decorator ya que el nombre del atributo y de la columna de la tabla son iguales
-		private String name;
+		private String name;			pero si queremos un nombre distinto en la base de datos debemos aclararlo
 		@Column(name="author")		//idem, no es necesario el decorator
 		private String author;
 
@@ -231,10 +231,25 @@ Tenemos también que definir lo que nos devuelve (lista de cursos) y el parámet
 Es importante volver a remarcar que hay que seguir la convención de nombres: si quiero hacer un nuevo método para buscar cursos por nombre de cursos mi método DEBE llamarse findByName, no puede ser findByCourseName u otro nombre diferente, Spring Data JPA no reconocerá como campo de la tabla o atributo de la clase Course a "CourseName" y el método no funcionará. Nos devolverá un error al intentar instanciar el Bean CourseSpringDataJpaRepository.
 
 
-HIBERNATE vs JPA
-─────────────────┘
+JBDC vs JPA vs HIBERNATE vs Spring Boot JPA
+───────────────────────────────────────────┘
 
-Hasta ahora solo hicimos uso del JPA (jakarta.persistance API), ya que JPA define la especificación. JPA es una API, una interfaz, define como podemos definir entidades (@Entity), define como una primarykey (@Id), como definimos atributos (@Column aunque no es obligatorio si el nombre de la columna es el mismo que el atributo) y JPA también nos define quien maneja estas entidades.
-Hibernate es UNA implementación de JPA, la más popular hoy en día. JPA define la API, como mapear los objetos a tablas pero hibernate lo IMPLEMENTA. Hibernate es la implementación de nuestra API (jakarta.persistance API). No es recomendable usar Hibernate directamente ya que podemos lockearnos en Hibernate. Es siempre mejor usar Hibernate a través de Spring Data JPA.
+JBDC (Java Database Conectivity) fue la primera forma de conectar una aplicación JAVA con una base de datos. Fue el puente entre el mundo JAVA y el mundo de las bases de datos no relacionales. Las desventajas de esta API es la gran cantidad de código para mapear atributos a querys y a campos de nuestra base de datos. 
+JPA por otra parte es una especificación que nos permite convenientemente mapear objetos JAVA a tablas de bases de datos. JPA no una herramienta o framework, sino que es una interfaz, o API que define los conceptos que podemos y debemos implementar mediante cualquier otra herramienta para realizar estos mapeos. Como JPA es una especificación, necesitamos una herramienta para implementarla.
+Hibernate es una de las herramientas que usamos para llevar a cabo las especificaciones de JPA. Hibernate es el framework ORM (Object Relational Mapping) más popular. Podemos pensar a JPA como la interfaz y a Hibernate como la implementación.
+Spring Data JPA por otro lado es una librería que forma parte de Spring Boot, uno de los frameworks más populares de JAVA. El objetivo de Spring Data es reducir la cantidad de boilerplate code, o código redundante requerido para implementar “data access layers” para databases.
+Spring Data JPA es una librería que agrega una capa extra de abstacción por encima de la implementación ORM JPA. Por default SDJPA usa Hibernate como su proveedor ORM (para ejecutar querys).
 
-Entonces JPA es una API, define una especificación (COMO mapear entidades, atributos, etc), mientras que Hibernate es una implementación de la JPA.
+JPA (jakarta.persistance API) es una especificación, una API, es como si fuese una interfaz que define cómo podemos definir entidades (@Entity), cómo podemos definir una primarykey (@Id), como definir atributos (@Column) y también maneja las entidades. Define los métodos que están expuestos en la EntityManager por ejemplo.
+Hibernate por otra parte es una de las implementaciones más populares de JPA. Hibernate es una herramienta ORM (Object–relational mapping) que facilita el mapeo de atributos entre una base de datos relacionales tradicional y el modelo de objetos de una aplicación a través de las espicificaciones de JPA.
+No es recomendable usar Hibernate directamente ya que podemos lockearnos en Hibernate. Es siempre mejor usar Hibernate a través de Spring Data JPA.
+
+Entonces JPA es una API, define una especificación (COMO mapear entidades, atributos, como usar la EntityManager, etc), mientras que Hibernate es una implementación de la JPA. JPA serían las instrucciones de cómo relacionar data mediante código JAVA, mientras que Hibernate es quien realiza esas instrucciones para lograrlo.
+
+Más adelante veremos Spring Data Jpa quien hace varias cosas por nosotros para facilitarnos nuestra conexión con la base de datos:
+	- Inicializará JPA y Spring Data JPA frameworks
+	- Lanzará una base de datos en memoria (H2)
+	- Hará el setup de la conexión entre la App y la base de datos en memoria
+	- Iniciará scripts especificados por nosotros (como data.sql donde populamos inicialmente ciertos datos de la base de datos)
+
+También podremos crear nuestro propio Repository que extienda a JpaRepository<T, TD> donde heredaremos por defecto una gran cantidad de métodos que podremos usar para modificar nuestra base de datos. Tendremos métodos como .save, .findById, deleteById, etc, que ya están definidos, a los que le podremos solo pasar el ID y ejecutará una query para eliminar la row con esa id de nuestra base de datos. También podremos definir nuevos métodos específicos sin casi ningúna lógica. Por ejemplo, podremos definir en nuestro Repository un nueveo método que sea findByLastname donde JpaRepository buscará cualquier data en nuestra BD donde haya una columna con el nombre "Lastname". 

@@ -1,0 +1,119 @@
+06 - SPRING BOOT STARTER SECURITY
+──────────────────────────────────┘
+
+La forma más popular hoy en día de agregar autenticación y autorización es con Spring Boot Starter Security. Para agregarlo a nuestro proyecto primero agregamos la dependnecia al pom.xml como siempre:
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+
+Al principio, al no tener nada seteado, SBSS nos dará en consola una contraseña con la que podremos loguear usando "user" como Username y la contraseña provista.
+
+Para configurar nuestros propios usarios y contraseñas tenemos que crear una nueva clase SpringSecurityConfiguration y tendremos que agregarle la anotación @Configuration.
+Típicamente cuando queremos guardar usernames y passwords tendremos que hacer uso de LDAP o Databases. También podemos para, proyectos simples, guardar usernames y passwords en memoria. En este caso veremos ésta última configuración. 
+
+Para configurar un usario en memoria tendremos que hacer uso de la clase InMemoryUserDetails provista por spring security. Esta clase tiene un constructor al que tendremos que pasarle por parámetro un UserDetails, que es una interfaz que extiende Serializable. Para crear un UserDetails entonces tendremos que crear o "buildear" uno de la siguiente manera:
+
+
+	@Configuration
+	public class SpringSecurityConfiguration {
+
+		@Bean
+		InMemoryUserDetailsManager createDetailsManager() {
+			UserDetails userDetails = User.withDefaultPasswordEncoder().username("Ale").password("123").roles("USER","ADMIN").build();
+			
+			return new InMemoryUserDetailsManager(userDetails);
+		
+		}
+	}
+
+En este caso estamos usando el método withDefaultPasswordEncoder() que está depreciado y no se considera una buena práctica por lo que agregaremos Bcrypt encoder para encriptar las contraseñas. 
+Para esto tendremos que modificar algunas cosas:
+
+	@Configuration
+	public class SpringSecurityConfiguration {
+
+		@Bean
+		InMemoryUserDetailsManager createDetailsManager() {
+			Function<String, String> passwordEncoder = input -> passwordEncoder().encode(input);
+			
+			UserDetails userDetails = User.builder()
+										  	.passwordEncoder(passwordEncoder)
+											.username("Ale").password("123").roles("USER","ADMIN").build();
+			
+			return new InMemoryUserDetailsManager(userDetails);
+		}
+		
+		@Bean
+		public PasswordEncoder passwordEncoder() {
+			return new BCryptPasswordEncoder();
+		}
+	}
+
+Como vemos, ya no haremos uso de withDefaultPasswordEncoder() sino que ahora usaremos builder().passwordEncoder(passwordEncoder) para crear nuestro userDetails. Para lograr esto hay que crear un nuevo método PasswordEncoder la anotación @Bean tal como se ve en las lineas 48 y 49, y también tendremos que crear una variable passwordEncoder para psarle al método utilizado en User. Esta variable local se definirá con una Funciton<String, String> que define, mediante una función lambda, que cualquiera sea el input sea encriptado o encodeado por el método passwordEncoder, como se ve en la linea 38.
+Una vez realizado esto podremos ahora si loguearnos con el username y la contraseña definidos en userDetails que pasaremos como parámetro del InMemoryUserDetailsManager que devolveremos en la linea 44.
+
+Configuraciones extras:
+───────────────────────┘
+
+Por default todas las URLs estarán protegidas por lo que no importa que endpoint toquemos (exista o no) siempre nos mostrará un form para loguearnos.
+Para usar h2 y acceder a la consola tendremos que modificar algunas configuraciones para sobrepasar esto. Tendremos que deshabilitar CSRF (cross site request forgery) y además h2 hace uso de algo usado "Frames" y por defualt Spring Security los bloquea, por lo que también tendremos que cambiar la config de esto. Para hacer eso tendremos que agregar lo siguiente en nuestra clase SpringSecurityConfiguration:
+
+import static org.springframework.security.config.Customizer.withDefaults;
+
+	@Bean
+	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+		http.authorizeHttpRequests(
+				auth -> auth.anyRequest().authenticated());
+		http.formLogin(withDefaults());
+		
+		http.csrf().disable();
+		http.headers().frameOptions().disable();
+		
+		return http.build();
+	}
+
+
+SecurityFilterChain define una cadena de filtros capaz de matchear contra HttpServletRequests. Osea, cuando hacemos una Request será procesado por este filtro primero. Este SecurityFilterChain es el que nos muestra la login page cuando no estamos logueados y queremos tocar algun endpoint. Mediante nuestra configuración establecimos en la linea 67 que todas las requests estén autorizadas, y si no están autorizadas, configuramos para que nos muestre el formLogin en la linea 69 (para poder pasar withDefaults() hay que hacer un static import específico, linea 63). Y por último deshabilitamos csrf y frameOptions para poder utilizar h2.
+
+
+
+Extra: Crear múltiples usuarios:
+──────┘
+Para crear múltiples usuarios podemos refactorizar nuesto código y extraer en un nuevo método desde las lineas 39 hasta la 43 de la siguiente manera:
+
+		private UserDetails createNewUser(String username, String password) {
+			Function<String, String> passwordEncoder = input -> passwordEncoder().encode(input);
+			UserDetails userDetails = User.builder()
+										  	.passwordEncoder(passwordEncoder)
+											.username(username).password(password).roles("USER","ADMIN").build();
+			return userDetails;
+		}
+
+Y modificar nuestro método createDetailsManager de la siguiente manera:
+
+		@Bean
+		InMemoryUserDetailsManager createDetailsManager() {
+			
+			UserDetails userDetails1 = createNewUser("Ale", "123");
+			UserDetails userDetails2 = createNewUser("User", "123");
+			
+			return new InMemoryUserDetailsManager(userDetails1, userDetails2);
+		}
+
+De esta forma pasamos 2, 3 o cuantos usuarios querramos.
+
+
+
+SecurityContextHolder:
+──────────────────────┘
+
+También podemos hacer uso de Spring Security para tomar el username de la persona logueada. En nuestro proyecto habíamos hardcodeado en distintos lugares el nombre de la persona logueada, o teníamos algunos mensajes genéricos de bienvenida. Usando el siguiente método podemos obtener el nombre de usuario de la persona logueada y usarlo en distintos lugares:
+
+	private String getLoggedInUsername() {
+		 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		 return authentication.getName();
+	}
+
+Ahora, si necesitamos el nombre o username de la persona logueada, solo tenemos que llamar al método getLoggedInUsername.
