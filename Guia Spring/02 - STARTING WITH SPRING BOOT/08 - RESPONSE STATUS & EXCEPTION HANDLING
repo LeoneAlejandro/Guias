@@ -1,0 +1,197 @@
+08 - RESPONSE STATUS & EXCEPTION HANDLING
+──────────────────────────────────────────┘
+
+Es muy importante en REST API's siempre devolver el status indicado. Dependiendo de las requests que hagamos podemos obtener algunas de las siguentes responses:
+
+	Status 200, éxito:
+
+		200 - Success
+		201 - Created
+		204 - No Content
+
+	Status 400/500, errores:
+
+		400 - Bad request (Validation error) 
+		401 - Unauthorized (authorization fails)
+		404 - Resource not found
+		500 - Server exception
+
+
+Usualmente Spring Boot viene configurado de una forma genérica que no es la más adecuada para nuestros proyectos. A continuación modificaremos la excepción devuelta y el status de nustro proyecto.
+
+
+Modificando la excepción:
+─────────────────────────┘
+
+Si por ejemplo intentamos obtener un user mediante la url "localhost:8080/users/200" y el user 200 no existe, por defecto Spring Boot nos devolverá un típico y genérico "Whitelabel Error Page" con un NoSuchElementException y status 500. Este tipo de respuesta no sería el adecuado para este tipo de request, en nuestro caso el método que se llama al intentar obtener un usuario es el siguiente:
+
+	public User findUserById(int id) {
+		Predicate<? super User> predicate = users -> users.getId().equals(id);
+		return users.stream().filter(predicate).findFirst().get();
+	}
+
+Mediante programación funcional intentamos buscar un usuario con el id pasado en la url, pero el método .get() de la linea 23 nos devolverá el error que indicamos anteriormente. Entonces, en vez de utilizar el .get() que por default devuelve un NoSuchElementException al no encontrar usuario, podríamos usar el método .orElse() que por defecto "si un valor está presente lo devuelve, sino devuelve otro valor definido". Si entonces reemplazaramos .get() por .orElse(null), nos devolvería siempre status 200 ya que al no encontrar usuario nos devolvería null, y es una response correcta. Para corregir esto deberíamos modificar el @GetMapping de la siguiente manera:
+
+	@GetMapping("/users/{id}")
+	public User retiveAllUsers(@PathVariable int id) {
+		return service.findUserById(id);
+	}
+
+Podríamos modificar nuestro @GetMapping para que nos quede así:
+
+	@GetMapping("/users/{id}")
+	public User retiveAllUsers(@PathVariable int id) {
+		User user = service.findUserById(id);
+		
+		if (user == null) {
+			throw new UserNotFoundException("id: " + id);
+		}
+
+		return user;
+	}
+
+Entonces intentaremos buscar un usuario con .findUserById() y si no lo encuentra nos devolverá null. Luego chequearemos y si nuestra respuesta fue null arrojaremos una excepción personalziada que tendremos que crear. Podremos crear entonces una clase UserNotFoundException que extienda RuntimeException de la siguiente manera:
+
+	public class UserNotFoundException extends RuntimeException {
+
+		public UserNotFoundException(String message) {
+			super(message);
+		}
+	}
+
+Ahora al intentar buscar un usuario que no existe nos devolverá la misma "Whitelabel Error Page" que antes con status 500, pero ahora con UserNotFoundException y el mensaje personalizado.
+
+
+
+Modificando el Response Status:
+───────────────────────────────┘
+
+Usualmente cuando algo no es encontrado se debe devolver el status 404, por lo que también tenemos que corregir esto. Como podemos hacer para que nuestra excepción personalizada UserNotFoundException devuelva un 404 ?
+Esto se logra a través de la anotación @ResponseStatus. Cuando decoramos nuestra excepción, en nuestro caso UserNotFoundException, con la anotación @ResponseStatus podemos elegir cual es el status que devuelva de la siguiente manera:
+
+	@ResponseStatus(code = HttpStatus.NOT_FOUND)
+	public class UserNotFoundException extends RuntimeException {
+		...
+	}
+
+Además de "code = HttpStatus.NOT_FOUND" tenemos decenas de otros tipos de status para devolver, como por ejemplo HttpStatus.BAD_REQUEST, .CREATED, y muchas otras que todavía no exploramos.
+
+Ahora si, luego de intentar buscar un usuario inexistente nos mostrará el "Whitelabel Error Page" con una excepción personalizada (UserNotFoundException) que explica un poco más el error encontrado, y con el status 404 deseado.
+
+
+Stack Trace & Spring Boot Devtools:
+───────────────────────────────────┘
+
+Por último, vemos que el error "Whitelabel Error Page" contiene todo el stacktrace que muchas veces no es deseado mostrar a un usuario ya que contiene información que no le será útil y muy compleja de leer. Este stack trace lo estamos viendo ya que tenemos la dependencia Spring Boot Devtools y nos sirve para debuguear, encontrar errores, y entender porque algunas cosas no funcionan, pero hay que tener en cuenta que cuando nuestro proyecto esté corriendo en producción, desde un archivo JAR, no tendremos las Devtools y no se imprimirá el stack trace cuando ocurra un error.
+Aunque tengamos la dependencia Devtools en nuestro proyecto y crearamos un archivo JAR de ese proyecto, y corremos el JAR, aun así tampoco veremos el stack trace.
+
+
+Custom Error Response Structure:
+────────────────────────────────┘
+
+Al igual que la página de error, la estructura del RESPONSE BODY ante un error está predefinido por Spring Boot y también podemos modificarlo para nuestro proyecto. Tener una estructura de respuesta de errores correcta es muy importante en empresas o grande proyectos. Por ejemplo, en nuestro nuevo proyecto al que acabamos de modificar el Whitelabel Error Page y la Status response, tenemos el siguiente RESPONSE BODY:
+
+	{
+	    "timestamp": "2023-04-07T11:44:18.778+00:00",
+	    "status": 404,
+	    "error": "Not Found",
+	    "trace": "com.aleleone.firstrestfulwebservices.user.UserNotFoundException: id: 1222.....,
+	    "message": "id: 1222",
+	    "path": "/users/1222"
+	}
+
+En nuestro proyecto podríamos necesitar una estructura distinta y la podemos modificar tenemos que primero crear la estructura de nuestra respuesta:
+
+		public class ErrorDetails {
+			
+			private LocalDate timestamp;
+			private String message;
+			private String details;
+
+			Constructores con parámetros y Getters...
+		}
+
+Y luego tendremos que crear nuestra clase para crear nuestra respuesta personalizada. Esta clase extenderá la clase "ResponseEntityExceptionHandler", y tendremos que utilizar el método "handleException" de la misma. Este método sigue la siguiente estructura:
+
+	public final ResponseEntity<Object> handleException(Exception ex, WebRequest request) throws Exception
+
+Y en este método tendremos que crear un nuevo ErrorDetails a devolver. ErrorDetails lo definimos en la linea 105 y tiene la siguiente estructura:
+
+	ErrorDetails errorDetails = new ErrorDetails(TIME, PAGE_NOT_FOUND_LOG_CATEGORY, PAGE_NOT_FOUND_LOG_CATEGORY)
+
+Aplicando todo esto, nuestra clase CustomResponseExceptionHandler nos quedaría así:
+
+		@ControllerAdvice
+		public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExceptionHandler {
+			
+			@ExceptionHandler(Exception.class)
+			public final ResponseEntity<Object> handleAllExceptions(Exception ex, WebRequest request) throws Exception {
+				ErrorDetails errorDetails = new ErrorDetails(LocalDate.now(), ex.getMessage(), request.getDescription(false));
+				return new ResponseEntity<>(errorDetails, HttpStatus.INTERNAL_SERVER_ERROR);
+			}	
+		}
+
+Entonces estamos usando nuestra propia estrucutra personalizada de excepciones en la linea 128, y lo devolvemos como respuesta en la linea 129, y la anotación @ControllerAdvice de la linea 124 hace que SpringBoot pueda utilizar esta ResponseEntity. @ControllerAdvice es una especialización de @Component para clases que declaran @ExceptionHandler, @InitBinding o @ModelAttribute.
+Ahora si, cuando intentamos obtener datos de un usuario inexistente tendremos este ResponseBody
+
+	{
+	    "timestamp": "2023-04-07",					//si queremos también la hora podemos usar LocalDateTime en la linea 107 y en el constructor y getter.
+	    "message": "id: 1222",							y también hay que corregir la linea 129 a LocalDateTime.now()
+	    "details": "uri=/users/1222"
+	}
+
+
+Ahora, una vez que definimos esta nueva estructura, en la anotación de la linea 127 definimos @ExceptionHandler(Exception.class), y al pasar Exception.class le estamos indicando que devuelva esta response para TODAS las excepciones, incluida nuestra UserNotFoundException. Por este motivo, ahora nuevamente tenemos un ResponseStatus 500, y debemos nuevamente indicar que para UserNotFoundException el Repsonse Status debe ser 404. Esto lo hacemos agregando un nuevo método muy parecido al de la linea 128 pero para nuestro UserNotFoundException:
+
+		@ExceptionHandler(UserNotFoundException.class)
+		public final ResponseEntity<Object> handleUserNotFoundException(Exception ex, WebRequest request) throws Exception {
+			ErrorDetails errorDetails = new ErrorDetails(LocalDate.now(), ex.getMessage(), request.getDescription(false));
+			return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
+		}
+
+Ahora en la anotación indicamos que esta excepción debe ser usada en la excepción UserNotFoundException.class, el método se llamará handleUserNotFoundException, y el HttpStatus sera NOT_FOUND par que nos devuelva 404.
+
+NOTA: En las lineas 116, 128, 130, 147 y 149 podemos ser más específicos y definir ResponseEntetity<ErrorDetails> en vez de Object o dejarlo vacío.
+
+
+Validaciones y Bad Request Responses:
+─────────────────────────────────────┘
+
+Como vimos antes, también podemos agregar validaciones para las REQUEST BODYs que nos llegue. Por ejemplo, al intentar dar de alta un usuario podemos agregar mediante Spring Boot Starter Validation. Agregando la dependencia en pom.xml, agregando las restricciones como vimos en el capítulo "05 - DATA VALIDATION", por ejemplo en la clase useres definimos al campo name como @Size(min=2) y luego agregando la notación @Valid al "@RequestBody User user" que pasamos como parámetro en nuestro método decorado con @PostMapping, tendremos una validación de datos mínima, pero nuevamente, si intentamos dar de alta un usuario con campos inválidos nos devolverá un "Error Response Structure" auto configurado por Spring Boot y el code status "400 - bad request".
+
+	{
+	    "type": "about:blank",
+	    "title": "Bad Request",
+	    "status": 400,
+	    "detail": "Invalid request content.",
+	    "instance": "/users"
+	}
+
+Esta respuesta no provee mucha información útil, necesitamos ahora escribir nuestro propia estructura de respuesta ante este error para dar información al usuario de porqué esta request está mal. 
+Podemos entonces volver a mirar nuestra ResponseEntityExceptionHandler y navegar en la clase donde encontraremos un método "handleMethodArgumentNotValid". Podemos entonces hacer un @Override de éste método que hereda nuestra clase "CustomizedResponseEntityExceptionHandler" para devolver una estructura personalizada. De manera muy similar a las anteriores, ahora tendremos el siguiente método:
+
+	@Override
+	protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+		ErrorDetails errorDetails = new ErrorDetails(LocalDate.now(), ex.getMessage(), request.getDescription(false));
+		return new ResponseEntity(errorDetails, HttpStatus.BAD_REQUEST);
+	} 
+
+Ahora sobreescribiremos el método handleMethodArgumentNotValid devolviendo el status HttpStatus.BAD_REQUEST (que estaba bien, 400), pero con el mensaje ext.getMessage() que provee mejor información sobre el error. Nuestra respuesta será la siguiente ahora:
+
+	{
+	    "timestamp": "2023-04-07",
+	    "message": "Validation failed for argument [0] in public org.springframework.http.ResponseEntity<com.aleleone.firstrestfulwebservices.user.User> com.aleleone.firstrestfulwebservices.user.UserResource.createUser(com.aleleone.firstrestfulwebservices.user.User): [Field error in object 'user' on field 'name': rejected value []; codes [Size.user.name,Size.name,Size.java.lang.String,Size]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [user.name,name]; arguments []; default message [name],2147483647,2]; default message [el tamaño debe estar entre 2 y 2147483647]] ",
+	    "details": "uri=/users"
+	}
+
+Como vemos el "message" nos da mucha información, aunque tal vez no sea muy útil para un usuario final. Lo que podemos hacer es agregar a la validación en la clase usuario y parámetro name que agregamos antes @Size un mensaje personalizado, agregando un segundo parámetro -> @Size(min = 2, message = "El nombre debe tener al menos 2 caracteres"). 
+Luego tendremos que cambiar, en la linea 175, el mensaje devuelto en nuestra estuctura; en vez de ex.getMessage() que nos devuelve el mensaje entero, al igual que la linea 183, pero ahora con el mensaje agregado "El nombre debe tener al menos 2 caracteres", podemos cambiarlo a ex.getFieldError().getDefaultMessage(), que nos devuelve exclusivamente el default message que definimos. Ahora la respuesta ante un campo vacío será:
+
+	{
+	    "timestamp": "2023-04-07",
+	    "message": "El nombre debe tener al menos 2 caracteres.",
+	    "details": "uri=/users"
+	}
+
+Ahora si tenemos un mensaje user friendly para indicar porqué no se puede dar de alta un usuario con los datos pasados.
+Si tenemos más de un error, y queremos mostrar ambos en el Response Body podemos crear un string con ambos errores y pasarlos a ambos en un mismo string.

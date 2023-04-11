@@ -1,0 +1,85 @@
+05 - CUSTOMIZING REST API RESPONSES
+────────────────────────────────────┘
+
+SERIALIZACIÓN:
+──────────────┘
+
+La serialización es el proceso de convertir un Objeto en un Stream. Por ejemplo en nuestro método retireveAllUsers() devolvermos una List<User> o lista de usuarios y la conversión de esta lista de usuarios a una respuesta JSON se realiza mediante Serialización. El framework más popular para serializar respuestas es Jackson como vimos anteriormente.
+Hasta ahora vimos que las respuestas representan perfectamente la estructura de nuestra clase User (id, name, birthDate), pero en ciertas situaciones quizás no querramos devolver ciertos datos dentro de un usuario y para esto debemos customizar la respuesta generada por Jackson.
+
+Customizar nombres de campos en respuestas:
+───────────────────────────────────────────┘
+
+	Podemos hacer uso de la anotación @JSONProperty para cambiar el nombre de algun campo en la respuesta. Esta anotación debe ir en el campo que deseamos cambiar en la clase que deseamos cambiar. Por ejemplo si tenemos User(id, name, birthDate) y queremos cambiar en la respuesta "name" con "user_name" debemos agregar la anotación:
+
+	public class User {
+
+		private Integer id;
+		@JSONProperty("user_name")
+		private String name;
+		private LocalDate birthDate;
+	}
+
+	Ahora la respuesta mostrará el nombre de campo "name" como "user_name".
+
+
+Filtering: 
+──────────┘
+
+	Tal vez tenemos data que no queremos mostrar en nuestras respuestas, como por ejemplo una password, para esto podemos seleccionar qué campos queremos mostrar y qué campos no. Hay dos tipos de filtrado:
+
+		Static: Por ejemplo tenemos una respuesta con "campo1", "campo2" y "campo3" y SIEMPRE queremos filtrar campo2 ya que es un dato sensible que no queremos devolver. Similarmente a la customización, debemos anotar el campo que no deseamos mostrar con @JsonIgnore. Una vez anotado, el campo no se devolverá en el JSON de respuesta.
+		También podemos anotar la clase que contiene los campos 1, 2 y 3 con @JsonIgnoreProperties("campo2") para quitar campo2 de la respuesta. También podemos crear un array de campos para ignorar múltiples campos con @JsonIgnoreProperties({"campo1", "campo2"}). Es recomendable usar @JsonIgnore en cada campo ya que es un decorator sin ninguna alcaración, por lo que podemos cambiar el nombre del field, cambiarlo, etc y no sufrirá ningún cambio. Sin embargo si usamos @JsonIgnoreProperties debemos cambiar un campo al ser éste modificado.
+
+
+		Dynamic: La otra alternativa es cuando deseamos mostrar campo1 para una API pero no para otra, para esto debemos customizar un filtro para un bean para una API específica.
+		Veamos un ejemplo donde para la API "localhost:8080/filtering-list" veamos los campos 2 y 3 para una lista de objetos, y para la API "localhost:8080/filtering" veamos los campos 1 y 3.
+		Como queremos hacer cosas distintas en REST APIs distintas, no podemos definir le filtro en el bean mismo, la lógica del filtrado deberá estar definida en la REST API. Entonces en los métodos de nuestra REST API no solo debemos definir la lógica de devolución de data, sino también de filtrado. Para esto haremos uso de MappingJacksonValue.
+
+		Primero vamos a definir la clase SomeBean que utilizaremos:
+
+			public class SomeBean {
+
+				private String campo1;
+				private String campo2;
+				private String campo3;
+				
+				+ Constructor + Setters + Getters
+			}
+
+
+		Ahora si empecemos a filtrar primero los campos 1 y 3 para nuestra API "localhost:8080/filtering":
+
+
+			@GetMapping("/filtering")
+			public SomeBean filtering() {
+				SomeBean someBean = new SomeBean("valor1", "valor2", "valor3");
+
+				MappingJacksonValue mappingJacksonValue = new MappingJacksonValue(someBean);
+				//filtrado
+				SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept("campo1", "campo3");
+				FilterProvider filters = new SimpleFilterProvider().addFilter("SomeBeanFilter", filter);
+				mappingJacksonValue.setFilters(filters);
+
+				return mappingJacksonValue;
+			}
+
+		Como vemos en el código, primero creamos un bean con los valores 1, 2 y 3, correspondientes a los campos 1, 2 y 3 del Bean. Luego creamos el filtro en la linea 60 donde filtramos todos los campos excepto 1 y 3, luego agregarmos nuestro filtro a los filtros aplicados en el bean en la linea 61, y por último usamos nuestro mappingJacksonValue con los filtros seteados y lo devolvemos. Para que se aplique este filtro debemos anotar a la clase SomeBean que contiene los campos 1, 2 y 3 con la anotación @JsonFilter.
+		Como vemos entonces, mappingJacksonValue nos da la posibilidad de agregar lógica de serialización y filtrado en adición a nuestra data en la respuesta.
+
+		Lo mismo podemos hacer para nuestra API "localhost:8080/filtering-list" donde filtramos una lista de filtros:
+
+			@GetMapping("/filtering-list") {
+				List<SomeBean> list = Arrays.asList(new SomeBean("valor1", "valor2", "valor3"),
+													new SomeBean("valor4", "valor5", "valor6"));
+
+				MappingJacksonValue mappingJacksonValue = new MappingJacksonValue(list);
+				SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept("campo2", "campo3");
+				FilterProvider filters = new SimpleFilterProvider().addFilter("SomeBeanFilter", filter);
+				mappingJacksonValue.setFilters(filters);
+
+				return mappingJacksonValue;
+			}
+
+		Ahora vemos que en la lista de valores, ni el valor 1 ni el 4 estarán visibles ya que los excluimos en la linea 77.
+		También podríamos extraer las lineas de código repetidas entre ambos métodos (60 a 62 y 77 a 79) para que nos quede más prolijo.

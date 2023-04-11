@@ -1,0 +1,105 @@
+03 - VERSIONING
+────────────────┘
+
+El versionado de nuestras aplicaciones es vital para el correcto uso de los consumidores. Estos versionados registran los cambios de nuestros proyectos a lo largo del tiempo y da una pauta de compatibilidades en el uso de aplicaciones.
+Estos cambios pueden ser desde cambios menores que no afectan en absoluto el funcionamiento de la aplicación o cambios más grandes que modifican el comportamiento o la estructura en la que se maneja un conumidor con nuestra app.
+Supongamos que por cuestiones de diseños deseamos cambiar un campo "name" y separarlo en dos campos "lasName" y "firstName" contenidos en el campo "name". Este cambio hace que las interacciones de los usuarios cambie, las requests de los usuarios van a tener una estructura distinta, y la compatibilidad con versiones anteriores o datos guardados puede romperse.
+Estos cambios deben evitarse a toda costa ya que cambios que modifiquen las demandas o respuestas impactan a todos nuestros usuarios, pero si aun así nos resulta vital realizar un cabmio, debemos tener siempre en cuenta el VERSIONADO de nuestra REST API, y separar completamente la versión con "name" en una versión que llamaremos v1 y la versión con nombres separados llamada "v2". Es muy importante que el funcionamiento de nuestra app v1 siga como siempre, que nuestros usuarios tengan la posibilidad de cambiar de v1 a v2, pero nunca obligarlos a cambiar sin poder familiarizarse primero con el cambio.
+
+Hay distintas formas de versionar nuestro proyecto:
+
+	- URL
+	- Request Parameter
+	- Header
+	- Media Type
+
+
+URL:
+────┘ 
+	Puede versionarse o separarse versiones mediante URL como por ej localhost/v1/usuarios y localhost/v2/usuarios donde ambas versiones están activas al mismo tiempo. Para esto necesitaremos dos métodos @GetMapping distintos:
+
+		@RestController
+		public class VersioningPersonController {
+
+			@GetMapping("/v1/person")
+			public PersonV1 getFirstVersionOfPerson() {
+				return new PersonV1("James Hetfield");
+			}
+		
+			@GetMapping("/v2/person")
+			public PersonV2 getSecondVersionOfPerson(){
+				return new PersonV2(new Name("James", "Hetfield"));
+			}
+		}
+
+	Y además necesitaremos las clases PersonV1 y PersonV2 donde la primera tendrá solo un campo "name" y la segunda tendráun campo "private Name name" donde esta será una nueva clase con los campos "fistName" y "lastName".
+
+
+Request Param:
+──────────────┘
+	Un consumer puede especificar una versión como un request parameter (localhost/person?version=1). Nuevamente tenemos que definir un método @GetMapping que acepte un versionado a través de un parámetro request.
+
+		@GetMapping(path = "/person/param", params = "version=1")
+		public PersonV1 getFirstVersionOfPersonRequestParameter() {
+			return new PersonV1("James Hetfield");
+		}
+
+		@GetMapping(path = "/person/param", params = "version=2")
+		public PersonV2 getSecondVersionOfPersonRequestParameter() {
+			return new PersonV2(new Name("James", "Hetfield"))
+		}
+
+
+	Estos métodos o APIs serán llamados solamente si hay un parámetro que indique la versión en la request enviada. Ahora podremos escribir localhost:8080/person?version=1 o 2 y tendremos las mismas respuestas que antes. Es el mismo endpoint (/person/param) pero aclaramos la versión por parámetro en vez de por urls distintas.
+
+
+Custom Headers:
+───────────────┘
+	En este caso el consumer de la API puede setear un header de la request (X-API-VERSION=1 o 2) para elegir cual versión de respuesta obtener. Nuevamente necesitamos un nuevo método:
+
+		@GetMapping(path = "/person/header", header = "X-API-VERSION=1")
+		public PersonV1 getFirstVersionOfPersonRequestHeader() {
+			return new PersonV1("James Hetfield");
+		}
+
+		@GetMapping(path = "/person/header", header = "X-API-VERSION=2")
+		public PersonV2 getSecondVersionOfPersonRequestHeader() {
+			return new PersonV2(new Name("James", "Hetfield"))
+		}
+
+	Muy similar al caso anterior, tenemos que diferenciar los @GetMappings pero en vez de declara un param, declaramos un header. Ahora cuando hacemos una request desde Postman tenemos que agregar el header "X-API-VERSION" : "1" y nos devolverá la primera versión o la que setiemos en el header.
+
+
+Media Type versioning:
+──────────────────────┘
+	En el capitulo anterior vimos "content negotiation" que está basado en el "accept" header. Este tipo de versionado se basa en el mismo principio: cuando un consumer quiere acceder la versión 1 de la API puede declara un "accept" header con "application/vnd.company.app-v1+json". Se implementa muy similarmente:
+
+		@GetMapping(path = "/person/accept", produces = "application/vnd.company.app-v1+json")
+		public PersonV1 getFirstVersionOfPersonRequestAccept() {
+			return new PersonV1("James Hetfield");
+		}
+
+		@GetMapping(path = "/person/accept", produces = "application/vnd.company.app-v2+json")
+		public PersonV2 getSecondVersionOfPersonRequestAccept() {
+			return new PersonV2(new Name("James", "Hetfield"))
+		}
+
+	Al igual que los casos anteriores debemos aclarar el seteo que deseamos en un parámetro "produces" dentro del @GetMapping. Una ver realizado esto podemos agregar un header "accept" con la "application/..." que seteamos anteriormente y listo.
+
+
+Factores a considerar:
+──────────────────────┘
+	
+	Hay distintos factores a considerar cuando elegimos cual método usar para versionar nuestra API:
+
+		URI Pollution: cuando usamos versionados mediante URL y Request Paramter estamos básicamente creando nuevas URLs para representar la nueva versión, lo que genera mucha contaminación o URI muy largas. Sin embargo en el caso de Custom Headers o Media Type las versiones se aclaran mediante headers dentro de la request lo que genera URLs más simples, fáciles de leer e intuitivas.
+
+		Mal uso de HTTP Headers: los headers nunca fueron pensados para ser usados en el versionado de una API, tanto Custom Headers como Media Type hacen un mal uso, o uso no profesional o no buen viso de los headers.
+
+		Caching: el chacheo típicamente se realiza basado en la URL y cuando usamos versionados Custom Header y Media Type estamos usando distintas versiones pero con la misma URL, por lo que no podremos cachear las requests en URLs. Siempre hay que ver los headers al cachear.
+
+		Ejecutable: otro factor es si podemos ejecutar la request en un explorador. En los casos de versionados mediante URL y Param Request es muy facil ejecutar las requests en un explorador, es tan sencillo como agregar los parámetros necesarios. En cambio cuando se trata de Custom Header y Media type la definición se hace en los headers lo que nos obliga a usar un "command line" o un cliente REST API para poder diferenciar las versiones en un explorador.
+
+		API Documentation: usualmente generar documentación usando versionados de URL y Param Request es muy fácil porque las URLs son diferentes para ambas versiones. Muchas herramientas de documentación no pueden generar diferente documentación basándose en diferencias en headers.
+
+	Sin embargo lo más importante de todo es siempre usar el mismo approach en toda las APIs de nuestra empresa o proyectos. Una vez que elgimos una debemo siempre usar la misma forma de versionado. No es tán importante cual approach usemos pero si que siempre respetemos la misma.

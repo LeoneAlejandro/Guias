@@ -1,0 +1,98 @@
+04 - HATEOAS (Hypermedia as the Engine of Application State)
+────────────────────────────────────────────────────────────┘
+
+Cuando visitamos un sitio web no solo podemos ver DATA sino que podemos también realizar ACCIOENS (usando links). Como podemos hacer para mejorar nuestra REST API no solo para devolver data, sino también para dar información al consumidor acerca de como realizar estas acciones sobre nuestros recursos ?
+Tipicamente cuando hablamos de REST APIs hablamos sobre DATA, pero HATEOAS mejora las respuestas a usuarios para no solo devolver DATA sino también devuelve links para ofrecerle al consumidor realizar acciones subsecuentes.
+
+
+Opciones de implementación: 
+───────────────────────────┘
+
+1) Formato e Implementación personalizados: usualmente es muy dificil de mantener un formato propio.
+
+2) Implementación Estandar: Podemos usar formatos estandarizados y simples que nos da una forma fácil y consistente de linkear recursos en nuestra API. Un ejemplo es HAL (JSON Hypertext Application Language). HAL nos define cómo linkear a otros recursos en nuestra REST API, por ejemplo crear un elemento "_links" donde guardaremos nuestros links
+
+	{
+		"name": "Adam",
+		"birthDate": "2022-07-17",
+		"_links": {
+			"all users": {
+				"href": "http://localhost:8080/users"
+			}
+		}
+	}
+
+Lo útil de usar este estandar es que todas nuestras aplicaciones ahora siguen esta tendencia. Siempre que usemos API estandarizadas con HAL veremos respuestas como este ejemplo, y para poder generar este tipo de respuesta podemos hacer uso de "Spring HATEOAS" para generar respuestas HAL con hiperlinks a recursos.
+
+
+Ejemplo de implementación:
+──────────────────────────┘
+
+Para poder hacer uso de HATEOAS debemos agregar la dependencia en nuestro pom.xml:
+
+	<dependency>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-hateoas</artifactId>
+	</dependency>
+
+Ahora veamos el método para consultar users que habíamos realizado anteriormente para consultar usuarios:
+
+	@GetMapping("/users/{id}")
+	public User retriveUser(@PathVariable int id) {
+		User user = service.findUserById(id);
+
+		if (user == null) {	throw new UserNotFoundException("id: " + id);}
+
+		return user;
+	}
+
+ Cuando consultabamos un endpoint como "locahost:8080/users/1" nos devolvía el usuario con id 1 con el siguiente formato:
+
+	{
+		"id":1,
+		"name":"Mauricio Macri",
+		"birthDate":"1968-04-11"
+	}
+
+Lo que queremos hacer ahora es, en adición de devolver la data del usuario, quremos devolver un link de vuelta hacia usuarios. Para hacer esto tenemos que agregar algunos links en la respuesta como parte de nuestro User Bean sin modificar la estructura y para poder hacer esto tendremos que agregar hacer uso de un par de conceptos de HATEOAS llamados "EntityModel" y "WebMvcLinkBuilder". Lo que tenemos que hacer entonces es envolver nuestra respuesta "User" en un EntitiyModel, luego crear un EntitiyModel dentro de nuestro método
+
+	@GetMapping("/users/{id}")
+	public EntityModel<User> retriveUser(@PathVariable int id) {
+		User user = service.findUserById(id);
+
+		if (user == null) {throw new UserNotFoundException("id: " + id);}
+
+		EntityModel<User> entityModel = EntityModel.of(user);
+		return entityModel;
+	}
+
+Si ahora consultamos el user 1 tendremos la misma respuesta que antes, no cambiamos nada por ahora, solamente envolvimos nuestra respuesta y el usuario obtenido en un EntitiyModel. Para devolver links ahora debemos agregar estos links a nuestro entityModel, y para poder crear estos links debemos hacer uso de WebMvcLinkBuilder. Una vez que creamos nuestro "link" con WebMvcLinkBuilder, le asignamos un link a (linkTo) un método (methodOn) y pasamos como parámetro la misma clase (this.getClass()) y al método "retriveAllUsers", que es un método que devuelve todos los usuarios que se obtiene con la URL "http://localhost:8080/users". Básicamente estamos creando un link apuntando al método retriveAllUsers(). Luego debemos agregar este link al entitiyModel con la linea "entityModel.add(link.withRel("all-users"));" donde withRel nos da la relación del link con nuestro recurso:
+
+
+	@GetMapping("/users/{id}")
+	public EntityModel<User> retriveUser(@PathVariable int id) {
+		User user = service.findUserById(id);
+		
+		if (user == null) {
+			throw new UserNotFoundException("id: " + id);
+		}
+		
+		EntityModel<User> entityModel = EntityModel.of(user);
+		WebMvcLinkBuilder link = linkTo(methodOn(this.getClass()).retriveAllUsers());
+		entityModel.add(link.withRel("all-users"));
+		return entityModel;
+	}
+
+Ahora al consultar el endpoint "locahost:8080/users/1" obtendremos la respuesta:
+
+{
+	"id":1,
+	"name":"Mauricio Macri",
+	"birthDate":"1968-04-11",
+	"_links": {
+		"all-users": {
+			"href":"http://localhost:8080/users"}
+		}
+}
+
+Aqui vemos la relación que declaramos como "all-users" entre el recurso y el link que acabamos de crear. Ahora si un consumer obtiene esta respuesta al consultar el user "1", también sabrá como obtener los detalles de TODOS los usuarios.

@@ -1,0 +1,61 @@
+02 - CONTENT NEGOTIATION & INTERNALIZATION
+──────────────────────────────────────────┘
+
+CONTENT NEGOTIATION
+───────────────────┘
+Típicamente cuando hablamos de recursos API o API resources, el mismo recurso tiene la misma URI, por ejemplo cuando hablamos de USERS la URI será localhost:8080/users en nuestro ejemplo. Sin embargo diferentes representaciones son posibles, por ejemplo, 2 consumers distintos pueden obtener la misma respuesta (/users/1), uno en JSON y el otro en XML, osea, dos respuestas en formatos distintos ante la misma request. También podríamos exponer el mismo recurso a distinas respuestas con respecto al lenguaje, podríamos tener 2 consumers distintos donde uno quiera la response en inglés y el otro en español.
+Para esto necesitamos que nuestros consumers nos digan que representación desean, y como se logra esto ? Mediante negociación de contenido o "Content Negotiation". El consumer puede usar headers como "Accept header" donde se puede definir el tipo de respuesta, como application/XML o application/JSON. También puede usar "Accept-Language" headers (en, es, fr, etc) donde puede especificarse qué lenguaje se desea en la response.
+
+
+Implementación de Accept Header:
+
+	Es muy sencillo agregar accept headers, debemos ir al pom.xml y agregar una simple dependencia:
+
+		<dependency>
+			<groupId>com.fasterxml.jackson.dataformat</groupId>
+			<artifactId>jackson-dataformat-xml</artifactId>
+		</dependency>
+
+	Luego de hacer esto tenemos la posibilidad de agregar un header a nuestras requests en POSTMAN. Sin header, si hacemos un get request a /users, obtendremos la respuesta en JSON, pero ahora podremos agregar un header "Accept: application/xml" a la request para que la response esté expresada en XML.
+	Lo que hicimos entonces es crear dos representaciones para el mismo recurso. Ahora podremos mediante un header elegir como será el tipo de respuesta (JSON o XML).
+
+
+INTERNALIZATION
+───────────────┘
+Nuestra REST API puede tener consumers de todo el mundo, como podemos customizar las respuestas para usuarios con distintos idiomas ? Aquí se aplica la internalización o i18n (internalización tiene 18 caracteres y en la jerga se abrevia con i18n).
+Cuando realizamos internalización hacemos uso de un HTTP REQUEST HEADER, como parte de nuestra request hacemos uso de un header llamado Accept-language.
+
+Implementación de Accept-language Header:
+
+	Para generar respuesta distintas dependiendo de un lenguaje deberíamos internacionalizar nuestro método get @GetMapping. Usemos el método más sencillo que tenemos "Hello Wolrd":
+
+		@GetMapping(path = "/hello-world")
+		public String helloWorld() {
+			return "HelloWorld";
+		}
+
+	Para internacionalizar este método, tendremos que devolve mensajes distintos dependiendo del idioma que sea pedido. Por ejemplo tendremos el mensaje "Buenos días" por defecto y su variante para cada idioma que se pida, como "Good Morning" si se pide en "en" y "Bonjour" si se pide en "fr". Usualmente estos mensajes se definen en un mismo sitio, el lugar estandar para guardar estos mensajes en un archivo en "src/main/resources" (debe estar en la misma carpeta que application.properties) y el archivo por defecto debe llamarse "messages.properties" y además tendremos que crear un archivo para cada mensaje distinto. El archivo con la respuesta por defecto (sin header) deberá contener la siguiente linea:
+
+		good.morning.message=Buenos días
+
+	Luego tendremos que hacer uso de una interfaz de Spring Boot llamada "message source". Debemos importarla en la clase que contenga el método @GetMapping, inyectarla y luego hacer uso de la misma en nuestro nuevo método internacionalizado:
+
+		@Autowired
+		private MessageSrouce messageSource;
+
+		@GetMapping(path = "/hello-world-internacionalized")
+		public String helloWorldInternacionalized() {
+			Local locale = LocaleContexHolder.getLocale();
+			return messageSource.getMessage("good.morning.message", null, "Default Message", locale);
+		}
+
+	Haremos entonces uso del messageSrouce, donde llamaremos al método getMessage() y tendremos que pasarle como primer parámetro el código (good.morning.message), el segundo parámetro es alguna variable para reemplazar en el mensaje (en este caso no lo tenemos y lo dejamos null), el tercer parámetro es un mensaje defecto y el tercero es algo llamado "locale" que lo obtendremos del RequestHeader, pero para obtener debemos hacer uso del LocaleContexHolder como se ve en la linea 48.
+	Para agregar una respuesta en otro idioma debemos ahora crear un nuevo "messages.properties" específico para cada idioma, por ejemplo un "messages_en.properties" con la siguiente linea:
+		
+		good.morning.message=Good Morning
+
+	y otro archivo "messages_fr.properties" con la siguiente linea:
+
+		good.morning.message=Bonjur
+
+	Ahora podremos hacer la request a "/hello-world-internacionalized" sin header, donde veremos como respuesta "Buenos días" por defecto, o podemos hacer la request con un header "Accept-Language" en "en" o "fr" para obtener "Good Morning" o "Bonjur" respectivamente.

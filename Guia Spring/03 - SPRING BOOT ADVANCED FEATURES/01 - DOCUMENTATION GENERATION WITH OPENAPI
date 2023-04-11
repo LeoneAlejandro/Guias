@@ -1,0 +1,68 @@
+01 - ADVANCED REST API FEATURES: Documentation
+──────────────────────────────────────────────┘
+
+
+Nuestra API está hecha para ser usada por peronas, o consumidores, y estos necesitan entender nuestro proyecto. Es muy importante que nuestra API tenga documentación sobre:
+
+	Resources - Cuales son los RECURSOS expuestos
+	Actions - Que ACCIONES pueden realizar
+	Structure - Cual es la estructura de las Requests/Repsoness (Constrains, Validations, etc)
+
+Cuando hablamos de la documentación de REST API's existen algunos desafíos:
+
+	Acurracy - Como podemos asegurar que nuestra documentación es correcta, está al día. Es posible que nuestra documentación pierda sincronía con el código que siempre evoluciona
+	Consistency - Podemos tener cientos de REST APIs en una empresa, como podemos asegurar consistencia entre las APIs ? en el formato de sus documentaciones ?
+
+Tenemos 2 opciones para generar documentación
+
+	Manual: Mantener una documentación manualmente implica estar constantemente actualizando nuestra documentación para que esté en sincronía con nuestro código.
+	From code: La segunda forma es crear documentación desde el código.
+
+Vamos ahora a explorar esta segunda opción
+
+
+Generar documentación desde el código:
+──────────────────────────────────────┘
+
+Overview: Hay dos términos muy importantes a entender cuando hablamos de REST API documentation, sin importar del lenguaje que usemos para escribir nuestra API, estas terminologías son generales: SWAGGER & OPEN API.
+
+Swagger y OPEN API son especificaciones creadas para documentar nuestro código. Swagger fue la primera en ser creada siendo un estandar para las empresas. Luego OPEN API fue creada usando las especificaciones Swagger y expandiéndolas. Open API es una interfaz lenguague-agnostic (que no depende de un lenguaje de programación).
+Veamos un ejemplo de Open API:
+
+{
+	"openapi": "3.0.1",
+	"info": {<->},
+	"paths": {
+		"/posts": {
+			"get": {<->},
+			"post": {<->}, 
+		},
+		"/posts/{id}": {
+			"get": {<->},
+			"put": {<->},
+			"delete": {<->},
+			"patch": {<->},
+		}
+	},
+}
+
+Como parte de nuestra especificación openapi, podemos definir donde específicamente nuestra API está expuesta, cuales son los recursos expuestos, cuales son las acciones que podemos realizar.
+Además veremos Swagger UI que nos permitirá visualizar e interactuar con nuestra API.
+
+
+Spring Doc OpenAPI:
+───────────────────┘
+
+Esta es una librería JAVA que nos permite automatizar la generación de documentación de una API para proyectos de Spring Boot. Springdoc-openapi funciona examinando la aplicación en runtime para inferir la semántica de la API basándose en spring configurations, class structures y varias annotations.
+
+Como siempre, primero debemos agregar la dependencia en el pom.xml (version 2.0.0 es compatible con Springboot 3)
+
+	<dependency>
+	    <groupId>org.springdoc</groupId>
+	    <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+	    <version>2.0.0</version>
+	</dependency>
+
+y luego podremos usar Swagger UI entrando a la url "http://localhost:8080/swagger-ui/index.html". Aquí veremos como automáticamente se genera una visata con nuestros controladores expuestos, recursos, schemas, etc. También podremos indagar en cada uno de ellos para tener más información como por ej, como es el esquema de cada resource, etc.
+
+También veremos arriba un link a la url "http://localhost:8080/v3/api-docs" donde podremos ver nuestra especificación OpenAPI para nuestra API. Básicamente es un documento JSON como la linea 32 a 47, donde veremos "info", "servers", "path" y "components". "Info" contiene la información básica como título y versión. En "servers" tenemos información acerca dónde está expuesta nuestra API (http://localhost:8080) y la descripción. En "paths" tenemos detalles de todos los recursos expuestos (/users, /users/{id}, /hello-world, etc) y también qué acciones podemos realizar (en /users tendremos get, post, delete, etc) y las respuestas posibles para cada acción y cuales son los parámetros esperados para cada acción. Y en "component" se define el "schema", osea, qué forma tiene un objeto "User" (campo name de tipo String con máxlength y minlength, campo ID de tipo integer de formato int32, etc).
