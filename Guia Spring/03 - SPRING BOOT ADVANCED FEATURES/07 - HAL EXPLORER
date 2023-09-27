@@ -1,0 +1,16 @@
+07 - HAL EXPLORER
+──────────────────┘
+
+Como vimos en HATEOAS, HAL (JSON Hypertext Application Language) es un simple formato que nos da una forma consistente y sencilla de hyperlinkear recursos en nuestra API.
+HAL Explorer es un explorador API para RESTful Hypermedia APIs usando HAL. Si nuestras APIs usan HAL podemos usar este explorador. Spring Boot HAL Explorer autoconfigura HAL Explorer para proyectos de Spring Boot.
+
+La dependencia será:
+
+	<dependency>
+		<groupId>org.springframework.data</groupId>
+		<artifactId>spring-data-rest-hal-explorer</artifactId>
+	</dependency>
+
+Ahora la entrar a "locahost:8080" veremos el explorador HAL Explorer que nos mostrará información muy útil acerca de nuestra app. El explorador tiene una barra "Edit Headers" donde podemos poner, por ejemplo, "actuator", y al golpear este endpoint nos mostrará toda la infomación correspondiente como links, ResponseBody, ResponseStatus y ResponseHeader. En los links veremos todos los endpoints disponibles en /actuator como vimos en el capítulo anterior, y sobre estos links podemos generar una HTTP Request como "GET" que nos devolverá cada endpoint. Por ejemplo podemos hacer click en el botón de HTTP Request GET en el link "beans" y nos mostrará la respuesta de "localhost:8080/actuator/beans" en formato de HAL Explorer que es mucho más útil y legible.
+De la misma manera podemos en el explorador HAL ingresar "/users/1" y nos devolverá la información de la HTTP Request, los headers utilizados, y el Response Body. 
+Como este Response Body tiene información del usuario con id 1 y además un link a "all-users" agregado en "_links" tal como lo anexamos en la unidad 04 - HATEOAS, veremos entonces por separado también la JSON Properties (que sería esta información del usuario con id 1 en formato JSON) y además el link a "all-users" como lo hemos agregado, con la posibilidad de hacer un GET request.

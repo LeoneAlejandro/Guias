@@ -1,0 +1,46 @@
+06 - ACTUATOR
+──────────────┘
+
+Spring Boot Actuator provee production-ready features para monitorear y manejar nuestras aplicaciones en producción.
+Este actuator nos proveerá de ciertos endpoints de gran utilidad para nuestra app como:
+
+	Beans - Nos provee con una lista completa de todos los Spring Beans de nuestra app
+	Health - Nos indica cómo se está comportando nuestra app
+	Metrics - Son las métricas relevantes a nuestra app
+	Mappings - Detalles al rededor de Request Mappings
+
+Para hacer uso de Spring Boot Actuator primero tenemos que agregar la dependencia a nuestro pom.xml
+
+	<dependency>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-actuator</artifactId>
+	</dependency>
+	
+Una vez agregado se podrá entrar al endpoint "localhost:8080/actuator" y tendremos la siguiente información
+
+{	
+	"_links": {
+		"self": {
+			"href":"http://localhost:8080/actuator",
+			"templated":false
+		},
+		"health-path": {
+			"href":"http://localhost:8080/actuator/health/{*path}",
+			"templated":true
+		},
+		health": {
+			"href":"http://localhost:8080/actuator/health",
+			"templated":false
+		}
+	}
+}
+
+Si hacemos click en los links nos llevará a la información respectiva de cada uno.
+Por default lo único que nuestro actuator expone es la salud o health de la aplicación. Si queremos exponer más información como parte de nuestro actuator podemos ir a "application.propperties" y configurarlo de la siguiente manera:
+
+	management.endpoints.web.exposure.include=*
+
+Ahora que seleccionamos todos veremos una larga lista de endpoints disponibles que nos devolverán información relevante de nuestra app. Por ejemplo podemos abrir "http://localhost:8080/actuator/beans" y nos devolverá una larga lista de todos los beans de nuestra aplicación, y sobre cada bean tendremos información como "aliases", "scope", "type", "resource", "dependencies", etc.
+Tambien podríamos entrar a "http://localhost:8080/actuator/env" donde trendremos información acerca del ambiente, entorno o environment en la que está corriendo nuestra app como versión de JAVA, class path, etc.
+O podemos entrar a "http://localhost:8080/actuator/metrics" donde tendremos todas las métricas disponibles y al apendar o anexar la métrica deseada (por ejemplo http://localhost:8080/actuator/metrics/http.server.requests) veremos toda la información acerca de todas las requests fueron enviadas a la aplicación, como cuales fueron las URI que fueron pegadas, cuanto tardó en responder, etc.
+Lo mismo con mappings, podemos ver todos los controllers de nuestra app y como están mapeadas, los métodos, etc.

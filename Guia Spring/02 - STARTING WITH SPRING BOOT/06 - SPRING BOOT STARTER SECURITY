@@ -54,11 +54,24 @@ Para esto tendremos que modificar algunas cosas:
 Como vemos, ya no haremos uso de withDefaultPasswordEncoder() sino que ahora usaremos builder().passwordEncoder(passwordEncoder) para crear nuestro userDetails. Para lograr esto hay que crear un nuevo método PasswordEncoder la anotación @Bean tal como se ve en las lineas 48 y 49, y también tendremos que crear una variable passwordEncoder para psarle al método utilizado en User. Esta variable local se definirá con una Funciton<String, String> que define, mediante una función lambda, que cualquiera sea el input sea encriptado o encodeado por el método passwordEncoder, como se ve en la linea 38.
 Una vez realizado esto podremos ahora si loguearnos con el username y la contraseña definidos en userDetails que pasaremos como parámetro del InMemoryUserDetailsManager que devolveremos en la linea 44.
 
+
 Configuraciones extras:
 ───────────────────────┘
 
-Por default todas las URLs estarán protegidas por lo que no importa que endpoint toquemos (exista o no) siempre nos mostrará un form para loguearnos.
-Para usar h2 y acceder a la consola tendremos que modificar algunas configuraciones para sobrepasar esto. Tendremos que deshabilitar CSRF (cross site request forgery) y además h2 hace uso de algo usado "Frames" y por defualt Spring Security los bloquea, por lo que también tendremos que cambiar la config de esto. Para hacer eso tendremos que agregar lo siguiente en nuestra clase SpringSecurityConfiguration:
+Por default todas las URLs estarán protegidas por lo que no importa que endpoint toquemos (exista o no) siempre nos mostrará un form para loguearnos. Para cambiar esta configuración por defecto necesitamos sobreescribir la cadena de filtros, y esto lo hacemos creando una nueva clas @Configurable SecurityConfiguration donde creamos un nuevo @Bean que devuelva un SpringSecurityFilterChain.
+Si declaramos solo esto:
+
+	@Configuration
+	public class SpringSecurityConfiguration {
+
+		@Bean
+		public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+			
+			return http.build();
+		}
+	}
+
+Basicamente estamos sobreescribiendo la cadena de filtros con una nueva cadena sin ningún tipo de filtros, por lo que ya no nos pedirá loguearnos y no necesitaremos ningún tipo de autenticación. Vamos a crear un nuevo filtro customizado para nosotros. Primero tendremos que deshabilitar CSRF (cross site request forgery) que es una defensa ante ataques maliciosos que nos imposibilita hacer POST y PUT requests, y además h2 hace uso de algo usado "Frames" y por defualt Spring Security los bloquea, por lo que también tendremos que cambiar la config de esto. Para hacer eso tendremos que agregar lo siguiente en nuestra clase SpringSecurityConfiguration:
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -75,12 +88,13 @@ import static org.springframework.security.config.Customizer.withDefaults;
 	}
 
 
-SecurityFilterChain define una cadena de filtros capaz de matchear contra HttpServletRequests. Osea, cuando hacemos una Request será procesado por este filtro primero. Este SecurityFilterChain es el que nos muestra la login page cuando no estamos logueados y queremos tocar algun endpoint. Mediante nuestra configuración establecimos en la linea 67 que todas las requests estén autorizadas, y si no están autorizadas, configuramos para que nos muestre el formLogin en la linea 69 (para poder pasar withDefaults() hay que hacer un static import específico, linea 63). Y por último deshabilitamos csrf y frameOptions para poder utilizar h2.
+SecurityFilterChain define una cadena de filtros capaz de matchear contra HttpServletRequests. Osea, cuando hacemos una Request será procesado por este filtro primero. Este SecurityFilterChain es el que nos muestra la login page cuando no estamos logueados y queremos tocar algun endpoint. Mediante nuestra configuración establecimos en la linea 80 que todas las requests deben estar autorizadas, y si no están autorizadas, configuramos para que nos muestre el formLogin en la linea 82 (para poder pasar withDefaults() hay que hacer un static import específico, linea 63). Y por último deshabilitamos csrf y frameOptions para poder utilizar h2 en las linesa 84 y 85.
 
 
 
 Extra: Crear múltiples usuarios:
-──────┘
+────────────────────────────────┘
+
 Para crear múltiples usuarios podemos refactorizar nuesto código y extraer en un nuevo método desde las lineas 39 hasta la 43 de la siguiente manera:
 
 		private UserDetails createNewUser(String username, String password) {
@@ -103,7 +117,6 @@ Y modificar nuestro método createDetailsManager de la siguiente manera:
 		}
 
 De esta forma pasamos 2, 3 o cuantos usuarios querramos.
-
 
 
 SecurityContextHolder:
